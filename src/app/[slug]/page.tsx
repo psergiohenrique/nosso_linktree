@@ -16,7 +16,7 @@ async function load(slug: string) {
   const supabase = createPublicClient();
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, slug, display_name, bio, avatar_url, theme, accent')
+    .select('id, slug, display_name, bio, avatar_url, cover_url, theme, accent')
     .eq('slug', slug.toLowerCase())
     .maybeSingle();
   if (!profile) return null;

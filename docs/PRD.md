@@ -32,8 +32,8 @@ O dono do negócio quer **gerar conversa (WhatsApp) e lead**, não só "ter link
 **Dentro:**
 1. Cadastro/login por e-mail (link mágico).
 2. Escolha do endereço `dominio/slug`.
-3. Perfil: nome, bio, avatar (URL), tema (claro/escuro/pôr do sol), cor de destaque.
-4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida).
+3. Perfil: nome, bio, avatar e imagem de capa (por URL), tema (claro/escuro/pôr do sol/areia), cor de destaque.
+4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida). Sugestões de título por segmento (serviços, portfólio, comércio, redes sociais).
 5. Página pública renderizada no servidor, rápida, sem captcha ou pop-up.
 6. Analytics: visualizações e cliques por link (7/30 dias), origem (referrer) e dispositivo.
 7. Slugs reservados e validação de URLs (http/https/tel/mailto).

@@ -12,17 +12,18 @@ export default function Demo() {
     <PageView
       tracked={false}
       profile={{
-        slug: 'barbearia-do-ze',
-        display_name: 'Barbearia do Zé',
-        bio: 'Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.',
+        slug: 'marina-duarte',
+        display_name: 'Marina Duarte',
+        bio: 'Projetos residenciais e comerciais com foco em luz natural e conforto. Atendo São Paulo e região.',
         avatar_url: null,
-        theme: 'sunset',
-        accent: '#4f46e5',
+        cover_url: null,
+        theme: 'sand',
+        accent: '#2b2622',
       }}
       links={[
-        { id: '1', kind: 'whatsapp', title: 'Agendar pelo WhatsApp', url: 'https://wa.me/5511999999999?text=Quero%20agendar' },
-        { id: '2', kind: 'link', title: 'Ver tabela de preços', url: 'https://example.com/precos' },
-        { id: '3', kind: 'link', title: 'Como chegar', url: 'https://maps.google.com' },
+        { id: '1', kind: 'whatsapp', title: 'Solicitar orçamento pelo WhatsApp', url: 'https://wa.me/5511999999999?text=Quero%20um%20or%C3%A7amento' },
+        { id: '2', kind: 'link', title: 'Ver portfólio completo', url: 'https://example.com/portfolio' },
+        { id: '3', kind: 'link', title: 'Agendar visita técnica', url: 'https://example.com/agenda' },
         { id: '4', kind: 'link', title: 'Instagram', url: 'https://instagram.com' },
       ]}
     />

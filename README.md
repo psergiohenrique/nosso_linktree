@@ -10,7 +10,7 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 ## Rodar localmente
 1. Instale o Node.js 20.9+.
 2. `npm install`
-3. Crie um projeto no Supabase, rode o SQL de `supabase/migrations/0001_init.sql` e, em *Authentication → URL Configuration*, libere `http://localhost:3000/auth/callback`.
+3. Crie um projeto no Supabase, rode, em ordem, os SQLs de `supabase/migrations/` (`0001_init.sql` e `0002_tema_areia_capa.sql`) e, em *Authentication → URL Configuration*, libere `http://localhost:3000/auth/callback`.
 4. Copie `.env.example` para `.env.local` e preencha a URL e a chave `anon` (e `NEXT_PUBLIC_SITE_URL` em produção).
 5. `npm run dev` e abra http://localhost:3000.
 

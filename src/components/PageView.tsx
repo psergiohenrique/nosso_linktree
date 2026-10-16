@@ -5,10 +5,11 @@ const THEME_CLASS: Record<Profile["theme"], string> = {
   light: "",
   dark: "bio-dark",
   sunset: "bio-sunset",
+  sand: "bio-sand",
 };
 
 type Props = {
-  profile: Pick<Profile, "display_name" | "bio" | "avatar_url" | "theme" | "accent" | "slug">;
+  profile: Pick<Profile, "display_name" | "bio" | "avatar_url" | "cover_url" | "theme" | "accent" | "slug">;
   links: Pick<LinkItem, "id" | "title" | "url" | "kind">[];
   /** Em modo demo os links vão direto ao destino, sem passar pelo rastreador. */
   tracked?: boolean;
@@ -17,9 +18,19 @@ type Props = {
 export default function PageView({ profile, links, tracked = true }: Props) {
   const themeClass = THEME_CLASS[profile.theme] ?? "";
   const initial = (profile.display_name || profile.slug).charAt(0).toUpperCase();
+  // No tema Areia a capa é sempre exibida: imagem do cliente ou padrão de planta.
+  const hasCover = Boolean(profile.cover_url) || profile.theme === "sand";
 
   return (
-    <main className={`bio ${themeClass}`}>
+    <main className={`bio ${themeClass} ${hasCover ? "bio-has-cover" : ""}`}>
+      {hasCover && (
+        <div
+          className="bio-cover"
+          style={profile.cover_url ? { backgroundImage: `url("${encodeURI(profile.cover_url)}")` } : undefined}
+          role="img"
+          aria-label=""
+        />
+      )}
       <div className="bio-inner">
         <header className="bio-header">
           {profile.avatar_url ? (

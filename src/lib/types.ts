@@ -1,4 +1,4 @@
-export type Theme = 'light' | 'dark' | 'sunset';
+export type Theme = 'light' | 'dark' | 'sunset' | 'sand';
 
 export type Profile = {
   id: string;
@@ -6,6 +6,7 @@ export type Profile = {
   display_name: string;
   bio: string;
   avatar_url: string | null;
+  cover_url: string | null;
   theme: Theme;
   accent: string;
 };

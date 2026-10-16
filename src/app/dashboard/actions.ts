@@ -45,13 +45,18 @@ export async function updateProfile(formData: FormData) {
   const avatar = avatarRaw ? safeUrl(avatarRaw) : null;
   if (avatarRaw && (!avatar || !avatar.startsWith('http'))) fail('URL do avatar inválida.');
 
+  const coverRaw = String(formData.get('cover_url') ?? '').trim();
+  const cover = coverRaw ? safeUrl(coverRaw) : null;
+  if (coverRaw && (!cover || !cover.startsWith('http'))) fail('URL da capa inválida.');
+
   const { error } = await supabase
     .from('profiles')
     .update({
       display_name: String(formData.get('display_name') ?? '').trim().slice(0, 60),
       bio: String(formData.get('bio') ?? '').trim().slice(0, 200),
       avatar_url: avatar,
-      theme: ['light', 'dark', 'sunset'].includes(theme) ? theme : 'light',
+      cover_url: cover,
+      theme: ['light', 'dark', 'sunset', 'sand'].includes(theme) ? theme : 'light',
       accent: validAccent(String(formData.get('accent') ?? '')),
     })
     .eq('id', user.id);

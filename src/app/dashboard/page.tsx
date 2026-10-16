@@ -205,7 +205,32 @@ export default async function Dashboard({
             <option value="link">Link comum</option>
             <option value="whatsapp">WhatsApp</option>
           </select>
-          <input name="title" required placeholder="Título (ex.: Agendar horário)" aria-label="Título" className="field" />
+          <input
+            name="title"
+            required
+            list="sugestoes-titulo"
+            placeholder="Título: digite ou escolha uma sugestão"
+            aria-label="Título"
+            className="field"
+          />
+          <datalist id="sugestoes-titulo">
+            <option value="Solicitar orçamento" />
+            <option value="Agendar uma conversa" />
+            <option value="Contratar palestra ou evento corporativo" />
+            <option value="Cursos e protocolos" />
+            <option value="Baixar material gratuito" />
+            <option value="Ver portfólio completo" />
+            <option value="Projetos recentes" />
+            <option value="Agendar visita técnica" />
+            <option value="Tabela de preços" />
+            <option value="Catálogo completo" />
+            <option value="Cardápio" />
+            <option value="Como chegar" />
+            <option value="Instagram" />
+            <option value="YouTube" />
+            <option value="TikTok" />
+            <option value="Pinterest" />
+          </datalist>
           <input
             name="url"
             required
@@ -243,11 +268,19 @@ export default async function Dashboard({
             aria-label="URL da foto"
             className="field"
           />
+          <input
+            name="cover_url"
+            defaultValue={profile.cover_url ?? ""}
+            placeholder="URL da imagem de capa (opcional)"
+            aria-label="URL da imagem de capa"
+            className="field"
+          />
           <div className="inline-row">
             <select name="theme" defaultValue={profile.theme} aria-label="Tema" className="field">
               <option value="light">Claro</option>
               <option value="dark">Escuro</option>
               <option value="sunset">Pôr do sol</option>
+              <option value="sand">Areia (bege, serifa)</option>
             </select>
             <input type="color" name="accent" defaultValue={profile.accent} className="field-color" aria-label="Cor de destaque" />
           </div>
