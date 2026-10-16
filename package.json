@@ -9,7 +9,9 @@
     "lint": "eslint",
     "db:up": "docker compose up -d --wait db",
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
-    "db:seed": "node --env-file=.env.local scripts/seed.mjs"
+    "db:seed": "node --env-file=.env.local scripts/seed.mjs",
+    "test": "vitest run",
+    "test:db": "TEST_DATABASE_URL=postgresql://linkbio:linkbio@localhost:5435/linkbio vitest run"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -29,6 +31,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

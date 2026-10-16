@@ -51,6 +51,11 @@ export default async function Login({
           {error && <p className="notice notice-error">{error}</p>}
           <button className="btn btn-primary">{signup ? "Criar conta" : "Entrar"}</button>
         </form>
+        {!signup && (
+          <p className="auth-switch">
+            <Link href="/login/recuperar">Esqueci minha senha</Link>
+          </p>
+        )}
         <p className="auth-switch">
           {signup ? "Já tem conta? " : "Ainda não tem conta? "}
           <Link href={signup ? "/login" : "/login?modo=cadastro"}>{signup ? "Entrar" : "Criar conta"}</Link>
