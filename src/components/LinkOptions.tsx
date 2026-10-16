@@ -23,10 +23,18 @@ type Props = {
   onChange?: (change: { layout?: LinkLayout; size?: LinkSize }) => void;
   /** Prefixo do name dos rádios, para vários links na mesma tela sem formulário próprio. */
   namePrefix?: string;
+  /** Destaque e Bloco liberados (plano Pro). Sem eles, aparecem travados com a etiqueta Pro. */
+  proLayouts?: boolean;
 };
 
 /** Formato e tamanho de um link. */
-export default function LinkOptions({ layout = "button", size = "md", onChange, namePrefix = "" }: Props) {
+export default function LinkOptions({
+  layout = "button",
+  size = "md",
+  onChange,
+  namePrefix = "",
+  proLayouts = true,
+}: Props) {
   const radio = (field: "layout" | "size", value: string, current: string) =>
     onChange
       ? {
@@ -42,15 +50,27 @@ export default function LinkOptions({ layout = "button", size = "md", onChange, 
       <div>
         <span className="field-label">Formato</span>
         <div className="segmented segmented-sm" role="radiogroup" aria-label="Formato">
-          {LINK_LAYOUTS.map((l) => (
-            <label key={l.value} title={l.hint}>
-              <input type="radio" {...radio("layout", l.value, layout)} />
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                {LAYOUT_ICONS[l.value]}
-              </svg>
-              {l.label}
-            </label>
-          ))}
+          {LINK_LAYOUTS.map((l) => {
+            const locked = !proLayouts && l.value !== "button";
+            return (
+              <label
+                key={l.value}
+                title={locked ? `${l.hint} (plano Pro)` : l.hint}
+                className={locked ? "locked" : undefined}
+              >
+                <input
+                  type="radio"
+                  {...radio("layout", l.value, proLayouts ? layout : "button")}
+                  disabled={locked}
+                />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  {LAYOUT_ICONS[l.value]}
+                </svg>
+                {l.label}
+                {locked && <span className="pro-tag">Pro</span>}
+              </label>
+            );
+          })}
         </div>
       </div>
       <div>

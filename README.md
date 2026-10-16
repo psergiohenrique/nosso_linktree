@@ -22,15 +22,19 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 
 ## Testes
 - `npm test` — testes de unidade (Vitest), sem banco.
-- `npm run test:db` — inclui os testes de limite de tentativas e recuperação de senha no Postgres local do Docker (precisa de `db:up` e `db:migrate`).
+- `npm run test:db` — inclui os testes de limite de tentativas, recuperação de senha e cobrança (webhook do Asaas simulado) no Postgres local do Docker (precisa de `db:up` e `db:migrate` com o `DATABASE_URL` do Docker).
+
+## Planos e cobrança
+Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 19/mês ou R$ 180/ano) via Asaas. Ligada por `BILLING_ENABLED=true` (desligada, todos têm o Pro). Como funciona e como ligar em produção: [docs/ESTADO-ATUAL.md](docs/ESTADO-ATUAL.md#11-planos-e-cobrança-paywall).
 
 ## Estrutura
 - `src/app/[slug]` — página pública (cache de 60 s, atualizada ao salvar no painel)
 - `src/app/go/[id]` — redireciona o link e registra o clique
 - `src/app/api/view` — registra a visualização
 - `src/app/media/[id]` — serve as imagens enviadas (guardadas no Postgres)
-- `src/app/dashboard` — painel: Links, Aparência (prévia ao vivo) e Resultados
-- `src/server/` — banco, autenticação, upload, analytics
+- `src/app/dashboard` — painel: Links, Aparência (prévia ao vivo), Resultados e Plano
+- `src/app/api/asaas/webhook` e `src/app/api/cron/billing` — webhook do Asaas e cron diário da cobrança
+- `src/server/` — banco, autenticação, upload, analytics, cobrança (Asaas)
 - `db/migrations` — SQL aplicado por `scripts/migrate.mjs`
 
 ## Trocar para um banco real
@@ -40,4 +44,4 @@ Qualquer PostgreSQL 14+ serve (Neon, Supabase, RDS…): aponte `DATABASE_URL` pa
 Não guarda IP nem cookies de rastreio. Cada visitante vira um hash diário (IP + navegador + perfil + dia + segredo), usado só para contar únicos e descartar repetições. Guarda origem (Instagram, Google…) e tipo de dispositivo.
 
 ## Próximos passos
-Ícones de redes sociais, arrastar para reordenar, QR code; depois leads → robô de leads, Pix, assinatura, domínio próprio, painel de agência.
+Ligar a cobrança em produção (chave de produção do Asaas); ícones de redes sociais, arrastar para reordenar, QR code; depois leads → robô de leads, Pix, domínio próprio, painel de agência.

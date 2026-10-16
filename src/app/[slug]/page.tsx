@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import PageView, { toPageViewProps } from "@/components/PageView";
 import ViewTracker from "@/components/ViewTracker";
 import { mediaUrl } from "@/lib/types";
+import { getPlan } from "@/server/billing";
 import { getPublicPage } from "@/server/profiles";
 
 // Página pública em cache; o painel chama revalidatePath ao salvar.
@@ -28,10 +29,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function PublicPage({ params }: { params: Promise<{ slug: string }> }) {
   const data = await getPublicPage((await params).slug);
   if (!data) notFound();
+  const plan = await getPlan(data.profile.id);
 
   return (
     <>
-      <PageView {...toPageViewProps(data.profile, data.links)} />
+      <PageView {...toPageViewProps(data.profile, data.links, plan.pro)} />
       <ViewTracker profileId={data.profile.id} />
     </>
   );

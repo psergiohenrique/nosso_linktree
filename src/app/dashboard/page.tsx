@@ -1,10 +1,13 @@
+import Link from "next/link";
 import LinkOptions from "@/components/LinkOptions";
 import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
 import PhonePreview from "@/components/PhonePreview";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
+import { FREE_LINK_LIMIT } from "@/lib/billing";
 import { requireUser } from "@/server/auth";
+import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
 import { addLink, createProfile, deleteLink, moveLink, updateLink } from "./actions";
 
@@ -64,7 +67,9 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
   }
 
   const links = await getLinksByProfile(profile.id);
-  const preview = toPageViewProps(profile, links.filter((l) => l.is_active));
+  const plan = await getPlan(user.id);
+  const preview = toPageViewProps(profile, links.filter((l) => l.is_active), plan.pro);
+  const atLimit = !plan.pro && links.length >= FREE_LINK_LIMIT;
 
   return (
     <div className="dash-grid">
@@ -75,32 +80,63 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
         </div>
         {error}
 
+        {!plan.pro && (
+          <div className="upsell">
+            <p>
+              <strong>
+                Plano Grátis: {Math.min(links.length, FREE_LINK_LIMIT)} de {FREE_LINK_LIMIT} links.
+              </strong>{" "}
+              {links.length > FREE_LINK_LIMIT
+                ? `Só os ${FREE_LINK_LIMIT} primeiros ativos aparecem na sua página. `
+                : ""}
+              No Pro: links ilimitados, Destaque e Bloco, e sem o selo.
+            </p>
+            <Link href="/dashboard/plano" className="btn btn-primary btn-sm">
+              Conhecer o Pro
+            </Link>
+          </div>
+        )}
+
         <form action={addLink} className="card card-new">
           <h2 className="card-title">Novo link</h2>
-          <select name="kind" className="field" defaultValue="link" aria-label="Tipo">
-            <option value="link">Link comum</option>
-            <option value="whatsapp">WhatsApp</option>
-          </select>
-          <input name="title" required placeholder="Título (ex.: Agendar horário)" aria-label="Título" className="field" />
-          <input
-            name="url"
-            required
-            placeholder="URL, ou número de WhatsApp com DDD"
-            aria-label="URL ou WhatsApp"
-            className="field"
-          />
-          <input
-            name="message"
-            placeholder="Mensagem inicial (só para WhatsApp)"
-            aria-label="Mensagem inicial"
-            className="field"
-          />
-          <LinkOptions />
-          <label className="file-field">
-            <span className="field-label">Imagem (opcional; recomendada para Destaque e Bloco)</span>
-            <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif" />
-          </label>
-          <button className="btn btn-primary">Adicionar</button>
+          <fieldset disabled={atLimit} className="card-fieldset">
+            <select name="kind" className="field" defaultValue="link" aria-label="Tipo">
+              <option value="link">Link comum</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+            <input
+              name="title"
+              required
+              placeholder="Título (ex.: Agendar horário)"
+              aria-label="Título"
+              className="field"
+            />
+            <input
+              name="url"
+              required
+              placeholder="URL, ou número de WhatsApp com DDD"
+              aria-label="URL ou WhatsApp"
+              className="field"
+            />
+            <input
+              name="message"
+              placeholder="Mensagem inicial (só para WhatsApp)"
+              aria-label="Mensagem inicial"
+              className="field"
+            />
+            <LinkOptions proLayouts={plan.pro} />
+            <label className="file-field">
+              <span className="field-label">Imagem (opcional; recomendada para Destaque e Bloco)</span>
+              <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif" />
+            </label>
+            <button className="btn btn-primary">Adicionar</button>
+          </fieldset>
+          {atLimit && (
+            <p className="hint">
+              Você chegou ao limite do plano Grátis. <Link href="/dashboard/plano">Assine o Pro</Link> para adicionar
+              mais links.
+            </p>
+          )}
         </form>
 
         {links.length === 0 && <p className="dash-empty">Nenhum link ainda. Adicione o primeiro acima.</p>}
@@ -140,7 +176,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                     className="field"
                   />
                 )}
-                <LinkOptions layout={link.layout} size={link.size} />
+                <LinkOptions layout={link.layout} size={link.size} proLayouts={plan.pro} />
                 <div className="card-row">
                   <label className="file-field file-field-inline">
                     <span>{link.thumbnail_id ? "Trocar imagem" : "Adicionar imagem"}</span>

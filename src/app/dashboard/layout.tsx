@@ -3,6 +3,7 @@ import Link from "next/link";
 import DashTabs from "@/components/DashTabs";
 import Logo from "@/components/Logo";
 import { requireUser } from "@/server/auth";
+import { billingEnabled } from "@/server/billing";
 import { getProfileByUser } from "@/server/profiles";
 import { signOut } from "../login/actions";
 
@@ -22,7 +23,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="dash">
       <header className="dash-top">
         <Logo />
-        <DashTabs />
+        <DashTabs showPlan={billingEnabled()} />
         <div className="dash-top-actions">
           <Link href={`/${profile.slug}`} target="_blank" className="btn btn-outline btn-sm">
             /{profile.slug} ↗

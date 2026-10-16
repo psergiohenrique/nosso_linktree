@@ -2,15 +2,17 @@
 
 Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
 
-**Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. **Publicado em https://bio.codepath.dev.br** (2026-10-16). Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas e recuperação de senha.
+**Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. **Publicado em https://bio.codepath.dev.br** (2026-10-16). Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas, recuperação de senha e cobrança. Plano Grátis + Pro com cobrança pelo Asaas pronta (desligada em produção).
 
 **Marca e endereço:** produto da CodePath — "Linkbio by CodePath" no logo, rodapé, SEO/JSON-LD (`Organization` CodePath como publisher) e imagem de compartilhamento. Endereço de produção: `https://bio.codepath.dev.br` (via `NEXT_PUBLIC_SITE_URL`; o prefixo do endereço no painel sai dessa variável).
 
-**Banco de produção:** Postgres no Neon, com as migrações 0001–0003 aplicadas (sem seed).
+**Banco de produção:** Postgres no Neon, com as migrações 0001–0004 aplicadas (sem seed).
 
-**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
+**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `BILLING_ENABLED` (hoje `false`), `ASAAS_API_URL` (hoje sandbox), `ASAAS_API_KEY` (hoje a de sandbox), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
 
 **E-mail:** Resend, na mesma conta usada pelo Ambiento (chave compartilhada com o `ambiento-backend`), onde `codepath.dev.br` já está verificado (região sa-east-1). Remetente: `Linkbio by CodePath <nao-responda@codepath.dev.br>`. Envio de recuperação de senha testado em produção.
+
+**Cobrança (paywall):** pronta e testada de ponta a ponta em produção contra o sandbox do Asaas, mas **desligada** (`BILLING_ENABLED=false`) até existir a chave de produção do Asaas. Desligada, todo mundo tem o Pro. Ver seção 11.
 
 ---
 
@@ -25,7 +27,7 @@ Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rod
 
 ## 2. Site de marketing (`/`)
 
-- Landing com seções: Nav, Hero, StatsBar, Recursos, Como funciona, CTA e Footer.
+- Landing com seções: Nav, Hero, StatsBar, Recursos, Como funciona, Planos (só com a cobrança ligada), CTA e Footer.
 - Animação de entrada ao rolar (`RevealWrapper`).
 - SEO: metadata global, JSON-LD (`SoftwareApplication` + `WebSite`), `sitemap.ts`, `robots.ts`, imagem Open Graph gerada (`opengraph-image.tsx`) e ícone.
 
@@ -40,7 +42,7 @@ Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rod
 
 ## 4. Painel (`/dashboard`)
 
-Abas: **Links**, **Aparência** e **Resultados**. Todas as alterações são Server Actions e revalidam a página pública.
+Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobrança ligada). Todas as alterações são Server Actions e revalidam a página pública.
 
 ### Página e links
 - Escolha do endereço (slug): 3–30 caracteres `a-z0-9-`, único, com lista de slugs reservados (`login`, `dashboard`, `go`, `api`, `demo`, `admin`…).
@@ -89,6 +91,7 @@ Abas: **Links**, **Aparência** e **Resultados**. Todas as alterações são Ser
 - `0001_init.sql`: `users`, `sessions`, `media`, `profiles` (com colunas de aparência), `links` (com `thumbnail_id`) e `events`.
 - `0002_link_layout_size.sql`: `links.layout` e `links.size`.
 - `0003_auth_security.sql`: `auth_attempts` e `password_resets`.
+- `0004_billing.sql`: `subscriptions`, `invoices` e `billing_events`.
 
 ## 10. Documentação
 
@@ -97,13 +100,41 @@ Abas: **Links**, **Aparência** e **Resultados**. Todas as alterações são Ser
 - [PERSONALIZACAO-POR-CLIENTE.md](PERSONALIZACAO-POR-CLIENTE.md) e [exemplos/](exemplos/) (barbearia, arquiteta) — personalização por cliente e módulos opcionais.
 - `CLAUDE.md` / `AGENTS.md` — arquitetura e convenções para agentes de código.
 
+## 11. Planos e cobrança (paywall)
+
+Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estado), adaptado para Grátis + Pro.
+
+| | Grátis | Pro |
+|---|---|---|
+| Preço | R$ 0 | R$ 19/mês ou R$ 180/ano (cartão, renovação automática) |
+| Links | até 5 (a página mostra os 5 primeiros ativos) | ilimitados |
+| Formatos Destaque e Bloco | não (aparecem como botão) | sim |
+| Resultados | 7 dias | 7, 30 e 90 dias |
+| Selo “Feito com Linkbio” | sim | não |
+
+- **Checkout:** `/dashboard/plano` → “Assinar mensal/anual” abre o checkout do Asaas (cartão recorrente, `externalReference = linkbio:<userId>`). Na volta, a tela recarrega sozinha até o webhook confirmar.
+- **Webhook:** `POST /api/asaas/webhook`, autenticado pelo cabeçalho `asaas-access-token` (`ASAAS_WEBHOOK_TOKEN`). Cada evento entra em `billing_events` (id único = entrega repetida ignorada) e é processado na hora; falhas são tentadas de novo (1 min, 5 min, 30 min, 2 h, 6 h) nas próximas entregas e no cron. Eventos de outros produtos na mesma conta Asaas (referência sem `linkbio:`) são ignorados.
+- **Estados:** ativo até o fim do período pago (+3 dias de folga para a renovação); cobrança recusada → 7 dias de carência ainda no Pro; cancelado → Pro até o fim do período; depois, volta ao Grátis sem apagar nada. Calculados na leitura.
+- **Trocar de ciclo ou de cartão / reativar:** novo checkout; a primeira cobrança só acontece quando o período pago acaba, e a assinatura antiga é encerrada no Asaas quando a nova nasce (nunca cobra duas vezes).
+- **Cortesia:** `subscriptions.courtesy_until` dá Pro grátis até uma data (ex.: pacote com site), definido por SQL.
+- **E-mails:** pagamento confirmado e cobrança recusada (com prazo da carência).
+- **Cron diário** (`vercel.json`, 06h de Brasília): reprocessa eventos pendentes e encerra carências vencidas (cancela no Asaas).
+- **Testado em produção (sandbox), 2026-10-16:** limite de 5 links, página com selo, checkout aberto no Asaas, eventos reais (`PAYMENT_CONFIRMED` antes de `SUBSCRIPTION_CREATED`) ativando o Pro, 6º link e Destaque liberados, 90 dias de resultados, selo removido, cancelamento pelo painel refletido no Asaas (`SUBSCRIPTION_DELETED`). O preenchimento do checkout em si não pôde ser automatizado (reCAPTCHA); a assinatura foi criada pela API com os mesmos dados.
+
+**Para ligar em produção:**
+1. Chave de produção do Asaas (painel do Asaas → Integrações → Chave de API) em `ASAAS_API_KEY`, e `ASAAS_API_URL=https://api.asaas.com/v3`.
+2. Cadastrar o webhook no Asaas de produção: URL `https://bio.codepath.dev.br/api/asaas/webhook`, token = `ASAAS_WEBHOOK_TOKEN`, eventos `CHECKOUT_PAID`, `SUBSCRIPTION_CREATED/DELETED/INACTIVATED` e `PAYMENT_CREATED/CONFIRMED/RECEIVED/CREDIT_CARD_CAPTURE_REFUSED/OVERDUE/REFUNDED/DELETED`.
+3. `BILLING_ENABLED=true` na Vercel e novo deploy.
+
 ---
 
 ## Ainda não feito
 
+- **Ligar a cobrança em produção** (falta a chave de produção do Asaas; ver seção 11).
+- Plano Business (domínio próprio, leads → robô, Pix) e Agência.
 - **Chave própria do Resend** para o Linkbio (hoje usa a do Ambiento; revogar uma afeta os dois produtos).
 - Banco separado para os previews (ex.: branch do Neon), se for usar deploys de preview.
 - Testes de ponta a ponta (navegador) e de componentes.
 - Ícones de redes sociais, arrastar para reordenar, QR code.
 - Login por link mágico (o PRD cita, mas hoje é e-mail + senha).
-- V2+: captura de leads → robô de leads, Pix/vendas, assinatura, domínio próprio, remoção de marca, painel de agência/white-label, templates por nicho, blocos (vídeo, mapa, cardápio), agendamento de links.
+- V2+: captura de leads → robô de leads, Pix/vendas, domínio próprio, painel de agência/white-label, templates por nicho, blocos (vídeo, mapa, cardápio), agendamento de links.

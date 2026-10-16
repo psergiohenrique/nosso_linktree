@@ -9,11 +9,13 @@ const TABS = [
   { href: "/dashboard/resultados", label: "Resultados" },
 ];
 
-export default function DashTabs() {
+const PLAN_TAB = { href: "/dashboard/plano", label: "Plano" };
+
+export default function DashTabs({ showPlan = false }: { showPlan?: boolean }) {
   const pathname = usePathname();
   return (
     <nav className="dash-tabs" aria-label="Seções do painel">
-      {TABS.map((tab) => (
+      {(showPlan ? [...TABS, PLAN_TAB] : TABS).map((tab) => (
         <Link
           key={tab.href}
           href={tab.href}

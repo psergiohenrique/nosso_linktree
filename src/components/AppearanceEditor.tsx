@@ -9,6 +9,7 @@ import PhonePreview from "./PhonePreview";
 type Props = {
   profile: PageViewProfile;
   links: PageViewLink[];
+  branding?: boolean;
   action: (formData: FormData) => Promise<void>;
 };
 
@@ -21,7 +22,7 @@ function SaveButton() {
   );
 }
 
-export default function AppearanceEditor({ profile, links, action }: Props) {
+export default function AppearanceEditor({ profile, links, branding = true, action }: Props) {
   const [state, setState] = useState<PageViewProfile>(profile);
   const [localAvatar, setLocalAvatar] = useState<string | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
@@ -62,7 +63,7 @@ export default function AppearanceEditor({ profile, links, action }: Props) {
         </div>
       </form>
 
-      <PhonePreview profile={{ ...state, avatar_url: avatarUrl }} links={links} />
+      <PhonePreview profile={{ ...state, avatar_url: avatarUrl }} links={links} branding={branding} />
     </div>
   );
 }

@@ -127,7 +127,7 @@ Captura de lead → robô de leads (webhook/API) · Pix e vendas · assinatura e
 
 ## 5. Decisões em aberto
 - Nome e domínio próprios no futuro (por ora: Linkbio by CodePath em bio.codepath.dev.br).
-- Gateway de cobrança (Asaas, Pagar.me ou Stripe).
+- Gateway de cobrança: decidido Asaas (mesma conta do Ambiento); Grátis + Pro implementados, falta ligar em produção.
 - Integração com o robô de leads: webhook simples ou API compartilhada.
 - Hospedagem: Vercel + Postgres gerenciado (Neon, Supabase…) ou VPS própria.
 - Validar preços e proposta com cerca de 10 clientes da base atual.

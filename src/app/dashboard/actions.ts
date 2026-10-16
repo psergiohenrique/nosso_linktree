@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth";
+import { BillingError, cancelPlan, getPlan, startCheckout } from "@/server/billing";
 import { pool, query, queryOne } from "@/server/db";
 import { deleteMedia, saveImage } from "@/server/media";
 import { getProfileByUser } from "@/server/profiles";
+import { FREE_LINK_LIMIT } from "@/lib/billing";
 import { BUTTON_STYLES, FONTS, LINK_LAYOUTS, LINK_SIZES, THEME_PRESETS } from "@/lib/types";
 import { oneOf, safeUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
 
@@ -80,7 +82,7 @@ export async function updateAppearance(formData: FormData) {
   redirect(`${back}?ok=1`);
 }
 
-function readLink(formData: FormData) {
+function readLink(formData: FormData, pro: boolean) {
   const kind = formData.get("kind") === "whatsapp" ? "whatsapp" : "link";
   const title = String(formData.get("title") ?? "").trim().slice(0, 80);
   if (!title) fail("Dê um título ao link.");
@@ -90,7 +92,9 @@ function readLink(formData: FormData) {
     kind === "whatsapp" ? whatsappUrl(rawTarget, String(formData.get("message") ?? "")) : safeUrl(rawTarget);
   if (!url) fail(kind === "whatsapp" ? "Número de WhatsApp inválido." : "URL inválida.");
 
-  const layout = oneOf(formData.get("layout"), LINK_LAYOUTS.map((l) => l.value), "button");
+  // Destaque e Bloco são do Pro. No Grátis, null: link novo vira botão e o editado mantém o que tinha
+  // (a página mostra como botão enquanto estiver no Grátis; volta sozinho se assinar de novo).
+  const layout = pro ? oneOf(formData.get("layout"), LINK_LAYOUTS.map((l) => l.value), "button") : null;
   const size = oneOf(formData.get("size"), LINK_SIZES.map((s) => s.value), "md");
 
   return { kind, title, url, layout, size } as const;
@@ -98,14 +102,21 @@ function readLink(formData: FormData) {
 
 export async function addLink(formData: FormData) {
   const { user, profile } = await requireProfile();
-  const link = readLink(formData);
+  const plan = await getPlan(user.id);
+  if (!plan.pro) {
+    const count = await queryOne<{ n: string }>("select count(*) as n from links where profile_id = $1", [user.id]);
+    if (Number(count?.n ?? 0) >= FREE_LINK_LIMIT) {
+      fail(`No plano Grátis são até ${FREE_LINK_LIMIT} links. Assine o Pro para ter links ilimitados.`);
+    }
+  }
+  const link = readLink(formData, plan.pro);
   const upload = await saveImage(user.id, formData.get("thumbnail"));
   if (upload && "error" in upload) fail(upload.error);
 
   await query(
     `insert into links (profile_id, kind, title, url, thumbnail_id, layout, size, position)
      values ($1, $2, $3, $4, $5, $6, $7, coalesce((select max(position) + 1 from links where profile_id = $1), 0))`,
-    [user.id, link.kind, link.title, link.url, upload?.id ?? null, link.layout, link.size],
+    [user.id, link.kind, link.title, link.url, upload?.id ?? null, link.layout ?? "button", link.size],
   );
   refreshPublicPage(profile.slug);
 }
@@ -113,13 +124,13 @@ export async function addLink(formData: FormData) {
 export async function updateLink(formData: FormData) {
   const { user, profile } = await requireProfile();
   const id = String(formData.get("id"));
-  const current = await queryOne<{ thumbnail_id: string | null }>(
-    "select thumbnail_id from links where id = $1 and profile_id = $2",
+  const current = await queryOne<{ thumbnail_id: string | null; layout: string }>(
+    "select thumbnail_id, layout from links where id = $1 and profile_id = $2",
     [id, user.id],
   );
   if (!current) fail("Link não encontrado.");
 
-  const link = readLink(formData);
+  const link = readLink(formData, (await getPlan(user.id)).pro);
   const upload = await saveImage(user.id, formData.get("thumbnail"));
   if (upload && "error" in upload) fail(upload.error);
   const thumbnailId = upload ? upload.id : formData.get("remove_thumbnail") === "on" ? null : current.thumbnail_id;
@@ -127,7 +138,7 @@ export async function updateLink(formData: FormData) {
   await query(
     `update links set kind = $3, title = $4, url = $5, thumbnail_id = $6, is_active = $7, layout = $8, size = $9
      where id = $1 and profile_id = $2`,
-    [id, user.id, link.kind, link.title, link.url, thumbnailId, formData.get("is_active") === "on", link.layout, link.size],
+    [id, user.id, link.kind, link.title, link.url, thumbnailId, formData.get("is_active") === "on", link.layout ?? current.layout, link.size],
   );
   if (thumbnailId !== current.thumbnail_id) await deleteMedia(user.id, current.thumbnail_id);
   refreshPublicPage(profile.slug);
@@ -168,4 +179,31 @@ export async function moveLink(formData: FormData) {
     client.release();
   }
   refreshPublicPage(profile.slug);
+}
+
+// ───────── Plano (cobrança) ─────────
+
+/** Abre o checkout do Asaas (assinar, reativar, trocar de ciclo ou de cartão). */
+export async function subscribePro(formData: FormData) {
+  const user = await requireUser();
+  const cycle = formData.get("cycle") === "yearly" ? "yearly" : "monthly";
+  let url: string;
+  try {
+    url = await startCheckout(user.id, cycle);
+  } catch (err) {
+    if (err instanceof BillingError) fail(err.message, "/dashboard/plano");
+    throw err;
+  }
+  redirect(url);
+}
+
+export async function cancelPro() {
+  const user = await requireUser();
+  try {
+    await cancelPlan(user.id);
+  } catch (err) {
+    if (err instanceof BillingError) fail(err.message, "/dashboard/plano");
+    throw err;
+  }
+  redirect("/dashboard/plano?cancelado=1");
 }

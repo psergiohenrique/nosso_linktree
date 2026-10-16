@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import AppearanceEditor from "@/components/AppearanceEditor";
 import { toPageViewProps } from "@/components/PageView";
 import { requireUser } from "@/server/auth";
+import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
 import { updateAppearance } from "../actions";
 
@@ -19,14 +20,25 @@ export default async function AparenciaPage({
   if (!profile) redirect("/dashboard");
 
   const links = await getLinksByProfile(profile.id);
-  const { profile: viewProfile, links: viewLinks } = toPageViewProps(profile, links.filter((l) => l.is_active));
+  const plan = await getPlan(user.id);
+  const {
+    profile: viewProfile,
+    links: viewLinks,
+    branding,
+  } = toPageViewProps(profile, links.filter((l) => l.is_active), plan.pro);
 
   return (
     <>
       {error && <p className="notice notice-error dash-notice">{error}</p>}
       {ok && <p className="notice notice-ok dash-notice">Aparência salva.</p>}
       {/* key: remonta o editor com os dados salvos depois de cada envio */}
-      <AppearanceEditor key={JSON.stringify(viewProfile)} profile={viewProfile} links={viewLinks} action={updateAppearance} />
+      <AppearanceEditor
+        key={JSON.stringify(viewProfile)}
+        profile={viewProfile}
+        links={viewLinks}
+        branding={branding}
+        action={updateAppearance}
+      />
     </>
   );
 }

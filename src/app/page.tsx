@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import StatsBar from "@/components/StatsBar";
 import Recursos from "@/components/Recursos";
 import ComoFunciona from "@/components/ComoFunciona";
+import Planos from "@/components/Planos";
 import Cta from "@/components/Cta";
 import Footer from "@/components/Footer";
 
@@ -22,6 +23,7 @@ export default function Home() {
         <StatsBar />
         <Recursos />
         <ComoFunciona />
+        <Planos />
         <Cta />
       </main>
       <Footer />

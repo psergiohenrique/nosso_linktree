@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { applyPlanToLinks } from "@/lib/billing";
 import { mediaUrl, type Appearance, type LinkItem, type Profile } from "@/lib/types";
 
 export type PageViewProfile = Appearance & Pick<Profile, "slug" | "display_name" | "bio"> & { avatar_url: string | null };
@@ -15,6 +16,8 @@ type Props = {
   tracked?: boolean;
   /** Prévia do painel: renderiza dentro do celular, sem altura de tela cheia. */
   preview?: boolean;
+  /** Selo "Feito com Linkbio" (o plano Pro tira). */
+  branding?: boolean;
 };
 
 export function pageViewStyle(a: Appearance): CSSProperties {
@@ -83,7 +86,7 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
   );
 }
 
-export default function PageView({ profile, links, tracked = true, preview = false }: Props) {
+export default function PageView({ profile, links, tracked = true, preview = false, branding = true }: Props) {
   const name = profile.display_name || `@${profile.slug}`;
   const initial = name.replace("@", "").charAt(0).toUpperCase();
 
@@ -118,7 +121,7 @@ export default function PageView({ profile, links, tracked = true, preview = fal
           )}
         </nav>
 
-        {preview ? (
+        {!branding ? null : preview ? (
           <span className="bio-foot">Feito com Linkbio</span>
         ) : (
           <Link href="/" className="bio-foot">
@@ -130,10 +133,17 @@ export default function PageView({ profile, links, tracked = true, preview = fal
   );
 }
 
-/** Converte perfil e links do banco nas props da página (ids de mídia viram URLs). */
-export function toPageViewProps(profile: Profile, links: LinkItem[]) {
+/**
+ * Converte perfil e links do banco nas props da página (ids de mídia viram URLs) e aplica o plano:
+ * no Grátis, só os primeiros links, todos como botão, e com o selo.
+ */
+export function toPageViewProps(profile: Profile, links: LinkItem[], pro = true) {
   return {
     profile: { ...profile, avatar_url: profile.avatar_id ? mediaUrl(profile.avatar_id) : null },
-    links: links.map((l) => ({ ...l, thumbnail_url: l.thumbnail_id ? mediaUrl(l.thumbnail_id) : null })),
+    links: applyPlanToLinks(links, pro).map((l) => ({
+      ...l,
+      thumbnail_url: l.thumbnail_id ? mediaUrl(l.thumbnail_id) : null,
+    })),
+    branding: !pro,
   };
 }

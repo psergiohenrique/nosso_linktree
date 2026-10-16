@@ -43,7 +43,7 @@ Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIE
 **Fora do MVP (V2+):**
 - Captura de lead com envio ao robô de leads (webhook/API).
 - Pix e cobrança de serviços; vendas.
-- Domínio próprio, remoção de marca, assinatura (Stripe/Pagar.me/Asaas).
+- Domínio próprio (plano Business).
 - Painel de agência multi-cliente, white-label.
 - Templates por nicho e montagem por IA (Instagram / Google Meu Negócio).
 - Login por link mágico (sem senha).
@@ -68,16 +68,18 @@ Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIE
 - Performance: página pública com cache (ISR 60 s), zero JS pesado.
 - Acessibilidade: contraste AA, navegação por teclado.
 
-## 7. Monetização (hipótese, validar)
+## 7. Monetização
+
+Grátis e Pro implementados (cobrança pelo Asaas, cartão recorrente; detalhes em [ESTADO-ATUAL.md](ESTADO-ATUAL.md#11-planos-e-cobrança-paywall)). Business e Agência seguem como hipótese.
 
 | Plano | Preço | Destaques |
 |---|---|---|
-| Grátis | R$ 0 | Links ilimitados, marca, analytics 7 dias |
-| Pro | R$ 19/mês (R$ 15 anual) | Sem marca, analytics 90 dias, agendamento |
-| Business | R$ 49/mês (R$ 39 anual) | Domínio próprio, leads → robô, Pix, 3 páginas |
-| Agência | R$ 149–199/mês | 10–25 páginas, white-label |
+| Grátis | R$ 0 | Até 5 links, selo “Feito com Linkbio”, resultados de 7 dias |
+| Pro | R$ 19/mês ou R$ 180/ano (R$ 15/mês) | Links ilimitados, Destaque e Bloco, sem selo, resultados de 30 e 90 dias |
+| Business (hipótese) | R$ 49/mês (R$ 39 anual) | Domínio próprio, leads → robô, Pix, 3 páginas |
+| Agência (hipótese) | R$ 149–199/mês | 10–25 páginas, white-label |
 
-Bundle: Pro grátis por 12 meses para quem compra site; Business junto do robô de leads. Taxa 0% sobre vendas.
+Bundle: Pro grátis por 12 meses para quem compra site (já suportado por `courtesy_until`); Business junto do robô de leads. Taxa 0% sobre vendas.
 
 ## 8. Riscos
 
@@ -89,12 +91,12 @@ Bundle: Pro grátis por 12 meses para quem compra site; Business junto do robô 
 
 1. M0 — Validar proposta e preço com ~10 clientes da base de sites.
 2. M1 — MVP (este repositório): página pública + painel + analytics.
-3. M2 — Leads → robô, Pix, assinatura.
+3. M2 — Assinatura Pro (feito, falta ligar em produção); leads → robô, Pix.
 4. M3 — Agências / white-label.
 
 ## 10. Questões em aberto
 
 - Nome e domínio próprios no futuro (por ora: Linkbio by CodePath em bio.codepath.dev.br).
-- Gateway de cobrança (Asaas, Pagar.me, Stripe).
+- Gateway de cobrança: decidido Asaas (mesma conta do Ambiento).
 - Modelo de integração com o robô (webhook simples vs. API compartilhada).
 - Hospedagem (Vercel + Postgres gerenciado vs. VPS própria).

@@ -1737,6 +1737,173 @@ textarea.field {
 
 /* ───────── Responsive ───────── */
 
+/* ───────── Planos (landing e painel) ───────── */
+
+.planos {
+  padding: 120px 0;
+}
+.planos-head {
+  margin-bottom: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.planos-h2 {
+  font-size: 60px;
+}
+.planos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 420px));
+  gap: 20px;
+}
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.plan-card {
+  background: var(--white);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.plan-card .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.plan-card-current {
+  border: 2px solid var(--ink);
+}
+.plan-card-dark {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
+.plan-name {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.plan-price {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.plan-price span {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+.plan-card-dark .plan-price span,
+.plan-card-dark .plan-alt {
+  color: rgba(255, 255, 255, 0.7);
+}
+.plan-alt {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: -6px;
+}
+.plan-save {
+  font-family: var(--f-body);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--lime);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.plan-feats {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+.plan-feats li::before {
+  content: "✓";
+  font-weight: 800;
+  margin-right: 8px;
+  color: var(--whats);
+}
+.plan-card-dark .plan-feats li::before {
+  color: var(--lime);
+}
+.plan-current-tag {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.plan-status p {
+  font-size: 15px;
+}
+.plan-status-ok {
+  border-left: 4px solid var(--whats);
+}
+.plan-status-warn {
+  border-left: 4px solid var(--danger);
+}
+.plan-confirm {
+  border: 2px solid var(--danger);
+}
+.plan-note {
+  max-width: 720px;
+}
+.upsell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: color-mix(in srgb, var(--lime) 35%, var(--white));
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 14px;
+}
+.upsell .btn {
+  flex-shrink: 0;
+}
+.upsell-card {
+  border: 2px dashed var(--rule);
+}
+.pro-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--lime);
+  border-radius: 999px;
+  padding: 2px 6px;
+  margin-left: 6px;
+}
+.segmented label.locked {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.card-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card-fieldset:disabled {
+  opacity: 0.5;
+}
+
 @media (max-width: 900px) {
   .hero-grid {
     flex-direction: column;
@@ -1759,6 +1926,17 @@ textarea.field {
   }
   .feat-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  .plan-grid,
+  .planos-grid {
+    grid-template-columns: 1fr;
+  }
+  .planos-h2 {
+    font-size: 44px;
+  }
+  .upsell {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .steps {
     grid-template-columns: 1fr;
