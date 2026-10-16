@@ -1,6 +1,6 @@
 # Linkbio by CodePath — O que já está feito
 
-Retrato do projeto em 2026-10-16 (último commit: `412cf9c Playground de personalização no /demo`). Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
+Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
 
 **Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. **Publicado em https://bio.codepath.dev.br** (2026-10-16). Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas e recuperação de senha.
 
@@ -8,7 +8,9 @@ Retrato do projeto em 2026-10-16 (último commit: `412cf9c Playground de persona
 
 **Banco de produção:** Postgres no Neon, com as migrações 0001–0003 aplicadas (sem seed).
 
-**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
+**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
+
+**E-mail:** Resend, na mesma conta usada pelo Ambiento (chave compartilhada com o `ambiento-backend`), onde `codepath.dev.br` já está verificado (região sa-east-1). Remetente: `Linkbio by CodePath <nao-responda@codepath.dev.br>`. Envio de recuperação de senha testado em produção.
 
 ---
 
@@ -99,7 +101,7 @@ Abas: **Links**, **Aparência** e **Resultados**. Todas as alterações são Ser
 
 ## Ainda não feito
 
-- **E-mail em produção:** a recuperação de senha só envia e-mail depois de configurar o Resend (domínio codepath.dev.br verificado + `RESEND_API_KEY`/`MAIL_FROM` na Vercel). Até lá, o pedido é aceito mas o e-mail não sai (fica um erro no log).
+- **Chave própria do Resend** para o Linkbio (hoje usa a do Ambiento; revogar uma afeta os dois produtos).
 - Banco separado para os previews (ex.: branch do Neon), se for usar deploys de preview.
 - Testes de ponta a ponta (navegador) e de componentes.
 - Ícones de redes sociais, arrastar para reordenar, QR code.
