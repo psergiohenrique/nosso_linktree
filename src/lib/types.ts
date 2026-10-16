@@ -21,6 +21,9 @@ export type Profile = Appearance & {
   avatar_id: string | null;
 };
 
+export type LinkLayout = "button" | "featured" | "tile";
+export type LinkSize = "sm" | "md" | "lg";
+
 export type LinkItem = {
   id: string;
   profile_id: string;
@@ -28,6 +31,8 @@ export type LinkItem = {
   title: string;
   url: string;
   thumbnail_id: string | null;
+  layout: LinkLayout;
+  size: LinkSize;
   position: number;
   is_active: boolean;
 };
@@ -38,6 +43,18 @@ export const BUTTON_STYLES: { value: ButtonStyle; label: string }[] = [
   { value: "square", label: "Reto" },
   { value: "outline", label: "Contorno" },
   { value: "shadow", label: "Sombra" },
+];
+
+export const LINK_LAYOUTS: { value: LinkLayout; label: string; hint: string }[] = [
+  { value: "button", label: "Botão", hint: "Botão com miniatura opcional ao lado do título" },
+  { value: "featured", label: "Destaque", hint: "Imagem grande em cima, título embaixo" },
+  { value: "tile", label: "Bloco", hint: "Quadrado com imagem; blocos seguidos ficam lado a lado" },
+];
+
+export const LINK_SIZES: { value: LinkSize; label: string }[] = [
+  { value: "sm", label: "Pequeno" },
+  { value: "md", label: "Médio" },
+  { value: "lg", label: "Grande" },
 ];
 
 export const FONTS: { value: FontKey; label: string }[] = [

@@ -6,7 +6,7 @@ import { requireUser } from "@/server/auth";
 import { pool, query, queryOne } from "@/server/db";
 import { deleteMedia, saveImage } from "@/server/media";
 import { getProfileByUser } from "@/server/profiles";
-import { BUTTON_STYLES, FONTS, THEME_PRESETS } from "@/lib/types";
+import { BUTTON_STYLES, FONTS, LINK_LAYOUTS, LINK_SIZES, THEME_PRESETS } from "@/lib/types";
 import { oneOf, safeUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
 
 function fail(message: string, path = "/dashboard"): never {
@@ -90,7 +90,10 @@ function readLink(formData: FormData) {
     kind === "whatsapp" ? whatsappUrl(rawTarget, String(formData.get("message") ?? "")) : safeUrl(rawTarget);
   if (!url) fail(kind === "whatsapp" ? "Número de WhatsApp inválido." : "URL inválida.");
 
-  return { kind, title, url } as const;
+  const layout = oneOf(formData.get("layout"), LINK_LAYOUTS.map((l) => l.value), "button");
+  const size = oneOf(formData.get("size"), LINK_SIZES.map((s) => s.value), "md");
+
+  return { kind, title, url, layout, size } as const;
 }
 
 export async function addLink(formData: FormData) {
@@ -100,9 +103,9 @@ export async function addLink(formData: FormData) {
   if (upload && "error" in upload) fail(upload.error);
 
   await query(
-    `insert into links (profile_id, kind, title, url, thumbnail_id, position)
-     values ($1, $2, $3, $4, $5, coalesce((select max(position) + 1 from links where profile_id = $1), 0))`,
-    [user.id, link.kind, link.title, link.url, upload?.id ?? null],
+    `insert into links (profile_id, kind, title, url, thumbnail_id, layout, size, position)
+     values ($1, $2, $3, $4, $5, $6, $7, coalesce((select max(position) + 1 from links where profile_id = $1), 0))`,
+    [user.id, link.kind, link.title, link.url, upload?.id ?? null, link.layout, link.size],
   );
   refreshPublicPage(profile.slug);
 }
@@ -122,9 +125,9 @@ export async function updateLink(formData: FormData) {
   const thumbnailId = upload ? upload.id : formData.get("remove_thumbnail") === "on" ? null : current.thumbnail_id;
 
   await query(
-    `update links set kind = $3, title = $4, url = $5, thumbnail_id = $6, is_active = $7
+    `update links set kind = $3, title = $4, url = $5, thumbnail_id = $6, is_active = $7, layout = $8, size = $9
      where id = $1 and profile_id = $2`,
-    [id, user.id, link.kind, link.title, link.url, thumbnailId, formData.get("is_active") === "on"],
+    [id, user.id, link.kind, link.title, link.url, thumbnailId, formData.get("is_active") === "on", link.layout, link.size],
   );
   if (thumbnailId !== current.thumbnail_id) await deleteMedia(user.id, current.thumbnail_id);
   refreshPublicPage(profile.slug);

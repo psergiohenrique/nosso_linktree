@@ -4,7 +4,9 @@ import { mediaUrl, type Appearance, type LinkItem, type Profile } from "@/lib/ty
 
 export type PageViewProfile = Appearance & Pick<Profile, "slug" | "display_name" | "bio"> & { avatar_url: string | null };
 
-export type PageViewLink = Pick<LinkItem, "id" | "title" | "url" | "kind"> & { thumbnail_url: string | null };
+export type PageViewLink = Pick<LinkItem, "id" | "title" | "url" | "kind" | "layout" | "size"> & {
+  thumbnail_url: string | null;
+};
 
 type Props = {
   profile: PageViewProfile;
@@ -22,6 +24,63 @@ export function pageViewStyle(a: Appearance): CSSProperties {
     "--btn-bg": a.button_color,
     "--btn-text": a.button_text_color,
   } as CSSProperties;
+}
+
+/** Blocos (tile) seguidos ficam juntos numa grade de 2 colunas. */
+function groupTiles(links: PageViewLink[]) {
+  const out: (PageViewLink | PageViewLink[])[] = [];
+  for (const link of links) {
+    const last = out[out.length - 1];
+    if (link.layout === "tile" && Array.isArray(last)) last.push(link);
+    else out.push(link.layout === "tile" ? [link] : link);
+  }
+  return out;
+}
+
+function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
+  const isWhats = link.kind === "whatsapp";
+  const img = link.thumbnail_url;
+  const title = isWhats && !img ? `💬 ${link.title}` : link.title;
+  const common = {
+    href: tracked ? `/go/${link.id}` : link.url,
+    target: "_blank",
+    rel: "noopener noreferrer nofollow",
+  };
+  const tone = isWhats ? "bio-link-whats" : "";
+
+  if (link.layout === "featured") {
+    return (
+      <a {...common} className={`bio-link bio-featured bio-size-${link.size} ${tone}`}>
+        {img && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} alt="" className="bio-featured-img" />
+        )}
+        <span className="bio-featured-title">{title}</span>
+      </a>
+    );
+  }
+
+  if (link.layout === "tile") {
+    return (
+      <a {...common} className={`bio-link bio-tile bio-size-${link.size} ${tone} ${img ? "has-img" : ""}`}>
+        {img && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} alt="" className="bio-tile-img" />
+        )}
+        <span className="bio-tile-title">{title}</span>
+      </a>
+    );
+  }
+
+  return (
+    <a {...common} className={`bio-link bio-size-${link.size} ${tone} ${img ? "has-thumb" : ""}`}>
+      {img && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={img} alt="" width={44} height={44} className="bio-thumb" />
+      )}
+      <span className="bio-link-title">{title}</span>
+    </a>
+  );
 }
 
 export default function PageView({ profile, links, tracked = true, preview = false }: Props) {
@@ -46,24 +105,17 @@ export default function PageView({ profile, links, tracked = true, preview = fal
         </header>
 
         <nav className="bio-links" aria-label="Links">
-          {links.map((link) => {
-            const isWhats = link.kind === "whatsapp";
-            return (
-              <a
-                key={link.id}
-                href={tracked ? `/go/${link.id}` : link.url}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className={`bio-link ${isWhats ? "bio-link-whats" : ""} ${link.thumbnail_url ? "has-thumb" : ""}`}
-              >
-                {link.thumbnail_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={link.thumbnail_url} alt="" width={44} height={44} className="bio-thumb" />
-                )}
-                <span className="bio-link-title">{isWhats && !link.thumbnail_url ? `💬 ${link.title}` : link.title}</span>
-              </a>
-            );
-          })}
+          {groupTiles(links).map((group) =>
+            Array.isArray(group) ? (
+              <div key={group[0].id} className="bio-tiles">
+                {group.map((link) => (
+                  <BioLink key={link.id} link={link} tracked={tracked} />
+                ))}
+              </div>
+            ) : (
+              <BioLink key={group.id} link={group} tracked={tracked} />
+            ),
+          )}
         </nav>
 
         {preview ? (

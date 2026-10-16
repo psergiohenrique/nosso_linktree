@@ -1,3 +1,4 @@
+import LinkOptions from "@/components/LinkOptions";
 import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
 import PhonePreview from "@/components/PhonePreview";
@@ -93,8 +94,9 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
             aria-label="Mensagem inicial"
             className="field"
           />
+          <LinkOptions />
           <label className="file-field">
-            <span className="field-label">Imagem do link (opcional)</span>
+            <span className="field-label">Imagem (opcional; recomendada para Destaque e Bloco)</span>
             <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif" />
           </label>
           <button className="btn btn-primary">Adicionar</button>
@@ -137,6 +139,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                     className="field"
                   />
                 )}
+                <LinkOptions layout={link.layout} size={link.size} />
                 <div className="card-row">
                   <label className="file-field file-field-inline">
                     <span>{link.thumbnail_id ? "Trocar imagem" : "Adicionar imagem"}</span>
