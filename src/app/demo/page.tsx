@@ -1,4 +1,10 @@
-import PageView from '@/components/PageView';
+import type { Metadata } from "next";
+import PageView from "@/components/PageView";
+
+export const metadata: Metadata = {
+  title: "Exemplo de página",
+  alternates: { canonical: "/demo" },
+};
 
 // Prévia estática: funciona sem Supabase configurado.
 export default function Demo() {

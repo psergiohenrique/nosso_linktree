@@ -6,15 +6,16 @@ export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const home = new URL('/', request.url);
-  if (!UUID.test(params.id)) return NextResponse.redirect(home);
+  if (!UUID.test(id)) return NextResponse.redirect(home);
 
   const supabase = createPublicClient();
   const { data: link } = await supabase
     .from('links')
     .select('id, profile_id, url')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_active', true)
     .maybeSingle();
 

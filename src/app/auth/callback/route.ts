@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
 
   if (code) {
-    const { error } = await createClient().auth.exchangeCodeForSession(code);
+    const { error } = await (await createClient()).auth.exchangeCodeForSession(code);
     if (!error) return NextResponse.redirect(`${origin}/dashboard`);
   }
   return NextResponse.redirect(`${origin}/login?error=Link%20inv%C3%A1lido%20ou%20expirado`);

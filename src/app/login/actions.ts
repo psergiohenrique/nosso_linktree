@@ -8,10 +8,10 @@ export async function sendMagicLink(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) redirect('/login?error=E-mail%20inv%C3%A1lido');
 
-  const h = headers();
+  const h = await headers();
   const origin = h.get('origin') ?? `http://${h.get('host')}`;
 
-  const { error } = await createClient().auth.signInWithOtp({
+  const { error } = await (await createClient()).auth.signInWithOtp({
     email,
     options: { emailRedirectTo: `${origin}/auth/callback` },
   });

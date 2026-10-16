@@ -10,7 +10,7 @@ function fail(message: string): never {
 }
 
 async function requireUser() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -18,7 +18,7 @@ async function requireUser() {
   return { supabase, user };
 }
 
-async function refreshPublicPage(supabase: ReturnType<typeof createClient>, userId: string) {
+async function refreshPublicPage(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
   const { data } = await supabase.from('profiles').select('slug').eq('id', userId).maybeSingle();
   if (data?.slug) revalidatePath(`/${data.slug}`);
   revalidatePath('/dashboard');
@@ -137,6 +137,6 @@ export async function moveLink(formData: FormData) {
 }
 
 export async function signOut() {
-  await createClient().auth.signOut();
+  await (await createClient()).auth.signOut();
   redirect('/login');
 }

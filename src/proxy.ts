@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-// Só roda onde há sessão: as páginas públicas ficam livres de middleware (cache).
+// Só roda onde há sessão: as páginas públicas ficam livres de proxy (cache).
 export const config = {
   matcher: ['/dashboard/:path*', '/login', '/auth/:path*'],
 };
