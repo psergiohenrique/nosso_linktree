@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import Logo from "@/components/Logo";
-import { sendMagicLink } from "./actions";
+import { getCurrentUser } from "@/server/auth";
+import { signIn, signUp } from "./actions";
 
 export const metadata: Metadata = {
   title: "Entrar",
@@ -10,32 +13,48 @@ export const metadata: Metadata = {
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{ modo?: string; error?: string }>;
 }) {
-  const { sent, error } = await searchParams;
+  if (await getCurrentUser()) redirect("/dashboard");
+  const { modo, error } = await searchParams;
+  const signup = modo === "cadastro";
 
   return (
     <main className="auth">
       <Logo />
       <div className="auth-card">
-        <h1 className="h2 auth-h1">Entrar ou criar conta</h1>
-        {sent ? (
-          <p className="notice notice-ok">Enviamos um link para o seu e-mail. Abra-o para entrar.</p>
-        ) : (
-          <>
-            <p className="auth-text">Sem senha: enviamos um link de acesso para o seu e-mail.</p>
-            <form action={sendMagicLink} className="auth-form">
-              <div>
-                <label className="field-label" htmlFor="email">
-                  Seu e-mail
-                </label>
-                <input id="email" name="email" type="email" required autoComplete="email" className="field" />
-              </div>
-              {error && <p className="notice notice-error">{error}</p>}
-              <button className="btn btn-primary">Receber link de acesso</button>
-            </form>
-          </>
-        )}
+        <h1 className="h2 auth-h1">{signup ? "Criar conta" : "Entrar"}</h1>
+        <p className="auth-text">
+          {signup ? "Crie sua conta e monte sua página em minutos." : "Acesse o painel da sua página."}
+        </p>
+        <form action={signup ? signUp : signIn} className="auth-form">
+          <div>
+            <label className="field-label" htmlFor="email">
+              E-mail
+            </label>
+            <input id="email" name="email" type="email" required autoComplete="email" className="field" />
+          </div>
+          <div>
+            <label className="field-label" htmlFor="password">
+              Senha
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              minLength={signup ? 8 : undefined}
+              autoComplete={signup ? "new-password" : "current-password"}
+              className="field"
+            />
+          </div>
+          {error && <p className="notice notice-error">{error}</p>}
+          <button className="btn btn-primary">{signup ? "Criar conta" : "Entrar"}</button>
+        </form>
+        <p className="auth-switch">
+          {signup ? "Já tem conta? " : "Ainda não tem conta? "}
+          <Link href={signup ? "/login" : "/login?modo=cadastro"}>{signup ? "Entrar" : "Criar conta"}</Link>
+        </p>
       </div>
     </main>
   );

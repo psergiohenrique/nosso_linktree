@@ -2,8 +2,8 @@ import RevealWrapper from "./RevealWrapper";
 
 const STEPS = [
   {
-    title: "Entre com seu e-mail",
-    desc: "Sem senha: enviamos um link de acesso direto para a sua caixa de entrada.",
+    title: "Crie sua conta",
+    desc: "Cadastro rápido com e-mail e senha. Sem cartão de crédito.",
   },
   {
     title: "Escolha seu endereço",

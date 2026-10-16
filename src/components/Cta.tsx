@@ -15,7 +15,7 @@ export default function Cta() {
             </p>
           </div>
           <div className="cta-actions">
-            <Link href="/login" className="btn btn-lime">
+            <Link href="/login?modo=cadastro" className="btn btn-lime">
               Criar minha página
             </Link>
             <Link href="/demo" className="btn btn-outline">

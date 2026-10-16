@@ -37,7 +37,7 @@ export default function Nav() {
           <Link href="/login" className="btn btn-outline btn-sm">
             Entrar
           </Link>
-          <Link href="/login" className="btn btn-primary btn-sm">
+          <Link href="/login?modo=cadastro" className="btn btn-primary btn-sm">
             Criar página
           </Link>
         </div>

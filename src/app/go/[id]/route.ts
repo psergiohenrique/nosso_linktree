@@ -1,35 +1,26 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { createPublicClient } from '@/lib/supabase/public';
-import { safeUrl } from '@/lib/validation';
+import { NextResponse, type NextRequest } from "next/server";
+import { trackEvent } from "@/server/analytics";
+import { queryOne } from "@/server/db";
+import { safeUrl } from "@/lib/validation";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const home = new URL('/', request.url);
+  const home = new URL("/", request.url);
   if (!UUID.test(id)) return NextResponse.redirect(home);
 
-  const supabase = createPublicClient();
-  const { data: link } = await supabase
-    .from('links')
-    .select('id, profile_id, url')
-    .eq('id', id)
-    .eq('is_active', true)
-    .maybeSingle();
-
+  const link = await queryOne<{ id: string; profile_id: string; url: string }>(
+    "select id, profile_id, url from links where id = $1 and is_active",
+    [id],
+  );
   const target = link ? safeUrl(link.url) : null;
   if (!link || !target) return NextResponse.redirect(home);
 
-  const device = /mobile|android|iphone/i.test(request.headers.get('user-agent') ?? '') ? 'mobile' : 'desktop';
-  await supabase.rpc('track_event', {
-    p_profile: link.profile_id,
-    p_link: link.id,
-    p_type: 'click',
-    p_referrer: request.headers.get('referer'),
-    p_device: device,
-  });
+  // O referer aqui é a própria página de links; a origem real da visita fica no evento de visualização.
+  await trackEvent({ profileId: link.profile_id, linkId: link.id, type: "click", headers: request.headers, referrer: null });
 
   return NextResponse.redirect(target, 302);
 }

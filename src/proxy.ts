@@ -1,41 +1,18 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+const SESSION_COOKIE = "lb_session";
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(toSet) {
-          toSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+// Checagem leve (só a presença do cookie); a sessão é validada no banco pelas páginas e actions.
+export function proxy(request: NextRequest) {
+  if (!request.cookies.has(SESSION_COOKIE)) {
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.search = '';
+    url.pathname = "/login";
+    url.search = "";
     return NextResponse.redirect(url);
   }
-
-  return response;
+  return NextResponse.next();
 }
 
-// Só roda onde há sessão: as páginas públicas ficam livres de proxy (cache).
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/auth/:path*'],
+  matcher: ["/dashboard/:path*"],
 };

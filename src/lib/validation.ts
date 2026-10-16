@@ -4,6 +4,8 @@ export const RESERVED_SLUGS = new Set([
   'go',
   'api',
   'auth',
+  'media',
+  'cadastro',
   'demo',
   'admin',
   'app',
@@ -46,6 +48,12 @@ export function whatsappUrl(phone: string, message: string): string | null {
   return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 }
 
-export function validAccent(raw: string): string {
-  return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : '#4f46e5';
+/** Cor hexadecimal #rrggbb em minúsculas, ou o valor padrão. */
+export function validColor(raw: unknown, fallback: string): string {
+  const value = String(raw ?? '').trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(value) ? value : fallback;
+}
+
+export function oneOf<T extends string>(raw: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(raw as T) ? (raw as T) : fallback;
 }

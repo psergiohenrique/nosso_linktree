@@ -17,6 +17,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Upload de imagens (até 2 MB) passa pelas Server Actions do painel.
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
   images: {
     formats: ["image/avif", "image/webp"],
   },

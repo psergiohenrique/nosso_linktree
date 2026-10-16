@@ -21,7 +21,7 @@ export default function Hero() {
             de cliques para saber o que gera conversa de verdade.
           </p>
           <div className="hero-ctas">
-            <Link href="/login" className="btn btn-primary">
+            <Link href="/login?modo=cadastro" className="btn btn-primary">
               Criar minha página
             </Link>
             <Link href="/demo" className="btn btn-outline">

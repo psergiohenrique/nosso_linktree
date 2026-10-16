@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, DM_Serif_Display, Manrope, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
@@ -17,6 +17,23 @@ const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
   display: "swap",
+});
+
+// Fontes extras só usadas nas páginas públicas que escolherem esse estilo: sem preload.
+const dmSerif = DM_Serif_Display({
+  weight: ["400"],
+  subsets: ["latin"],
+  variable: "--font-dm-serif",
+  display: "swap",
+  preload: false,
+});
+
+const spaceMono = Space_Mono({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-space-mono",
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -71,7 +88,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${bricolage.variable} ${manrope.variable}`}>
+    <html lang="pt-BR" className={`${bricolage.variable} ${manrope.variable} ${dmSerif.variable} ${spaceMono.variable}`}>
       <head>
         <script
           type="application/ld+json"
