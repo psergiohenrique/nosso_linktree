@@ -3,6 +3,7 @@ import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
 import PhonePreview from "@/components/PhonePreview";
 import { mediaUrl } from "@/lib/types";
+import { SITE_HOST } from "@/lib/site";
 import { requireUser } from "@/server/auth";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
 import { addLink, createProfile, deleteLink, moveLink, updateLink } from "./actions";
@@ -44,7 +45,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                 Endereço
               </label>
               <div className="slug-row">
-                <span className="slug-prefix">linkbio/</span>
+                <span className="slug-prefix">{SITE_HOST}/</span>
                 <input
                   id="slug"
                   name="slug"

@@ -1,0 +1,6 @@
+# Arquivos que o `vercel deploy` (CLI) não envia. Segredos ficam nas variáveis de ambiente do projeto.
+.env*
+!.env.example
+.next
+node_modules
+.vercel

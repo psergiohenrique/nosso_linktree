@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "Linkbio — Seu link na bio, feito para vender no WhatsApp";
+export const alt = "Linkbio by CodePath — Seu link na bio, feito para vender no WhatsApp";
 
 export default function Image() {
   return new ImageResponse(
@@ -55,6 +55,7 @@ export default function Image() {
               <div style={{ position: "absolute", left: "16px", top: "35px", width: "25px", height: "9px", borderRadius: "5px", background: "#c8f169" }} />
             </div>
             <span style={{ fontSize: "30px", fontWeight: 800, color: "#17181a" }}>Linkbio</span>
+            <span style={{ fontSize: "22px", fontWeight: 600, color: "#5c5f66", marginTop: "8px" }}>by CodePath</span>
           </div>
 
           <div

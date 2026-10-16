@@ -202,6 +202,14 @@ img {
   font-size: 22px;
   letter-spacing: -0.03em;
 }
+.logo-by {
+  align-self: flex-end;
+  margin: 0 0 4px -4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 /* ───────── Nav ───────── */
 
@@ -671,6 +679,10 @@ img {
 .footer-bottom span {
   color: var(--muted);
   font-size: 13px;
+}
+.footer-bottom a {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 /* ───────── Formulários (login / painel) ───────── */
@@ -1796,6 +1808,10 @@ textarea.field {
 @media (max-width: 600px) {
   :root {
     --gutter: 20px;
+  }
+  /* No celular o menu já tem dois botões; a assinatura aparece no rodapé. */
+  .nav .logo-by {
+    display: none;
   }
   .hero-h1 {
     font-size: 46px;

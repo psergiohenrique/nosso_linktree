@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { COMPANY_NAME, SITE_NAME } from "@/lib/site";
 
 export function LogoMark({ size = 32 }: { size?: number }) {
   return (
@@ -18,9 +19,10 @@ export function LogoMark({ size = 32 }: { size?: number }) {
 
 export default function Logo({ href = "/" }: { href?: string }) {
   return (
-    <Link href={href} className="logo" aria-label="Linkbio — início">
+    <Link href={href} className="logo" aria-label={`${SITE_NAME} by ${COMPANY_NAME} — início`}>
       <LogoMark />
-      <span className="logo-text">Linkbio</span>
+      <span className="logo-text">{SITE_NAME}</span>
+      <span className="logo-by">by {COMPANY_NAME}</span>
     </Link>
   );
 }

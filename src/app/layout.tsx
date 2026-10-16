@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, DM_Serif_Display, Manrope, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
+import { COMPANY_NAME, COMPANY_URL, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -51,9 +51,11 @@ export const metadata: Metadata = {
     "link na bio para pequenos negócios",
     "link na bio sem comissão",
     "Linkbio",
+    "Linkbio CodePath",
   ],
-  authors: [{ name: SITE_NAME }],
-  creator: SITE_NAME,
+  authors: [{ name: COMPANY_NAME, url: COMPANY_URL }],
+  creator: COMPANY_NAME,
+  publisher: COMPANY_NAME,
   metadataBase: new URL(SITE_URL),
   openGraph: {
     type: "website",
@@ -97,11 +99,18 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@graph": [
                 {
+                  "@type": "Organization",
+                  "@id": `${COMPANY_URL}/#organization`,
+                  name: COMPANY_NAME,
+                  url: COMPANY_URL,
+                },
+                {
                   "@type": "SoftwareApplication",
                   "@id": `${SITE_URL}/#app`,
                   name: SITE_NAME,
                   description: SITE_DESCRIPTION,
                   url: SITE_URL,
+                  publisher: { "@id": `${COMPANY_URL}/#organization` },
                   applicationCategory: "BusinessApplication",
                   operatingSystem: "Web",
                   inLanguage: "pt-BR",
@@ -116,8 +125,8 @@ export default function RootLayout({
                   "@id": `${SITE_URL}/#website`,
                   url: SITE_URL,
                   name: SITE_NAME,
-                  description: "Site oficial do Linkbio, plataforma de link na bio para pequenos negócios.",
-                  publisher: { "@id": `${SITE_URL}/#app` },
+                  description: `Site oficial do ${SITE_NAME}, plataforma de link na bio da ${COMPANY_NAME} para pequenos negócios.`,
+                  publisher: { "@id": `${COMPANY_URL}/#organization` },
                   inLanguage: "pt-BR",
                 },
               ],

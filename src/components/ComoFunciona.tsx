@@ -7,7 +7,7 @@ const STEPS = [
   },
   {
     title: "Escolha seu endereço",
-    desc: "Algo como linkbio/barbearia-do-ze. Curto, fácil de lembrar e de colocar na bio.",
+    desc: "Algo como bio.codepath.dev.br/barbearia-do-ze. Curto, fácil de lembrar e de colocar na bio.",
   },
   {
     title: "Adicione links e publique",
