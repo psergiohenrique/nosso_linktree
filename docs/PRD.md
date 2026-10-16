@@ -38,6 +38,8 @@ O dono do negócio quer **gerar conversa (WhatsApp) e lead**, não só "ter link
 6. Analytics: visualizações e cliques por link (7/30 dias), origem (referrer) e dispositivo.
 7. Slugs reservados e validação de URLs (http/https/tel/mailto).
 
+Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIENTE.md](PERSONALIZACAO-POR-CLIENTE.md).
+
 **Fora do MVP (V2+):**
 - Captura de lead com envio ao robô de leads (webhook/API).
 - Pix e cobrança de serviços; vendas.
