@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linkbio — exemplo: barbearia</title>
+<style>
+  :root { --accent:#4f46e5; --ink:#171717; --muted:#737373; --line:#e5e5e5; --bg:#fafafa; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .bar { display:flex; gap:8px; align-items:center; padding:12px 16px; background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; flex-wrap:wrap; }
+  .bar b { margin-right:8px; }
+  .tab,.chip { border:1px solid #d4d4d4; background:#fff; border-radius:8px; padding:7px 12px; font-size:14px; cursor:pointer; }
+  .tab.on,.chip.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .note { font-size:12px; color:var(--muted); margin-left:auto; }
+  .stage { padding:24px 12px 48px; }
+  .hidden { display:none; }
+
+  /* Página pública */
+  .page { max-width:420px; margin:0 auto; border-radius:28px; border:1px solid var(--line); overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+  .page main { min-height:680px; padding:40px 16px; display:flex; flex-direction:column; align-items:center; gap:24px; }
+  .t-light { background:#fafafa; color:#171717; --card:#fff; --cardb:#e5e5e5; --m:#525252; }
+  .t-dark { background:#0a0a0a; color:#fff; --card:#171717; --cardb:#262626; --m:#a3a3a3; }
+  .t-sunset { background:linear-gradient(#ffedd5,#ffe4e6,#c7d2fe); color:#171717; --card:rgba(255,255,255,.8); --cardb:#fff; --m:#404040; }
+  .avatar { width:96px; height:96px; border-radius:50%; background:var(--accent); color:#fff; font-size:34px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .page h1 { font-size:20px; margin:12px 0 4px; text-align:center; }
+  .page p { margin:0; font-size:14px; color:var(--m); max-width:280px; text-align:center; }
+  .links { width:100%; display:flex; flex-direction:column; gap:12px; }
+  .btn { display:block; padding:16px 20px; text-align:center; font-weight:500; border-radius:14px; background:var(--card); border:1px solid var(--cardb); color:inherit; text-decoration:none; box-shadow:0 1px 2px rgba(0,0,0,.06); transition:transform .15s; }
+  .btn:hover { transform:translateY(-2px); }
+  .btn.wa { background:#16a34a; border-color:#16a34a; color:#fff; }
+  .foot { font-size:12px; color:var(--m); padding-top:16px; }
+
+  /* Painel */
+  .dash { max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:28px; }
+  .dash h2 { font-size:16px; margin:0 0 10px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; text-align:center; }
+  .stats .n { font-size:26px; font-weight:700; }
+  .stats .l { font-size:12px; color:var(--muted); }
+  .head { display:flex; justify-content:space-between; align-items:center; }
+  .head a { color:var(--accent); font-size:14px; }
+  input,select,textarea { width:100%; border:1px solid #d4d4d4; border-radius:8px; padding:9px 12px; font-size:14px; font-family:inherit; background:#fff; }
+  .row { display:flex; gap:8px; align-items:center; }
+  .stack { display:flex; flex-direction:column; gap:8px; }
+  .link { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .meta { display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--muted); }
+  .primary { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:9px 16px; font-size:14px; font-weight:500; }
+  .ghost { background:#fff; border:1px solid #d4d4d4; border-radius:8px; padding:7px 12px; font-size:14px; }
+  .danger { color:#dc2626; margin-left:auto; }
+  .dashed { border:1px dashed #a3a3a3; background:transparent; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>Linkbio · exemplo: barbearia</b>
+  <button class="tab on" data-view="pub">Página pública</button>
+  <button class="tab" data-view="dash">Painel</button>
+  <span class="note">Maquete visual fiel ao código, não é o app rodando</span>
+</div>
+
+<div id="pub" class="stage">
+  <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">
+    <button class="chip" data-theme="t-light">Claro</button>
+    <button class="chip" data-theme="t-dark">Escuro</button>
+    <button class="chip on" data-theme="t-sunset">Pôr do sol</button>
+  </div>
+  <div class="page">
+    <main id="phone" class="t-sunset">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="avatar">B</div>
+        <h1>Barbearia do Zé</h1>
+        <p>Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.</p>
+      </div>
+      <nav class="links">
+        <a class="btn wa" href="#">💬 Agendar pelo WhatsApp</a>
+        <a class="btn" href="#">Ver tabela de preços</a>
+        <a class="btn" href="#">Como chegar</a>
+        <a class="btn" href="#">Instagram</a>
+      </nav>
+      <div class="foot">Feito com Linkbio</div>
+    </main>
+  </div>
+</div>
+
+<div id="dash" class="stage hidden">
+  <div class="dash">
+    <div class="head">
+      <div><b style="font-size:20px">Painel</b><br><a href="#">Ver minha página: /barbearia-do-ze</a></div>
+      <button class="ghost">Sair</button>
+    </div>
+
+    <section>
+      <div class="head"><h2>Resultados</h2><span style="font-size:14px"><b>7 dias</b> · <span style="color:var(--muted)">30 dias</span></span></div>
+      <div class="stats">
+        <div class="card"><div class="n">428</div><div class="l">Visualizações</div></div>
+        <div class="card"><div class="n">187</div><div class="l">Cliques</div></div>
+        <div class="card"><div class="n">44%</div><div class="l">Taxa de clique</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Links</h2>
+      <div class="card link">
+        <input value="Agendar pelo WhatsApp"><input value="5511999999999"><input value="Quero agendar um horário">
+        <div class="meta"><label><input type="checkbox" checked style="width:auto"> Ativo</label><span>112 cliques (7d)</span><button class="primary">Salvar</button></div>
+        <div class="row"><button class="ghost">↑</button><button class="ghost">↓</button><button class="ghost danger">Excluir</button></div>
+      </div>
+      <div class="card link">
+        <input value="Ver tabela de preços"><input value="https://example.com/precos">
+        <div class="meta"><label><input type="checkbox" checked style="width:auto"> Ativo</label><span>41 cliques (7d)</span><button class="primary">Salvar</button></div>
+        <div class="row"><button class="ghost">↑</button><button class="ghost">↓</button><button class="ghost danger">Excluir</button></div>
+      </div>
+      <div class="card dashed stack">
+        <b style="font-size:14px">Novo link</b>
+        <select><option>Link comum</option><option>WhatsApp</option></select>
+        <input placeholder="Título (ex.: Agendar horário)">
+        <input placeholder="URL, ou número de WhatsApp com DDD">
+        <button class="primary">Adicionar</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Aparência</h2>
+      <div class="card stack">
+        <input value="Barbearia do Zé">
+        <textarea rows="2">Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.</textarea>
+        <input placeholder="URL da foto (opcional)">
+        <div class="row"><select><option>Claro</option><option>Escuro</option><option selected>Pôr do sol</option></select><input type="color" value="#4f46e5" style="width:64px;height:40px;padding:2px"></div>
+        <button class="primary">Salvar aparência</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.onclick = function () {
+      document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x === t); });
+      document.getElementById('pub').classList.toggle('hidden', t.dataset.view !== 'pub');
+      document.getElementById('dash').classList.toggle('hidden', t.dataset.view !== 'dash');
+    };
+  });
+  document.querySelectorAll('.chip').forEach(function (c) {
+    c.onclick = function () {
+      document.querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('on', x === c); });
+      document.getElementById('phone').className = c.dataset.theme;
+    };
+  });
+</script>
+</body>
+</html>

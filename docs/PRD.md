@@ -30,13 +30,15 @@ O dono do negócio quer **gerar conversa (WhatsApp) e lead**, não só "ter link
 ## 4. Escopo do MVP (V1)
 
 **Dentro:**
-1. Cadastro/login por e-mail (link mágico).
+1. Cadastro/login por e-mail e senha.
 2. Escolha do endereço `dominio/slug`.
-3. Perfil: nome, bio, avatar (URL), tema (claro/escuro/pôr do sol), cor de destaque.
-4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida).
+3. Perfil: nome, bio e foto (upload). Aparência: temas prontos, fundo sólido ou degradê, cores de texto e botões, estilo do botão e fonte, com prévia ao vivo no painel.
+4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida). Imagem opcional por link (upload).
 5. Página pública renderizada no servidor, rápida, sem captcha ou pop-up.
-6. Analytics: visualizações e cliques por link (7/30 dias), origem (referrer) e dispositivo.
+6. Analytics: visualizações, visitantes únicos, cliques e CTR por link (7/30/90 dias), gráfico diário, origem e dispositivo; filtro de robôs e repetições.
 7. Slugs reservados e validação de URLs (http/https/tel/mailto).
+
+Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIENTE.md](PERSONALIZACAO-POR-CLIENTE.md).
 
 **Fora do MVP (V2+):**
 - Captura de lead com envio ao robô de leads (webhook/API).
@@ -94,4 +96,4 @@ Bundle: Pro grátis por 12 meses para quem compra site; Business junto do robô 
 - Nome da marca e domínio.
 - Gateway de cobrança (Asaas, Pagar.me, Stripe).
 - Modelo de integração com o robô (webhook simples vs. API compartilhada).
-- Hospedagem (Vercel + Supabase vs. VPS própria).
+- Hospedagem (Vercel + Postgres gerenciado vs. VPS própria).
