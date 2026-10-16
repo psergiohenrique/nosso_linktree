@@ -1,0 +1,25 @@
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+/** Cliente com a sessão do usuário (Server Components, Actions, Route Handlers). */
+export function createClient() {
+  const cookieStore = cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(toSet) {
+          try {
+            toSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          } catch {
+            // Chamado de um Server Component: o middleware já renova a sessão.
+          }
+        },
+      },
+    },
+  );
+}
