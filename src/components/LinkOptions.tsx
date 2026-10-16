@@ -16,8 +16,27 @@ const LAYOUT_ICONS: Record<LinkLayout, React.ReactNode> = {
   ),
 };
 
-/** Formato e tamanho de um link (rádios dentro do formulário do link). */
-export default function LinkOptions({ layout = "button", size = "md" }: { layout?: LinkLayout; size?: LinkSize }) {
+type Props = {
+  layout?: LinkLayout;
+  size?: LinkSize;
+  /** Modo controlado (playground): sem isso, os rádios vão no formulário do link com defaultChecked. */
+  onChange?: (change: { layout?: LinkLayout; size?: LinkSize }) => void;
+  /** Prefixo do name dos rádios, para vários links na mesma tela sem formulário próprio. */
+  namePrefix?: string;
+};
+
+/** Formato e tamanho de um link. */
+export default function LinkOptions({ layout = "button", size = "md", onChange, namePrefix = "" }: Props) {
+  const radio = (field: "layout" | "size", value: string, current: string) =>
+    onChange
+      ? {
+          name: `${namePrefix}${field}`,
+          value,
+          checked: current === value,
+          onChange: () => onChange({ [field]: value }),
+        }
+      : { name: field, value, defaultChecked: current === value };
+
   return (
     <div className="link-options">
       <div>
@@ -25,7 +44,7 @@ export default function LinkOptions({ layout = "button", size = "md" }: { layout
         <div className="segmented segmented-sm" role="radiogroup" aria-label="Formato">
           {LINK_LAYOUTS.map((l) => (
             <label key={l.value} title={l.hint}>
-              <input type="radio" name="layout" value={l.value} defaultChecked={layout === l.value} />
+              <input type="radio" {...radio("layout", l.value, layout)} />
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 {LAYOUT_ICONS[l.value]}
               </svg>
@@ -39,7 +58,7 @@ export default function LinkOptions({ layout = "button", size = "md" }: { layout
         <div className="segmented segmented-sm" role="radiogroup" aria-label="Tamanho">
           {LINK_SIZES.map((s) => (
             <label key={s.value}>
-              <input type="radio" name="size" value={s.value} defaultChecked={size === s.value} />
+              <input type="radio" {...radio("size", s.value, size)} />
               {s.label}
             </label>
           ))}

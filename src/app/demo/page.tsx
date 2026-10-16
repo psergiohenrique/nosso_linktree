@@ -1,30 +1,13 @@
 import type { Metadata } from "next";
-import PageView from "@/components/PageView";
-import { THEME_PRESETS } from "@/lib/types";
+import Playground from "@/components/Playground";
 
 export const metadata: Metadata = {
-  title: "Exemplo de página",
+  title: "Playground — monte sua página",
+  description: "Teste temas, cores, botões, fontes e formatos de link do Linkbio. Nada é salvo.",
   alternates: { canonical: "/demo" },
 };
 
-// Prévia estática: funciona sem banco de dados.
+// Funciona sem banco de dados: todo o estado fica no navegador.
 export default function Demo() {
-  return (
-    <PageView
-      tracked={false}
-      profile={{
-        ...THEME_PRESETS[2].appearance,
-        slug: "barbearia-do-ze",
-        display_name: "Barbearia do Zé",
-        bio: "Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.",
-        avatar_url: null,
-      }}
-      links={[
-        { id: "1", kind: "whatsapp", title: "Agendar pelo WhatsApp", url: "https://wa.me/5511999999999?text=Quero%20agendar", thumbnail_url: null, layout: "button", size: "lg" },
-        { id: "2", kind: "link", title: "Ver tabela de preços", url: "https://example.com/precos", thumbnail_url: null, layout: "button", size: "md" },
-        { id: "3", kind: "link", title: "Como chegar", url: "https://maps.google.com", thumbnail_url: null, layout: "button", size: "md" },
-        { id: "4", kind: "link", title: "Instagram", url: "https://instagram.com", thumbnail_url: null, layout: "button", size: "md" },
-      ]}
-    />
-  );
+  return <Playground />;
 }

@@ -804,7 +804,8 @@ textarea.field {
   border-radius: 999px;
   padding: 4px;
 }
-.dash-tabs a {
+.dash-tabs a,
+.dash-tabs button {
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
@@ -813,10 +814,18 @@ textarea.field {
   border-radius: 999px;
   transition: color 0.2s, background 0.2s;
 }
-.dash-tabs a:hover {
+.dash-tabs button {
+  border: none;
+  background: none;
+  font-family: var(--f-body);
+  cursor: pointer;
+}
+.dash-tabs a:hover,
+.dash-tabs button:hover {
   color: var(--ink);
 }
-.dash-tabs a.active {
+.dash-tabs a.active,
+.dash-tabs button.active {
   background: var(--white);
   color: var(--ink);
 }
@@ -945,7 +954,8 @@ textarea.field {
   display: flex;
   gap: 8px;
 }
-.card-actions .push {
+.card-actions .push,
+.card-actions > .btn.push {
   margin-left: auto;
 }
 .btn:disabled {
@@ -995,6 +1005,30 @@ textarea.field {
   flex-shrink: 0;
   border-radius: 10px;
   object-fit: cover;
+}
+.link-thumb-pick {
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.link-thumb-pick input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.link-thumb-pick:hover .link-thumb {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.link-thumb-pick:has(input:focus-visible) .link-thumb {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.play-notice {
+  background: color-mix(in srgb, var(--lime) 45%, var(--white));
+  margin-bottom: 32px;
 }
 .link-thumb-empty {
   display: flex;
@@ -1569,6 +1603,12 @@ textarea.field {
   width: 34px;
   height: 34px;
   left: 5px;
+}
+
+/* Destaque e Bloco são cartões: arredondamento limitado (no estilo Pílula não viram ovais). */
+.bio-featured,
+.bio-tile {
+  border-radius: min(var(--btn-radius), 22px);
 }
 
 /* Destaque: imagem grande em cima, título embaixo */

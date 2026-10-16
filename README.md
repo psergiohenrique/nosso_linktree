@@ -16,7 +16,7 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 6. `npm run db:seed` — opcional: conta de teste com página e 30 dias de acessos (credenciais no topo de `scripts/seed.mjs`).
 7. `npm run dev` e abra http://localhost:3000.
 
-`/demo` mostra uma página de exemplo e funciona sem banco.
+`/demo` é um playground: dá para testar temas, cores, botões, fontes, formatos, tamanhos e imagens dos links com prévia ao vivo, sem banco e sem login (nada é salvo).
 
 ## Estrutura
 - `src/app/[slug]` — página pública (cache de 60 s, atualizada ao salvar no painel)
