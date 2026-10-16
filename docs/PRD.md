@@ -1,8 +1,8 @@
-# PRD — Linkbio (nome provisório)
+# PRD — Linkbio by CodePath
 
-Plataforma de "link na bio" para pequenos negócios e agências brasileiras. Projeto pessoal, independente da Cozimax, mas pensado para integrar com o ecossistema (sites + robô de leads).
+Plataforma de "link na bio" para pequenos negócios e agências brasileiras. Produto da CodePath (https://codepath.dev.br), independente da Cozimax, mas pensado para integrar com o ecossistema (sites + robô de leads). Endereço: **bio.codepath.dev.br** (páginas dos clientes em `bio.codepath.dev.br/<slug>`).
 
-Status: rascunho v0.1 · 2026-10-15 · apenas local, nada publicado.
+Status: rascunho v0.2 · 2026-10-16 · publicado em bio.codepath.dev.br.
 
 ## 1. Problema
 
@@ -30,7 +30,7 @@ O dono do negócio quer **gerar conversa (WhatsApp) e lead**, não só "ter link
 ## 4. Escopo do MVP (V1)
 
 **Dentro:**
-1. Cadastro/login por e-mail e senha.
+1. Cadastro/login por e-mail e senha, com recuperação de senha por e-mail e limite de tentativas.
 2. Escolha do endereço `dominio/slug`.
 3. Perfil: nome, bio e foto (upload). Aparência: temas prontos, fundo sólido ou degradê, cores de texto e botões, estilo do botão e fonte, com prévia ao vivo no painel.
 4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida). Imagem opcional por link (upload).
@@ -46,13 +46,14 @@ Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIE
 - Domínio próprio, remoção de marca, assinatura (Stripe/Pagar.me/Asaas).
 - Painel de agência multi-cliente, white-label.
 - Templates por nicho e montagem por IA (Instagram / Google Meu Negócio).
-- Upload de avatar (V1 usa URL), blocos (vídeo, mapa, cardápio), agendamento de links.
+- Login por link mágico (sem senha).
+- Blocos (vídeo, mapa, cardápio), agendamento de links.
 
 ## 5. Requisitos funcionais (resumo)
 
 | ID | Requisito | Critério de aceite |
 |---|---|---|
-| F1 | Login por e-mail | Usuário recebe link e entra no painel |
+| F1 | Login por e-mail e senha | Usuário cria conta, entra no painel e redefine a senha por um link enviado ao e-mail (válido por 1 h, uso único) |
 | F2 | Criar página | Slug único, 3–30 caracteres `a-z0-9-`, não reservado |
 | F3 | CRUD de links | Alterações refletem na página pública em até 60 s |
 | F4 | Botão WhatsApp | Abre `wa.me/<número>?text=<mensagem>` |
@@ -62,7 +63,7 @@ Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIE
 
 ## 6. Requisitos não funcionais
 
-- Segurança: RLS em todas as tabelas; sem chave de serviço no cliente; registro de eventos só via função `track_event`.
+- Segurança: backend próprio sem RLS — toda consulta filtra pelo dono no código do servidor; nenhuma credencial no cliente; eventos registrados só pelo servidor (`/go/[id]` e `/api/view`); limite de tentativas em login, cadastro e recuperação de senha.
 - Privacidade (LGPD): não guardar IP nem cookie de rastreio; guardar só referrer e tipo de dispositivo.
 - Performance: página pública com cache (ISR 60 s), zero JS pesado.
 - Acessibilidade: contraste AA, navegação por teclado.
@@ -93,7 +94,7 @@ Bundle: Pro grátis por 12 meses para quem compra site; Business junto do robô 
 
 ## 10. Questões em aberto
 
-- Nome da marca e domínio.
+- Nome e domínio próprios no futuro (por ora: Linkbio by CodePath em bio.codepath.dev.br).
 - Gateway de cobrança (Asaas, Pagar.me, Stripe).
 - Modelo de integração com o robô (webhook simples vs. API compartilhada).
 - Hospedagem (Vercel + Postgres gerenciado vs. VPS própria).

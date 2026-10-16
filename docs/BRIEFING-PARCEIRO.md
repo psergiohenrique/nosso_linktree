@@ -1,6 +1,6 @@
 # Linkbio — Briefing para o líder técnico
 
-Versão 1.0 · 2026-10-15 · Rascunho para alinhamento (nome da marca provisório)
+Versão 1.0 · 2026-10-15 · Rascunho para alinhamento (marca: Linkbio by CodePath, em bio.codepath.dev.br)
 
 Este documento reúne (1) a análise de mercado feita no início, (2) o produto do MVP e (3) o que precisa de revisão técnica. O PRD completo está em [PRD.md](PRD.md). A personalização por cliente e os módulos opcionais (barbearia x arquiteta) estão em [PERSONALIZACAO-POR-CLIENTE.md](PERSONALIZACAO-POR-CLIENTE.md).
 
@@ -8,7 +8,7 @@ Este documento reúne (1) a análise de mercado feita no início, (2) o produto 
 
 ## 1. Contexto
 
-Queremos criar um "link na bio" próprio para **vender como produto** (assinatura). É um projeto pessoal, independente da Cozimax, mas pensado para conversar com o que já temos: a plataforma de venda de sites e o robô de lead management.
+Queremos criar um "link na bio" próprio para **vender como produto** (assinatura). É um produto da CodePath, independente da Cozimax, mas pensado para conversar com o que já temos: a plataforma de venda de sites e o robô de lead management. Num primeiro momento fica atrelado à empresa: marca **Linkbio by CodePath** no endereço **bio.codepath.dev.br**.
 
 ## 2. Análise de mercado
 
@@ -101,7 +101,7 @@ Captura de lead → robô de leads (webhook/API) · Pix e vendas · assinatura e
 - `src/app/media/[id]` — serve as imagens enviadas (guardadas no Postgres).
 - `src/app/dashboard` — painel (Links, Aparência, Resultados) via Server Actions.
 - `src/server/` — banco, autenticação (senha com scrypt, sessão em cookie httpOnly), upload e analytics.
-- `db/migrations/` — `0001_init.sql`: tabelas `users`, `sessions`, `media`, `profiles`, `links`, `events`.
+- `db/migrations/` — `0001_init.sql`: tabelas `users`, `sessions`, `media`, `profiles`, `links`, `events`; `0002` (formato/tamanho dos links); `0003` (`auth_attempts`, `password_resets`).
 
 **Decisões de segurança e privacidade**
 - Sem RLS: toda consulta filtra pelo dono no código do servidor.
@@ -111,9 +111,9 @@ Captura de lead → robô de leads (webhook/API) · Pix e vendas · assinatura e
 - URLs de destino são validadas por protocolo antes do redirecionamento.
 
 **Estado atual — importante**
-- `npm run lint` e `npm run build` passam; o fluxo foi testado localmente com dados de exemplo.
-- Nenhum teste automatizado. Nada foi implantado ainda.
-- Sem recuperação de senha nem limite de tentativas de login.
+- `npm run lint`, `npm run build` e `npm test` passam; o fluxo foi testado localmente com dados de exemplo.
+- Testes automatizados (Vitest) de validação, origem do tráfego, limite de tentativas e recuperação de senha. Publicado em https://bio.codepath.dev.br (Vercel + Neon).
+- Recuperação de senha por e-mail (Resend) e limite de tentativas em login, cadastro e recuperação.
 
 **Pontos que pedimos para revisar**
 1. Autenticação própria (sessões, senha) versus usar um provedor.
@@ -126,7 +126,7 @@ Captura de lead → robô de leads (webhook/API) · Pix e vendas · assinatura e
 ---
 
 ## 5. Decisões em aberto
-- Nome da marca e domínio.
+- Nome e domínio próprios no futuro (por ora: Linkbio by CodePath em bio.codepath.dev.br).
 - Gateway de cobrança (Asaas, Pagar.me ou Stripe).
 - Integração com o robô de leads: webhook simples ou API compartilhada.
 - Hospedagem: Vercel + Postgres gerenciado (Neon, Supabase…) ou VPS própria.

@@ -4,7 +4,7 @@
 
 ## What this is
 
-Linkbio (provisional name): a "link in bio" platform for Brazilian small businesses and agencies. Product scope is in `docs/PRD.md`. Built with Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + PostgreSQL (via `pg`, raw SQL). The backend lives in this repo (`src/server/`); locally Postgres runs in Docker. All user-facing copy is Portuguese (pt-BR).
+Linkbio by CodePath: a "link in bio" platform for Brazilian small businesses and agencies, a product of CodePath (https://codepath.dev.br). Production URL: `https://bio.codepath.dev.br` (customer pages at `/<slug>`); the company's own site lives at the apex domain in another project. Brand constants (`SITE_NAME`, `COMPANY_NAME`, `COMPANY_URL`, `SITE_HOST`) are in `src/lib/site.ts`. Product scope is in `docs/PRD.md`. Built with Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + PostgreSQL (via `pg`, raw SQL). The backend lives in this repo (`src/server/`); locally Postgres runs in Docker. All user-facing copy is Portuguese (pt-BR).
 
 Follows the same conventions as the sibling site projects (`../site-moraex`, `../site_leticia_moraes`).
 
@@ -17,17 +17,19 @@ Follows the same conventions as the sibling site projects (`../site-moraex`, `..
 - `npm run db:up` — start local Postgres (docker-compose, port 5435)
 - `npm run db:migrate` — apply pending `db/migrations/*.sql` (tracked in `schema_migrations`)
 - `npm run db:seed` — dev-only demo account + page + 30 days of events (credentials at the top of `scripts/seed.mjs`)
+- `npm test` — Vitest unit tests (`test/*.test.ts`); DB tests are skipped
+- `npm run test:db` — also runs `test/*.db.test.ts` against the local Docker Postgres (via `TEST_DATABASE_URL`, never `.env.local`)
 
-Env vars live in `.env.local` (see `.env.example`): `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`.
+Env vars live in `.env.local` (see `.env.example`): `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, optional `RESEND_API_KEY` + `MAIL_FROM` (password-reset e-mail; without them, in dev the e-mail is printed to the server terminal).
 
-No test suite configured.
+Tests live in `test/`; `vitest.config.mts` aliases `@` to `src` and stubs `server-only`.
 
 ## Architecture
 
 - **`src/app/layout.tsx`** — fonts (Bricolage Grotesque + Manrope via `next/font/google`), global metadata/SEO, JSON-LD (`SoftwareApplication` + `WebSite`), `@vercel/analytics` and `@vercel/speed-insights`. `sitemap.ts`, `robots.ts`, `opengraph-image.tsx` (generated via `next/og`) and `icon.svg` are metadata files.
 - **`src/app/page.tsx`** — marketing landing; only composes section components in order: `Nav`, `Hero`, `StatsBar`, `Recursos`, `ComoFunciona`, `Cta`, `Footer`. Each section is a `<section id="...">` matching nav anchors (`#recursos`, `#como-funciona`, `#comecar`). Sections take no props and hold their own copy/data arrays.
-- **App routes** — `[slug]` public page (ISR 60 s via `generateStaticParams` returning `[]`; dashboard actions call `revalidatePath`), `go/[id]` tracked redirect, `api/view` view tracking (posted by `ViewTracker`), `media/[id]` serves uploaded images from Postgres (immutable cache), `login` (email + password, `?modo=cadastro` for signup), `dashboard` with tabs: Links (`page.tsx`), `aparencia` (client `AppearanceEditor` with live preview; its controls are `AppearanceFields`, shared with the playground), `resultados` (analytics). All mutations are Server Actions in `dashboard/actions.ts` and `login/actions.ts`. `demo` is a client-only playground (`Playground`) with the same Links/Aparência controls and live preview — no DB, nothing saved; sample images live in `public/demo/`.
-- **`src/server/`** (all `server-only`) — `db.ts` (pg Pool + `query`/`queryOne`), `auth.ts` (scrypt passwords, sessions table keyed by sha256 of an httpOnly cookie token, `requireUser`), `media.ts` (image upload ≤ 2 MB, type sniffed from bytes, no SVG), `profiles.ts` (profile/link reads), `analytics.ts` (`trackEvent` with bot filter + dedupe + rate cap; `getStats`). **There is no RLS: every query must filter by the owner's user id in code.**
+- **App routes** — `[slug]` public page (ISR 60 s via `generateStaticParams` returning `[]`; dashboard actions call `revalidatePath`), `go/[id]` tracked redirect, `api/view` view tracking (posted by `ViewTracker`), `media/[id]` serves uploaded images from Postgres (immutable cache), `login` (email + password, `?modo=cadastro` for signup; `login/recuperar` requests a reset e-mail, `login/redefinir` sets the new password), `api/redefinir-senha` (reset link target: moves the token into the httpOnly `lb_reset` cookie and redirects, so it never stays in the URL), `dashboard` with tabs: Links (`page.tsx`), `aparencia` (client `AppearanceEditor` with live preview; its controls are `AppearanceFields`, shared with the playground), `resultados` (analytics). All mutations are Server Actions in `dashboard/actions.ts` and `login/actions.ts`. `demo` is a client-only playground (`Playground`) with the same Links/Aparência controls and live preview — no DB, nothing saved; sample images live in `public/demo/`.
+- **`src/server/`** (all `server-only`) — `db.ts` (pg Pool + `query`/`queryOne`), `auth.ts` (scrypt passwords, sessions table keyed by sha256 of an httpOnly cookie token, `requireUser`, single-use 1 h password-reset tokens that also drop all sessions), `rate-limit.ts` (`auth_attempts` with hashed email/IP keys; rules in `RATE_RULES`; signin counts only failures), `mail.ts` (`sendMail` via Resend HTTP API, console fallback in dev), `media.ts` (image upload ≤ 2 MB, type sniffed from bytes, no SVG), `profiles.ts` (profile/link reads), `analytics.ts` (`trackEvent` with bot filter + dedupe + rate cap; `getStats`). **There is no RLS: every query must filter by the owner's user id in code.**
 - **`src/proxy.ts`** — only checks the session cookie exists for `/dashboard`; real validation happens in pages/actions via `requireUser`.
 - **`src/lib/`** — `types.ts` (Profile/LinkItem/Appearance, button styles, fonts, theme presets), `validation.ts` (slug/URL/WhatsApp/color), `site.ts` (site URL/name from `NEXT_PUBLIC_SITE_URL`).
 - **Public page rendering** — `PageView` takes appearance as CSS variables (`--bio-bg`, `--bio-text`, `--btn-bg`, `--btn-text`) plus `bio-btn-*` / `bio-font-*` classes; the same component renders the public page, `/demo` and the dashboard `PhonePreview`. Each link has a `layout` (`button` with optional thumbnail, `featured` big image on top, `tile` square — consecutive tiles are grouped into a 2-column grid by `groupTiles`) and a `size` (`sm`/`md`/`lg`, `.bio-size-*`); edited via `LinkOptions` (uncontrolled radios inside each link form in the dashboard; controlled via `onChange` + `namePrefix` in the playground).
@@ -36,7 +38,7 @@ No test suite configured.
 - **Client components** — `Nav`, `RevealWrapper`, `ViewTracker`, `DashTabs`, `AppearanceEditor`, `TrafficChart`.
 - **Styling** — plain global CSS in `src/app/globals.css`: CSS custom properties on `:root` (`--ink`, `--paper`, `--lime`, `--whats`, …) plus BEM-ish classes (`.wrap`, `.btn-*`, `.h2`, per-section `.hero-*`, `.feat-*`, `.dash-*`, `.bio-*`). Tailwind v4 is imported but not used for styling — don't add Tailwind utilities ad hoc. Responsive rules are hand-written `@media` blocks at the end (900px, 600px). Public page appearance is driven by `--bio-*`/`--btn-*` variables set inline by `PageView`.
 - **Security headers** — set centrally in `next.config.ts`.
-- **Database** — `db/migrations/0001_init.sql`: `users`, `sessions`, `media`, `profiles` (incl. appearance columns), `links` (incl. `thumbnail_id`), `events`; `0002_link_layout_size.sql` adds `links.layout` and `links.size`. Add schema changes as new numbered files, never edit applied ones.
+- **Database** — `db/migrations/0001_init.sql`: `users`, `sessions`, `media`, `profiles` (incl. appearance columns), `links` (incl. `thumbnail_id`), `events`; `0002_link_layout_size.sql` adds `links.layout` and `links.size`; `0003_auth_security.sql` adds `auth_attempts` and `password_resets`. Add schema changes as new numbered files, never edit applied ones.
 
 ## Next 16 notes
 

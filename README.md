@@ -1,8 +1,8 @@
-# Linkbio (nome provisório)
+# Linkbio by CodePath
 
-Plataforma de link na bio para pequenos negócios e agências. Veja o produto e o escopo em [docs/PRD.md](docs/PRD.md).
+Plataforma de link na bio para pequenos negócios e agências, produto da [CodePath](https://codepath.dev.br). Produção: **https://bio.codepath.dev.br** (páginas dos clientes em `bio.codepath.dev.br/<slug>`). Veja o produto e o escopo em [docs/PRD.md](docs/PRD.md).
 
-**Estado:** `npm run lint` e `npm run build` passam. Roda localmente com PostgreSQL em Docker. **Nada foi publicado.**
+**Estado:** `npm run lint`, `npm run build` e `npm test` passam. Publicado na Vercel (projeto `nosso_linktree`, push na `main` publica) com banco no Neon. Localmente roda com PostgreSQL em Docker.
 
 ## Stack
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com variáveis) · PostgreSQL 16 (`pg`, SQL puro) · Vercel Analytics. Backend dentro do repositório (`src/server/`). Mesmo padrão dos sites `site-moraex` e `site_leticia_moraes`; detalhes em `CLAUDE.md`.
@@ -17,6 +17,12 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 7. `npm run dev` e abra http://localhost:3000.
 
 `/demo` é um playground: dá para testar temas, cores, botões, fontes, formatos, tamanhos e imagens dos links com prévia ao vivo, sem banco e sem login (nada é salvo).
+
+**Recuperar senha:** sem `RESEND_API_KEY`/`MAIL_FROM`, em dev o e-mail com o link aparece no terminal do `npm run dev`.
+
+## Testes
+- `npm test` — testes de unidade (Vitest), sem banco.
+- `npm run test:db` — inclui os testes de limite de tentativas e recuperação de senha no Postgres local do Docker (precisa de `db:up` e `db:migrate`).
 
 ## Estrutura
 - `src/app/[slug]` — página pública (cache de 60 s, atualizada ao salvar no painel)
