@@ -7,6 +7,7 @@ import Logo from "./Logo";
 const LINKS = [
   { id: "recursos", label: "Recursos" },
   { id: "como-funciona", label: "Como funciona" },
+  { id: "planos", label: "Planos" },
   { id: "comecar", label: "Começar" },
 ];
 

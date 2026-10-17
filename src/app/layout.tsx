@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, DM_Serif_Display, Manrope, Space_Mono } from "next
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { COMPANY_NAME, COMPANY_URL, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
+import { PRO_PRICES } from "@/lib/billing";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -114,11 +115,23 @@ export default function RootLayout({
                   applicationCategory: "BusinessApplication",
                   operatingSystem: "Web",
                   inLanguage: "pt-BR",
-                  offers: {
-                    "@type": "Offer",
-                    price: "0",
-                    priceCurrency: "BRL",
-                  },
+                  offers: [
+                    { "@type": "Offer", name: "Grátis", price: "0", priceCurrency: "BRL", url: `${SITE_URL}/#planos` },
+                    ...(["monthly", "yearly"] as const).map((cycle) => ({
+                      "@type": "Offer",
+                      name: PRO_PRICES[cycle].name.replace("Linkbio ", ""),
+                      price: (PRO_PRICES[cycle].cents / 100).toFixed(2),
+                      priceCurrency: "BRL",
+                      url: `${SITE_URL}/#planos`,
+                      priceSpecification: {
+                        "@type": "UnitPriceSpecification",
+                        price: (PRO_PRICES[cycle].cents / 100).toFixed(2),
+                        priceCurrency: "BRL",
+                        billingDuration: 1,
+                        unitCode: cycle === "monthly" ? "MON" : "ANN",
+                      },
+                    })),
+                  ],
                 },
                 {
                   "@type": "WebSite",

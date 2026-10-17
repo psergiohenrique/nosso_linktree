@@ -20,7 +20,7 @@ const FEATURES = [
   },
   {
     title: "Métricas que importam",
-    desc: "Visualizações, cliques e taxa de clique por link em 7 ou 30 dias. Veja o que converte.",
+    desc: "Visualizações, cliques e taxa de clique por link, e de onde vem cada visita. Veja o que converte.",
     icon: <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />,
   },
   {
