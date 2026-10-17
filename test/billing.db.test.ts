@@ -76,7 +76,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
     expect(url).toContain("asaas.com");
 
     const input = asaas.createCheckout.mock.calls[0][0] as unknown as Record<string, unknown>;
-    expect(input).toMatchObject({ externalReference: ref(), valueCents: 1900, cycle: "MONTHLY" });
+    expect(input).toMatchObject({ externalReference: ref(), valueCents: 990, cycle: "MONTHLY" });
     expect(Math.abs((input.nextDueDate as Date).getTime() - Date.now())).toBeLessThan(60_000);
     expect((await plan(userId)).kind).toBe("free");
   });
@@ -95,7 +95,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
       id: "pay_1_" + subId,
       customer,
       subscription: subId,
-      value: 19,
+      value: 9.9,
       dueDate: brDate(new Date()),
       creditCard: { creditCardBrand: "VISA", creditCardNumber: "4242" },
       transactionReceiptUrl: "https://sandbox.asaas.com/comprovantes/1",
@@ -112,7 +112,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
       "select status, amount_cents, receipt_url from invoices where gateway_payment_id = $1",
       [payment.id],
     );
-    expect(inv).toMatchObject({ status: "paid", amount_cents: 1900 });
+    expect(inv).toMatchObject({ status: "paid", amount_cents: 990 });
     const card = await queryOne("select card_brand, card_last4 from subscriptions where user_id = $1", [userId]);
     expect(card).toEqual({ card_brand: "VISA", card_last4: "4242" });
   });
@@ -124,7 +124,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
   });
 
   it("renovação recusada abre 7 dias de carência (uma vez só) e o pagamento depois regulariza", async () => {
-    const payment = { id: "pay_2_" + subId, customer, subscription: subId, value: 19, dueDate: brDate(daysFromNow(30)) };
+    const payment = { id: "pay_2_" + subId, customer, subscription: subId, value: 9.9, dueDate: brDate(daysFromNow(30)) };
     await deliver("PAYMENT_CREDIT_CARD_CAPTURE_REFUSED", { payment });
     const first = await plan(userId);
     expect(first).toMatchObject({ pro: true, kind: "past_due" });
@@ -145,7 +145,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
     const before = await plan(userId);
     await startCheckout(userId, "yearly");
     const input = asaas.createCheckout.mock.calls[0][0] as unknown as Record<string, unknown>;
-    expect(input).toMatchObject({ valueCents: 18000, cycle: "YEARLY" });
+    expect(input).toMatchObject({ valueCents: 7080, cycle: "YEARLY" });
     expect((input.nextDueDate as Date).getTime()).toBe(before.until!.getTime());
     // Checkout aberto não mexe na assinatura viva.
     expect(asaas.cancelGatewaySubscription).not.toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
   });
 
   it("pagamento de um período que já acabou não reabre o acesso", async () => {
-    const old = { id: "pay_old_" + subId, customer, subscription: subId, value: 19, dueDate: brDate(daysFromNow(-70)) };
+    const old = { id: "pay_old_" + subId, customer, subscription: subId, value: 9.9, dueDate: brDate(daysFromNow(-70)) };
     await deliver("PAYMENT_CONFIRMED", { payment: old });
     expect((await plan(userId)).pro).toBe(false);
   });
@@ -179,7 +179,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
 
   it("evento que chega antes do que o explica fica na fila para nova tentativa", async () => {
     const id = `evt_${randomUUID()}`;
-    const early = { id: "pay_early", customer: "cus_desconhecido", value: 19, dueDate: brDate(new Date()) };
+    const early = { id: "pay_early", customer: "cus_desconhecido", value: 9.9, dueDate: brDate(new Date()) };
     expect(await deliver("PAYMENT_CONFIRMED", { payment: early }, id)).toBe("failed");
     const row = await queryOne<{ processed_at: Date | null; attempts: number; error: string; next_attempt_at: Date }>(
       "select processed_at, attempts, error, next_attempt_at from billing_events where gateway_event_id = $1",

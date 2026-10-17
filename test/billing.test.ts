@@ -100,8 +100,8 @@ describe("nextInvoiceStatus", () => {
 
 describe("cobrança: ciclo e período", () => {
   it("deduz o ciclo pelo valor", () => {
-    expect(cycleForAmount(1900)).toBe("monthly");
-    expect(cycleForAmount(18000)).toBe("yearly");
+    expect(cycleForAmount(990)).toBe("monthly");
+    expect(cycleForAmount(7080)).toBe("yearly");
   });
 
   it("soma meses no calendário", () => {

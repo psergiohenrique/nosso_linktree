@@ -25,7 +25,7 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 - `npm run test:db` — inclui os testes de limite de tentativas, recuperação de senha e cobrança (webhook do Asaas simulado) no Postgres local do Docker (precisa de `db:up` e `db:migrate` com o `DATABASE_URL` do Docker).
 
 ## Planos e cobrança
-Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 19/mês ou R$ 180/ano) via Asaas. Ligada por `BILLING_ENABLED=true` (desligada, todos têm o Pro). Como funciona e como ligar em produção: [docs/ESTADO-ATUAL.md](docs/ESTADO-ATUAL.md#11-planos-e-cobrança-paywall).
+Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 9,90/mês ou R$ 70,80/ano = R$ 5,90/mês) via Asaas. Ligada por `BILLING_ENABLED=true` (desligada, todos têm o Pro). Como funciona e como ligar em produção: [docs/ESTADO-ATUAL.md](docs/ESTADO-ATUAL.md#11-planos-e-cobrança-paywall).
 
 ## Estrutura
 - `src/app/[slug]` — página pública (cache de 60 s, atualizada ao salvar no painel)

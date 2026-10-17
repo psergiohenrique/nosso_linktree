@@ -28,7 +28,7 @@ Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rod
 ## 2. Site de marketing (`/`)
 
 - Landing com seções: Nav, Hero, StatsBar, Recursos, Como funciona, Planos, CTA e Footer.
-- **Seção de preços** (`#planos`, link no menu e no rodapé): três cartões (Grátis R$ 0, Pro mensal R$ 19/mês, Pro anual R$ 15/mês = R$ 180/ano, “Mais vantajoso”, economia de 21%), tabela comparativa Grátis × Pro e 7 perguntas frequentes. Preços e limites vêm de `src/lib/billing.ts`. Com a cobrança desligada, mostra o aviso “Lançamento: todos os recursos do Pro liberados sem custo”. Os três planos também estão no JSON-LD (`offers`). Posicionamento definido a partir de Linktree, Beacons, Taplink, Lnk.bio, Abre.bio, Viber.Bio, Linkme e Linkhiver (out/2026): R$ 19/R$ 180 empata com o Abre.bio (R$ 19,90/R$ 189,90, com 10 links) e fica abaixo do Linktree Pro.
+- **Seção de preços** (`#planos`, link no menu e no rodapé): três cartões (Grátis R$ 0, Pro mensal R$ 9,90/mês, Pro anual R$ 5,90/mês = R$ 70,80/ano, “Mais vantajoso”, economia de 40%), tabela comparativa Grátis × Pro e 7 perguntas frequentes. Preços e limites vêm de `src/lib/billing.ts`. Com a cobrança desligada, mostra o aviso “Lançamento: todos os recursos do Pro liberados sem custo”. Os três planos também estão no JSON-LD (`offers`). Posicionamento definido a partir de Linktree, Beacons, Taplink, Lnk.bio, Abre.bio, Viber.Bio, Linkme e Linkhiver (out/2026). Preço baixado para R$ 9,90 / R$ 5,90 (2026-10-16): abaixo do Abre.bio (R$ 19,90/R$ 189,90) e do Linkhiver (R$ 17), na faixa do Linkme.
 - Animação de entrada ao rolar (`RevealWrapper`).
 - SEO: metadata global, JSON-LD (`SoftwareApplication` + `WebSite`), `sitemap.ts`, `robots.ts`, imagem Open Graph gerada (`opengraph-image.tsx`) e ícone.
 
@@ -107,7 +107,7 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 
 | | Grátis | Pro |
 |---|---|---|
-| Preço | R$ 0 | R$ 19/mês ou R$ 180/ano (cartão, renovação automática) |
+| Preço | R$ 0 | R$ 9,90/mês ou R$ 70,80/ano = R$ 5,90/mês (cartão, renovação automática) |
 | Links | até 5 (a página mostra os 5 primeiros ativos) | ilimitados |
 | Formatos Destaque e Bloco | não (aparecem como botão) | sim |
 | Resultados | 7 dias | 7, 30 e 90 dias |

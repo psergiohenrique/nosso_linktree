@@ -14,8 +14,9 @@ export const PRO_PRICES: Record<
   Cycle,
   { cents: number; price: string; per: string; months: number; asaasCycle: "MONTHLY" | "YEARLY"; name: string }
 > = {
-  monthly: { cents: 1900, price: "R$ 19", per: "/mês", months: 1, asaasCycle: "MONTHLY", name: "Linkbio Pro mensal" },
-  yearly: { cents: 18000, price: "R$ 180", per: "/ano", months: 12, asaasCycle: "YEARLY", name: "Linkbio Pro anual" },
+  monthly: { cents: 990, price: "R$ 9,90", per: "/mês", months: 1, asaasCycle: "MONTHLY", name: "Linkbio Pro mensal" },
+  // R$ 5,90 por mês, cobrados de uma vez no ano.
+  yearly: { cents: 7080, price: "R$ 70,80", per: "/ano", months: 12, asaasCycle: "YEARLY", name: "Linkbio Pro anual" },
 };
 
 export const FREE_FEATURES = [

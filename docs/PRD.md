@@ -75,7 +75,7 @@ Grátis e Pro implementados (cobrança pelo Asaas, cartão recorrente; detalhes 
 | Plano | Preço | Destaques |
 |---|---|---|
 | Grátis | R$ 0 | Até 5 links, selo “Feito com Linkbio”, resultados de 7 dias |
-| Pro | R$ 19/mês ou R$ 180/ano (R$ 15/mês) | Links ilimitados, Destaque e Bloco, sem selo, resultados de 30 e 90 dias |
+| Pro | R$ 9,90/mês ou R$ 70,80/ano (R$ 5,90/mês) | Links ilimitados, Destaque e Bloco, sem selo, resultados de 30 e 90 dias |
 | Business (hipótese) | R$ 49/mês (R$ 39 anual) | Domínio próprio, leads → robô, Pix, 3 páginas |
 | Agência (hipótese) | R$ 149–199/mês | 10–25 páginas, white-label |
 

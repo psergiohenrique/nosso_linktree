@@ -55,7 +55,7 @@ Queremos criar um "link na bio" próprio para **vender como produto** (assinatur
 | Plano | Preço | Destaques |
 |---|---|---|
 | Grátis | R$ 0 | Links ilimitados, marca d'água, analytics de 7 dias |
-| Pro | R$ 19/mês (R$ 15 anual) | Sem marca, analytics 90 dias, agendamento de links |
+| Pro | R$ 9,90/mês ou R$ 5,90/mês no anual (R$ 70,80/ano) | Sem marca, links ilimitados, Destaque e Bloco, analytics 90 dias |
 | Business | R$ 49/mês (R$ 39 anual) | Domínio próprio, leads → robô, Pix, vários atendentes, 3 páginas |
 | Agência | R$ 149–199/mês | 10–25 páginas, white-label, painel multi-cliente |
 
