@@ -36,7 +36,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
           <h1 className="h2 auth-h1">Crie sua página</h1>
           <p className="auth-text">Escolha o nome do seu negócio e o endereço da sua página.</p>
           {error}
-          <form action={createProfile} className="auth-form">
+          <form action={createProfile} className="auth-form" data-posthog-event="profile_created">
             <div>
               <label className="field-label" htmlFor="display_name">
                 Nome
@@ -97,7 +97,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
           </div>
         )}
 
-        <form action={addLink} className="card card-new">
+        <form action={addLink} className="card card-new" data-posthog-event="link_created">
           <h2 className="card-title">Novo link</h2>
           <fieldset disabled={atLimit} className="card-fieldset">
             <select name="kind" className="field" defaultValue="link" aria-label="Tipo">
@@ -145,7 +145,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
           const wa = link.kind === "whatsapp" ? splitWhatsapp(link.url) : null;
           return (
             <div key={link.id} className={`card ${link.is_active ? "" : "card-off"}`}>
-              <form action={updateLink} className="card-form">
+              <form action={updateLink} className="card-form" data-posthog-event="link_updated">
                 <input type="hidden" name="id" value={link.id} />
                 <input type="hidden" name="kind" value={link.kind} />
                 <div className="link-head">
@@ -197,21 +197,21 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                 </div>
               </form>
               <div className="card-actions">
-                <form action={moveLink}>
+                <form action={moveLink} data-posthog-event="link_reordered">
                   <input type="hidden" name="id" value={link.id} />
                   <input type="hidden" name="dir" value="up" />
                   <button className="btn btn-outline btn-sm" aria-label="Subir" disabled={i === 0}>
                     ↑
                   </button>
                 </form>
-                <form action={moveLink}>
+                <form action={moveLink} data-posthog-event="link_reordered">
                   <input type="hidden" name="id" value={link.id} />
                   <input type="hidden" name="dir" value="down" />
                   <button className="btn btn-outline btn-sm" aria-label="Descer" disabled={i === links.length - 1}>
                     ↓
                   </button>
                 </form>
-                <form action={deleteLink} className="push">
+                <form action={deleteLink} className="push" data-posthog-event="link_deleted">
                   <input type="hidden" name="id" value={link.id} />
                   <button className="btn btn-outline btn-sm btn-danger">Excluir</button>
                 </form>

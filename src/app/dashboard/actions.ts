@@ -10,6 +10,7 @@ import { getProfileByUser } from "@/server/profiles";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
 import { BUTTON_STYLES, FONTS, LINK_LAYOUTS, LINK_SIZES, THEME_PRESETS } from "@/lib/types";
 import { oneOf, safeUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
+import { emitPostHogLog } from "@/server/posthog-logs";
 
 function fail(message: string, path = "/dashboard"): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
@@ -194,6 +195,7 @@ export async function subscribePro(formData: FormData) {
     if (err instanceof BillingError) fail(err.message, "/dashboard/plano");
     throw err;
   }
+  await emitPostHogLog("checkout_session_created", { operation: "start_checkout", billing_cycle: cycle });
   redirect(url);
 }
 
@@ -205,5 +207,6 @@ export async function cancelPro() {
     if (err instanceof BillingError) fail(err.message, "/dashboard/plano");
     throw err;
   }
+  await emitPostHogLog("subscription_cancellation_requested", { operation: "cancel_subscription" });
   redirect("/dashboard/plano?cancelado=1");
 }

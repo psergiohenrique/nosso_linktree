@@ -14,10 +14,15 @@
     "test:db": "TEST_DATABASE_URL=postgresql://linkbio:linkbio@localhost:5435/linkbio vitest run"
   },
   "dependencies": {
+    "@opentelemetry/api-logs": "^0.223.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.223.0",
+    "@opentelemetry/resources": "^2.12.0",
+    "@opentelemetry/sdk-logs": "^0.223.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "next": "16.2.6",
     "pg": "^8.23.1",
+    "posthog-js": "^1.438.12",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "server-only": "^0.0.1"

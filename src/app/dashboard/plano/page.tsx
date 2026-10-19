@@ -146,7 +146,7 @@ export default async function PlanoPage({
               : "Não haverá novas cobranças e sua página volta ao plano Grátis. Nada é apagado."}
           </p>
           <div className="card-row">
-            <form action={cancelPro}>
+            <form action={cancelPro} data-posthog-event="pro_subscription_cancelled">
               <button className="btn btn-outline btn-sm btn-danger">Sim, cancelar</button>
             </form>
             <Link href="/dashboard/plano" className="btn btn-primary btn-sm">
@@ -192,7 +192,7 @@ export default async function PlanoPage({
               {cta.current ? (
                 <p className="plan-current-tag">Seu plano atual</p>
               ) : (
-                <form action={subscribePro}>
+                <form action={subscribePro} data-posthog-event="pro_checkout_started" data-posthog-cycle={cycle}>
                   <input type="hidden" name="cycle" value={cycle} />
                   <button className={`btn ${cycle === "yearly" ? "btn-lime" : "btn-primary"}`}>{cta.label}</button>
                 </form>
@@ -217,7 +217,7 @@ export default async function PlanoPage({
           </p>
           <div className="card-row">
             {plan.cycle && (
-              <form action={subscribePro}>
+              <form action={subscribePro} data-posthog-event="pro_checkout_started" data-posthog-cycle={plan.cycle}>
                 <input type="hidden" name="cycle" value={plan.cycle} />
                 <button className="btn btn-outline btn-sm">Trocar cartão</button>
               </form>

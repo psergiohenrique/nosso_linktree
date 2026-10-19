@@ -17,18 +17,25 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const profile = await getProfileByUser(user.id);
 
   // Sem página criada ainda: a rota /dashboard mostra o formulário de criação, sem o menu.
-  if (!profile) return children;
+  if (!profile) {
+    return (
+      <>
+        <DashTabs showTabs={false} userId={user.id} email={user.email} />
+        {children}
+      </>
+    );
+  }
 
   return (
     <div className="dash">
       <header className="dash-top">
         <Logo />
-        <DashTabs showPlan={billingEnabled()} />
+        <DashTabs showPlan={billingEnabled()} userId={user.id} email={user.email} />
         <div className="dash-top-actions">
           <Link href={`/${profile.slug}`} target="_blank" className="btn btn-outline btn-sm">
             /{profile.slug} ↗
           </Link>
-          <form action={signOut}>
+          <form action={signOut} data-posthog-logout="true">
             <button className="btn btn-outline btn-sm">Sair</button>
           </form>
         </div>

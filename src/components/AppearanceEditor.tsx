@@ -37,7 +37,7 @@ export default function AppearanceEditor({ profile, links, branding = true, acti
 
   return (
     <div className="dash-grid">
-      <form action={action} className="dash-main">
+      <form action={action} className="dash-main" data-posthog-event="appearance_saved">
         <div className="dash-head">
           <p className="eyebrow">Aparência</p>
           <h1 className="h2 dash-h1">Sua página, seu jeito</h1>
