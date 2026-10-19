@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AdvancedStats, { SAMPLE_ADVANCED } from "@/components/AdvancedStats";
 import BarList from "@/components/BarList";
-import Heatmap from "@/components/Heatmap";
+import { PaywallButton } from "@/components/Paywall";
 import TrafficChart from "@/components/TrafficChart";
 import { toggleWeeklyReport } from "@/app/dashboard/actions";
 import { SOURCE_LABELS, getAdvancedStats, getStats } from "@/server/analytics";
@@ -55,17 +56,27 @@ export default async function ResultadosPage({ searchParams }: { searchParams: P
         <h1 className="h2 dash-h1">Como sua página está indo</h1>
       </div>
       <div className="dash-head-actions">
-        {plan.pro && !locked(days) && (
+        {plan.pro ? (
           <a href={`/dashboard/resultados/csv?days=${days}`} className="btn btn-outline btn-sm" download>
             Exportar CSV
           </a>
+        ) : (
+          <PaywallButton feature="csv" className="btn btn-outline btn-sm">
+            Exportar CSV <span className="pro-tag">Pro</span>
+          </PaywallButton>
         )}
         <nav className="range" aria-label="Período">
-          {RANGES.map((r) => (
-            <Link key={r} href={`/dashboard/resultados?days=${r}`} className={days === r ? "active" : ""}>
-              {r} dias{locked(r) && <span className="pro-tag">Pro</span>}
-            </Link>
-          ))}
+          {RANGES.map((r) =>
+            locked(r) && days !== r ? (
+              <PaywallButton key={r} feature="stats" className="">
+                {r} dias<span className="pro-tag">Pro</span>
+              </PaywallButton>
+            ) : (
+              <Link key={r} href={`/dashboard/resultados?days=${r}`} className={days === r ? "active" : ""}>
+                {r} dias{locked(r) && <span className="pro-tag">Pro</span>}
+              </Link>
+            ),
+          )}
         </nav>
       </div>
     </div>
@@ -82,9 +93,7 @@ export default async function ResultadosPage({ searchParams }: { searchParams: P
             saber o que realmente traz clientes.
           </p>
           <div className="card-row">
-            <Link href="/dashboard/plano" className="btn btn-primary btn-sm">
-              Conhecer o Pro
-            </Link>
+            <PaywallButton feature="stats">Conhecer o Pro</PaywallButton>
             <Link href={`/dashboard/resultados?days=${FREE_STATS_DAYS}`} className="btn btn-outline btn-sm">
               Ver {FREE_STATS_DAYS} dias
             </Link>
@@ -199,106 +208,26 @@ export default async function ResultadosPage({ searchParams }: { searchParams: P
       </section>
 
       {advanced ? (
-        <>
-          <section className="card stat-card">
-            <h2 className="card-title">De onde vem quem clica em cada link</h2>
-            {advanced.linkSources.length === 0 ? (
-              <p className="dash-empty">Sem cliques no período.</p>
-            ) : (
-              <ul className="link-sources">
-                {advanced.linkSources.map((l) => (
-                  <li key={l.id}>
-                    <div className="link-sources-head">
-                      <span>
-                        {l.title}
-                        {l.kind === "whatsapp" && <span className="link-kind link-kind-whats">WhatsApp</span>}
-                      </span>
-                      <span className="link-sources-total">
-                        {l.total} {l.total === 1 ? "clique" : "cliques"}
-                      </span>
-                    </div>
-                    <p className="link-sources-list">
-                      {l.sources.map((s) => (
-                        <span key={s.key} className="source-chip">
-                          {sourceLabel(s.key)} <strong>{pct(s.count, l.total)}</strong>
-                        </span>
-                      ))}
-                    </p>
-                  </li>
+        <AdvancedStats data={advanced} views={stats.views} pageUrl={pageUrl} />
+      ) : (
+        // Grátis: as seções aparecem com dados de exemplo, borradas, e o clique abre o aviso do Pro.
+        <div className="pro-locked">
+          <div className="pro-locked-content" aria-hidden="true" inert>
+            <AdvancedStats data={SAMPLE_ADVANCED} views={420} pageUrl={pageUrl} />
+          </div>
+          <div className="pro-locked-overlay">
+            <div className="card pro-locked-card">
+              <span className="pro-tag paywall-tag">Pro</span>
+              <h2 className="card-title">Mais métricas no Pro</h2>
+              <ul className="upsell-list">
+                {PRO_METRICS.map((m) => (
+                  <li key={m}>{m}</li>
                 ))}
               </ul>
-            )}
-          </section>
-
-          <section className="card stat-card">
-            <h2 className="card-title">Horários de pico</h2>
-            <Heatmap data={advanced.heatmap} />
-          </section>
-
-          <div className="stat-cols">
-            <section className="card stat-card">
-              <h2 className="card-title">Cidades</h2>
-              <BarList
-                items={advanced.cities.map((c) => ({
-                  key: `${c.city}|${c.region ?? ""}`,
-                  label: c.region ? `${c.city} – ${c.region}` : c.city,
-                  count: c.count,
-                }))}
-                total={stats.views}
-                empty="Sem cidades identificadas no período."
-              />
-            </section>
-            <section className="card stat-card">
-              <h2 className="card-title">Campanhas</h2>
-              {advanced.campaigns.length === 0 ? (
-                <div className="dash-empty">
-                  <p>Nenhuma campanha no período. Para medir cada post, story ou anúncio, divulgue o link com UTM:</p>
-                  <code className="utm-example">{pageUrl}?utm_source=instagram&amp;utm_campaign=promo</code>
-                </div>
-              ) : (
-                <table className="rank">
-                  <thead>
-                    <tr>
-                      <th>Campanha</th>
-                      <th className="num">Visitas</th>
-                      <th className="num">Cliques</th>
-                      <th className="num">WhatsApp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {advanced.campaigns.map((c) => (
-                      <tr key={`${c.source}|${c.medium}|${c.campaign}`}>
-                        <td>
-                          {c.campaign ?? "(sem nome)"}
-                          <span className="hint campaign-meta">{[c.source, c.medium].filter(Boolean).join(" / ")}</span>
-                        </td>
-                        <td className="num">{c.views}</td>
-                        <td className="num">{c.clicks}</td>
-                        <td className="num">{c.whatsapp}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </section>
+              <PaywallButton feature="stats">Desbloquear com o Pro</PaywallButton>
+            </div>
           </div>
-        </>
-      ) : (
-        <section className="card upsell-card">
-          <h2 className="card-title">
-            Mais métricas no Pro <span className="pro-tag">Pro</span>
-          </h2>
-          <ul className="upsell-list">
-            {PRO_METRICS.map((m) => (
-              <li key={m}>{m}</li>
-            ))}
-          </ul>
-          <div className="card-row">
-            <Link href="/dashboard/plano" className="btn btn-primary btn-sm">
-              Conhecer o Pro
-            </Link>
-          </div>
-        </section>
+        </div>
       )}
 
       <section className="card weekly-card">

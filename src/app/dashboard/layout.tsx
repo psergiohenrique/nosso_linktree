@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DashTabs from "@/components/DashTabs";
 import Logo from "@/components/Logo";
+import { PaywallDialog } from "@/components/Paywall";
 import { requireUser } from "@/server/auth";
-import { billingEnabled } from "@/server/billing";
+import { billingEnabled, getPlan } from "@/server/billing";
 import { getProfileByUser } from "@/server/profiles";
 import { signOut } from "../login/actions";
 
@@ -26,6 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     );
   }
 
+  // Aviso de recurso Pro: só para quem está no Grátis (com a cobrança desligada todos têm o Pro).
+  const plan = await getPlan(user.id);
+
   return (
     <div className="dash">
       <header className="dash-top">
@@ -41,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </header>
       {children}
+      {!plan.pro && <PaywallDialog />}
     </div>
   );
 }

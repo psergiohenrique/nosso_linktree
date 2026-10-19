@@ -1,3 +1,6 @@
+"use client";
+
+import { openPaywall } from "./Paywall";
 import { LINK_LAYOUTS, LINK_SIZES, type LinkLayout, type LinkSize } from "@/lib/types";
 
 const LAYOUT_ICONS: Record<LinkLayout, React.ReactNode> = {
@@ -23,7 +26,7 @@ type Props = {
   onChange?: (change: { layout?: LinkLayout; size?: LinkSize }) => void;
   /** Prefixo do name dos rádios, para vários links na mesma tela sem formulário próprio. */
   namePrefix?: string;
-  /** Destaque e Bloco liberados (plano Pro). Sem eles, aparecem travados com a etiqueta Pro. */
+  /** Destaque e Bloco liberados (plano Pro). Sem eles, aparecem com a etiqueta Pro e abrem o aviso do Pro. */
   proLayouts?: boolean;
 };
 
@@ -61,7 +64,15 @@ export default function LinkOptions({
                 <input
                   type="radio"
                   {...radio("layout", l.value, proLayouts ? layout : "button")}
-                  disabled={locked}
+                  // No Grátis o clique não marca: mostra o formato no aviso do Pro.
+                  onClick={
+                    locked
+                      ? (e) => {
+                          e.preventDefault();
+                          openPaywall(l.value === "tile" ? "tile" : "featured");
+                        }
+                      : undefined
+                  }
                 />
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   {LAYOUT_ICONS[l.value]}

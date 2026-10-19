@@ -37,6 +37,7 @@ export default async function AparenciaPage({
         profile={viewProfile}
         links={viewLinks}
         branding={branding}
+        pro={plan.pro}
         action={updateAppearance}
       />
     </>

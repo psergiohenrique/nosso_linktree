@@ -2,6 +2,7 @@ import Link from "next/link";
 import LinkOptions from "@/components/LinkOptions";
 import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
+import { PaywallButton } from "@/components/Paywall";
 import PhonePreview from "@/components/PhonePreview";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
@@ -99,7 +100,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
 
         <form action={addLink} className="card card-new" data-posthog-event="link_created">
           <h2 className="card-title">Novo link</h2>
-          <fieldset disabled={atLimit} className="card-fieldset">
+          <fieldset className="card-fieldset">
             <select name="kind" className="field" defaultValue="link" aria-label="Tipo">
               <option value="link">Link comum</option>
               <option value="whatsapp">WhatsApp</option>
@@ -129,12 +130,18 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
               <span className="field-label">Imagem (opcional; recomendada para Destaque e Bloco)</span>
               <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif" />
             </label>
-            <button className="btn btn-primary">Adicionar</button>
+            {/* No limite do Grátis o formulário continua aberto; o botão mostra o aviso do Pro. */}
+            {atLimit ? (
+              <PaywallButton feature="links" className="btn btn-primary">
+                Adicionar
+              </PaywallButton>
+            ) : (
+              <button className="btn btn-primary">Adicionar</button>
+            )}
           </fieldset>
           {atLimit && (
             <p className="hint">
-              Você chegou ao limite do plano Grátis. <Link href="/dashboard/plano">Assine o Pro</Link> para adicionar
-              mais links.
+              Você chegou aos {FREE_LINK_LIMIT} links do plano Grátis. Com o Pro, são ilimitados.
             </p>
           )}
         </form>
