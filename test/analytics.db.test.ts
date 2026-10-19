@@ -40,7 +40,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: métricas", () => {
       "x-vercel-ip-country-region": "PE",
       "x-vercel-ip-country": "BR",
     });
-    await trackEvent({
+    const view = await trackEvent({
       profileId: userId,
       linkId: null,
       type: "view",
@@ -48,6 +48,9 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: métricas", () => {
       referrer: null,
       utm: { source: "instagram", medium: "stories", campaign: "promo" },
     });
+    expect(view).toMatchObject({ source: "instagram", city: "Recife", utm_campaign: "promo" });
+    // Repetição em menos de 30 min é descartada (e não vai ao PostHog).
+    expect(await trackEvent({ profileId: userId, linkId: null, type: "view", headers, referrer: null })).toBeNull();
     await trackEvent({ profileId: userId, linkId: whatsId, type: "click", headers, referrer: null });
 
     const click = await queryOne<{ source: string; utm_campaign: string; city: string }>(

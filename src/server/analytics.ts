@@ -58,6 +58,17 @@ type TrackInput = {
   utm?: Utm;
 };
 
+export type TrackedEvent = {
+  source: string;
+  device: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+};
+
 export type Utm = { source: string | null; medium: string | null; campaign: string | null };
 
 const NO_UTM: Utm = { source: null, medium: null, campaign: null };
@@ -101,10 +112,18 @@ export function geoFromHeaders(headers: Headers) {
  * ou excesso de eventos (proteção contra inflar números).
  * O clique herda origem e campanha da última visualização do mesmo visitante, para saber
  * de onde vem quem clica em cada link.
+ * Devolve o evento gravado (ou null se foi descartado), para repassar ao PostHog.
  */
-export async function trackEvent({ profileId, linkId, type, headers, referrer, utm = NO_UTM }: TrackInput) {
+export async function trackEvent({
+  profileId,
+  linkId,
+  type,
+  headers,
+  referrer,
+  utm = NO_UTM,
+}: TrackInput): Promise<TrackedEvent | null> {
   const ua = headers.get("user-agent") ?? "";
-  if (!ua || BOT_UA.test(ua)) return;
+  if (!ua || BOT_UA.test(ua)) return null;
 
   const ip = (headers.get("x-forwarded-for")?.split(",")[0] ?? headers.get("x-real-ip") ?? "").trim();
   const day = new Date().toISOString().slice(0, 10);
@@ -120,7 +139,7 @@ export async function trackEvent({ profileId, linkId, type, headers, referrer, u
 
   // Visualização: 1 por visitante a cada 30 min. Clique: 1 por link a cada 30 s.
   // Teto: 120 eventos por visitante por hora.
-  await query(
+  const [row] = await query<TrackedEvent>(
     `insert into events (profile_id, link_id, type, source, referrer_host, device, visitor_hash,
                          city, region, country, utm_source, utm_medium, utm_campaign)
      select $1, $2, $3, coalesce(v.source, $4), coalesce(v.referrer_host, $5), $6, $7,
@@ -142,7 +161,8 @@ export async function trackEvent({ profileId, linkId, type, headers, referrer, u
             and e.created_at > now() - case when $3 = 'view' then interval '30 minutes' else interval '30 seconds' end
        )
        and (select count(*) from events e
-             where e.profile_id = $1 and e.visitor_hash = $7 and e.created_at > now() - interval '1 hour') < 120`,
+             where e.profile_id = $1 and e.visitor_hash = $7 and e.created_at > now() - interval '1 hour') < 120
+     returning source, device, city, region, country, utm_source, utm_medium, utm_campaign`,
     [
       profileId,
       linkId,
@@ -159,6 +179,7 @@ export async function trackEvent({ profileId, linkId, type, headers, referrer, u
       utm.campaign,
     ],
   );
+  return row ?? null;
 }
 
 export type DailyPoint = { day: string; views: number; clicks: number };

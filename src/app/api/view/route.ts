@@ -1,5 +1,6 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { parseUtm, trackEvent } from "@/server/analytics";
+import { captureBioEvent } from "@/server/posthog-events";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  await trackEvent({
+  const event = await trackEvent({
     profileId,
     linkId: null,
     type: "view",
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
     referrer: typeof body.referrer === "string" ? body.referrer.slice(0, 500) : null,
     utm: parseUtm(body.utm),
   });
+  if (event) after(() => captureBioEvent({ profileId, event }));
 
   return NextResponse.json({ ok: true });
 }

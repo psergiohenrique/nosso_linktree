@@ -86,6 +86,7 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 - Filtro de robôs, descarte de repetições (visualização: 30 min; clique: 30 s) e limite de 120 eventos por visitante por hora.
 - Dias calculados no fuso `America/Sao_Paulo`.
 - Cidade, estado e país vêm dos cabeçalhos de geolocalização da Vercel e são guardados só como nome (sem IP). Migração `0005_metrics.sql`.
+- **PostHog** (analytics do produto, para nós): no navegador só carrega no site (`/`, `/login`, `/demo`) e no painel (`instrumentation-client.ts`); o painel identifica o usuário e captura eventos dos formulários. As páginas públicas dos clientes ficam sem PostHog e sem cookie: cada visita e clique que entra no banco também vai ao PostHog pelo servidor (`bio_page_viewed` / `bio_link_clicked`, `src/server/posthog-events.ts`, via `after()`), com `distinct_id` = dono da página, sem IP nem código do visitante e com GeoIP desligado. Logs OTLP de checkout/cancelamento em `src/server/posthog-logs.ts`. Variáveis: `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` e `NEXT_PUBLIC_POSTHOG_HOST`.
 
 ## 8. Playground (`/demo`)
 
