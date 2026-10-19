@@ -6,7 +6,7 @@ Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rod
 
 **Marca e endereço:** produto da CodePath — "Linkbio by CodePath" no logo, rodapé, SEO/JSON-LD (`Organization` CodePath como publisher) e imagem de compartilhamento. Endereço de produção: `https://bio.codepath.dev.br` (via `NEXT_PUBLIC_SITE_URL`; o prefixo do endereço no painel sai dessa variável).
 
-**Banco de produção:** Postgres no Neon, com as migrações 0001–0004 aplicadas (sem seed).
+**Banco de produção:** Postgres no Neon, com as migrações 0001–0005 aplicadas (sem seed).
 
 **Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `BILLING_ENABLED` (hoje `false`), `ASAAS_API_URL` (hoje sandbox), `ASAAS_API_KEY` (hoje a de sandbox), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
 
@@ -64,6 +64,9 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 - Períodos de 7, 30 e 90 dias.
 - Visualizações, visitantes únicos, cliques e CTR.
 - Gráfico diário (visualizações × cliques), cliques por link, origem do tráfego (Instagram, Facebook, TikTok, Google, direto…) e dispositivo (celular/computador).
+- **Conversas no WhatsApp** (cliques em links do tipo WhatsApp) em destaque e variação de cada número contra o período anterior de mesmo tamanho (taxa de clique em pontos percentuais).
+- **Só no Pro** (`getAdvancedStats`): origem de quem clica em cada link (o clique herda origem e UTM da última visualização do mesmo visitante), horários de pico (dia da semana × hora, fuso de Brasília), cidades (cabeçalhos `x-vercel-ip-*` da Vercel), campanhas (`utm_source`/`utm_medium`/`utm_campaign` da URL da página) e exportação CSV (`/dashboard/resultados/csv?days=`, separador `;` com BOM para o Excel). No Grátis aparece um cartão de upsell.
+- **Resumo semanal por e-mail** (Grátis e Pro): cron `/api/cron/weekly-report` toda segunda às 9h de Brasília (`0 12 * * 1`, `CRON_SECRET`) manda os 7 dias até ontem comparados à semana anterior, link mais clicado e principal origem, para contas com visitas na semana. Ligado por padrão (`users.weekly_report`); `weekly_report_sent_at` impede envio duplicado. Desliga pelo painel ou pelo link do e-mail (`/api/resumo/sair`, assinado com HMAC do `APP_SECRET`, com `List-Unsubscribe` de um clique).
 
 ## 5. Página pública (`/[slug]`)
 
@@ -82,6 +85,7 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 - Não guarda IP nem cookies de rastreio: cada visitante vira um hash diário (`APP_SECRET` + dia + perfil + IP + navegador).
 - Filtro de robôs, descarte de repetições (visualização: 30 min; clique: 30 s) e limite de 120 eventos por visitante por hora.
 - Dias calculados no fuso `America/Sao_Paulo`.
+- Cidade, estado e país vêm dos cabeçalhos de geolocalização da Vercel e são guardados só como nome (sem IP). Migração `0005_metrics.sql`.
 
 ## 8. Playground (`/demo`)
 
@@ -111,6 +115,8 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 | Links | até 5 (a página mostra os 5 primeiros ativos) | ilimitados |
 | Formatos Destaque e Bloco | não (aparecem como botão) | sim |
 | Resultados | 7 dias | 7, 30 e 90 dias |
+| Conversas no WhatsApp, comparação e resumo semanal | sim | sim |
+| Origem por link, horários de pico, cidades, campanhas e CSV | não | sim |
 | Selo “Feito com Linkbio” | sim | não |
 
 - **Checkout:** `/dashboard/plano` → “Assinar mensal/anual” abre o checkout do Asaas (cartão recorrente, `externalReference = linkbio:<userId>`). Na volta, a tela recarrega sozinha até o webhook confirmar.

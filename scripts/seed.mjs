@@ -43,6 +43,8 @@ try {
   }
 
   const sources = ["instagram", "instagram", "instagram", "instagram", "whatsapp", "whatsapp", "direto", "google", "tiktok", "facebook"];
+  const cities = [["São Paulo", "SP"], ["São Paulo", "SP"], ["São Paulo", "SP"], ["Guarulhos", "SP"], ["Campinas", "SP"], ["Rio de Janeiro", "RJ"], ["Belo Horizonte", "MG"]];
+  const campaigns = [null, null, null, null, ["instagram", "stories", "promo-corte"], ["instagram", "bio", null], ["facebook", "anuncio", "dia-dos-pais"]];
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   let visitor = 0;
   for (let day = 29; day >= 0; day--) {
@@ -52,16 +54,21 @@ try {
       const hash = createHash("sha256").update(String(visitor++)).digest("hex").slice(0, 32);
       const at = new Date(Date.now() - day * 864e5 - Math.random() * 12 * 36e5);
       const device = Math.random() < 0.82 ? "mobile" : "desktop";
+      const source = pick(sources);
+      const [city, region] = pick(cities);
+      const [utmSource, utmMedium, utmCampaign] = pick(campaigns) ?? [null, null, null];
+      const extra = [city, region, "BR", utmSource, utmMedium, utmCampaign];
       await client.query(
-        `insert into events (profile_id, type, source, device, visitor_hash, created_at) values ($1, 'view', $2, $3, $4, $5)`,
-        [user.id, pick(sources), device, hash, at],
+        `insert into events (profile_id, type, source, device, visitor_hash, created_at, city, region, country, utm_source, utm_medium, utm_campaign)
+         values ($1, 'view', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [user.id, source, device, hash, at, ...extra],
       );
       for (const [i, id] of linkIds.entries()) {
         if (Math.random() < links[i][3]) {
           await client.query(
-            `insert into events (profile_id, link_id, type, source, device, visitor_hash, created_at)
-             values ($1, $2, 'click', 'direto', $3, $4, $5)`,
-            [user.id, id, device, hash, new Date(at.getTime() + 20000)],
+            `insert into events (profile_id, link_id, type, source, device, visitor_hash, created_at, city, region, country, utm_source, utm_medium, utm_campaign)
+             values ($1, $2, 'click', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [user.id, id, source, device, hash, new Date(at.getTime() + 20000), ...extra],
           );
         }
       }

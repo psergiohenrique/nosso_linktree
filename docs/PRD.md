@@ -35,7 +35,7 @@ O dono do negócio quer **gerar conversa (WhatsApp) e lead**, não só "ter link
 3. Perfil: nome, bio e foto (upload). Aparência: temas prontos, fundo sólido ou degradê, cores de texto e botões, estilo do botão e fonte, com prévia ao vivo no painel.
 4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida). Imagem opcional por link (upload).
 5. Página pública renderizada no servidor, rápida, sem captcha ou pop-up.
-6. Analytics: visualizações, visitantes únicos, cliques e CTR por link (7/30/90 dias), gráfico diário, origem e dispositivo; filtro de robôs e repetições.
+6. Analytics: visualizações, visitantes únicos, cliques e CTR por link (7/30/90 dias), gráfico diário, origem e dispositivo; filtro de robôs e repetições. Conversas no WhatsApp, comparação com o período anterior e resumo semanal por e-mail. No Pro: origem por link, horários de pico, cidades, campanhas UTM e CSV.
 7. Slugs reservados e validação de URLs (http/https/tel/mailto).
 
 Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIENTE.md](PERSONALIZACAO-POR-CLIENTE.md).
@@ -75,7 +75,7 @@ Grátis e Pro implementados (cobrança pelo Asaas, cartão recorrente; detalhes 
 | Plano | Preço | Destaques |
 |---|---|---|
 | Grátis | R$ 0 | Até 5 links, selo “Feito com Linkbio”, resultados de 7 dias |
-| Pro | R$ 9,90/mês ou R$ 70,80/ano (R$ 5,90/mês) | Links ilimitados, Destaque e Bloco, sem selo, resultados de 30 e 90 dias |
+| Pro | R$ 9,90/mês ou R$ 70,80/ano (R$ 5,90/mês) | Links ilimitados, Destaque e Bloco, sem selo, resultados de 30 e 90 dias, métricas avançadas (origem por link, horários, cidades, campanhas, CSV) |
 | Business (hipótese) | R$ 49/mês (R$ 39 anual) | Domínio próprio, leads → robô, Pix, 3 páginas |
 | Agência (hipótese) | R$ 149–199/mês | 10–25 páginas, white-label |
 

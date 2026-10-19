@@ -24,6 +24,7 @@ export const FREE_FEATURES = [
   "Botão de WhatsApp",
   "Temas, cores, botões e fontes",
   `Resultados dos últimos ${FREE_STATS_DAYS} dias`,
+  "Resumo semanal por e-mail",
   "Selo “Feito com Linkbio”",
 ];
 
@@ -31,6 +32,7 @@ export const PRO_FEATURES = [
   "Links ilimitados",
   "Formatos Destaque e Bloco",
   "Resultados de 30 e 90 dias",
+  "Horários de pico, cidades, campanhas e CSV",
   "Sem o selo “Feito com Linkbio”",
   "0% de comissão, sempre",
 ];

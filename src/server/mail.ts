@@ -6,9 +6,10 @@ import "server-only";
  * Sem eles, fora de produção, só mostra o e-mail no terminal do servidor (útil para testar localmente).
  */
 
-type Mail = { to: string; subject: string; text: string; html: string };
+/** headers: cabeçalhos extras do e-mail (ex.: List-Unsubscribe nos e-mails recorrentes). */
+type Mail = { to: string; subject: string; text: string; html: string; headers?: Record<string, string> };
 
-export async function sendMail({ to, subject, text, html }: Mail) {
+export async function sendMail({ to, subject, text, html, headers }: Mail) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM;
 
@@ -24,7 +25,7 @@ export async function sendMail({ to, subject, text, html }: Mail) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: [to], subject, text, html }),
+    body: JSON.stringify({ from, to: [to], subject, text, html, ...(headers && { headers }) }),
   });
   if (!res.ok) {
     console.error(`[mail] falha ao enviar (${res.status}): ${await res.text().catch(() => "")}`);

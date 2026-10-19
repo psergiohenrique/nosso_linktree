@@ -11,6 +11,7 @@ const PRO_HIGHLIGHTS = [
   "Links ilimitados",
   "Formatos Destaque e Bloco",
   "Resultados de 30 e 90 dias",
+  "Métricas avançadas: horários, cidades, campanhas e CSV",
   "Sem o selo “Feito com Linkbio”",
 ];
 
@@ -27,6 +28,7 @@ const PLANS = [
       "Botão de WhatsApp com mensagem pronta",
       "Todos os temas, cores e fontes",
       `Resultados dos últimos ${FREE_STATS_DAYS} dias`,
+      "Resumo semanal por e-mail",
       "Selo “Feito com Linkbio”",
     ],
     cta: "Começar grátis",
@@ -63,6 +65,11 @@ const COMPARE: { label: string; free: string | boolean; pro: string | boolean }[
   { label: "Formatos Destaque (imagem grande) e Bloco (grade)", free: false, pro: true },
   { label: "Visualizações, cliques e taxa de clique", free: `${FREE_STATS_DAYS} dias`, pro: "7, 30 e 90 dias" },
   { label: "Origem das visitas e dispositivo", free: `${FREE_STATS_DAYS} dias`, pro: "7, 30 e 90 dias" },
+  { label: "Conversas no WhatsApp e comparação com o período anterior", free: true, pro: true },
+  { label: "Resumo semanal por e-mail", free: true, pro: true },
+  { label: "De onde vem quem clica em cada link", free: false, pro: true },
+  { label: "Horários de pico e cidades das visitas", free: false, pro: true },
+  { label: "Campanhas (UTM) e exportação em planilha (CSV)", free: false, pro: true },
   { label: "Selo “Feito com Linkbio” na página", free: "Aparece", pro: "Não aparece" },
   { label: "Comissão sobre suas vendas", free: "0%", pro: "0%" },
 ];
@@ -74,7 +81,7 @@ const FAQ = [
   },
   {
     q: "O que muda quando eu assino o Pro?",
-    a: `Você passa a ter links ilimitados, os formatos Destaque e Bloco, resultados de 30 e 90 dias e sua página deixa de mostrar o selo “Feito com Linkbio”. Tudo é liberado assim que o pagamento é confirmado.`,
+    a: `Você passa a ter links ilimitados, os formatos Destaque e Bloco, resultados de 30 e 90 dias, métricas avançadas (origem de quem clica em cada link, horários de pico, cidades, campanhas e exportação em CSV) e sua página deixa de mostrar o selo “Feito com Linkbio”. Tudo é liberado assim que o pagamento é confirmado.`,
   },
   {
     q: "Posso cancelar quando quiser? Tem multa ou fidelidade?",

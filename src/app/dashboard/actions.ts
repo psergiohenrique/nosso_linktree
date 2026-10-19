@@ -11,6 +11,7 @@ import { FREE_LINK_LIMIT } from "@/lib/billing";
 import { BUTTON_STYLES, FONTS, LINK_LAYOUTS, LINK_SIZES, THEME_PRESETS } from "@/lib/types";
 import { oneOf, safeUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
 import { emitPostHogLog } from "@/server/posthog-logs";
+import { setWeeklyReport } from "@/server/weekly-report";
 
 function fail(message: string, path = "/dashboard"): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
@@ -209,4 +210,10 @@ export async function cancelPro() {
   }
   await emitPostHogLog("subscription_cancellation_requested", { operation: "cancel_subscription" });
   redirect("/dashboard/plano?cancelado=1");
+}
+
+export async function toggleWeeklyReport(formData: FormData) {
+  const user = await requireUser();
+  await setWeeklyReport(user.id, formData.get("on") === "1");
+  revalidatePath("/dashboard/resultados");
 }

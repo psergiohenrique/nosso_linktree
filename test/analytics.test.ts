@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifySource } from "@/server/analytics";
+import { classifySource, geoFromHeaders, parseUtm } from "@/server/analytics";
 
 const CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36";
 const INSTAGRAM_APP =
@@ -42,5 +42,36 @@ describe("classifySource", () => {
       host: "blog.exemplo.com",
     });
     expect(classifySource("não é url", CHROME, null).source).toBe("direto");
+  });
+});
+
+describe("parseUtm", () => {
+  it("normaliza e limita os valores", () => {
+    expect(parseUtm({ source: "  Instagram ", medium: "Stories  Pagos", campaign: "x".repeat(80) })).toEqual({
+      source: "instagram",
+      medium: "stories pagos",
+      campaign: "x".repeat(60),
+    });
+  });
+
+  it("ignora o que não é texto", () => {
+    expect(parseUtm(null)).toEqual({ source: null, medium: null, campaign: null });
+    expect(parseUtm({ source: 1, medium: "", campaign: ["a"] })).toEqual({ source: null, medium: null, campaign: null });
+  });
+});
+
+describe("geoFromHeaders", () => {
+  it("lê e decodifica os cabeçalhos da Vercel", () => {
+    const h = new Headers({
+      "x-vercel-ip-city": "S%C3%A3o%20Paulo",
+      "x-vercel-ip-country-region": "sp",
+      "x-vercel-ip-country": "BR",
+    });
+    expect(geoFromHeaders(h)).toEqual({ city: "São Paulo", region: "SP", country: "BR" });
+  });
+
+  it("sem cabeçalhos ou com valor inválido fica vazio", () => {
+    expect(geoFromHeaders(new Headers())).toEqual({ city: null, region: null, country: null });
+    expect(geoFromHeaders(new Headers({ "x-vercel-ip-country": "1x", "x-vercel-ip-city": "%E0%A4%A" })).country).toBeNull();
   });
 });

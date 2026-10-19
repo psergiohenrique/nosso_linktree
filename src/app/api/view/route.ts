@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { trackEvent } from "@/server/analytics";
+import { parseUtm, trackEvent } from "@/server/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     type: "view",
     headers: request.headers,
     referrer: typeof body.referrer === "string" ? body.referrer.slice(0, 500) : null,
+    utm: parseUtm(body.utm),
   });
 
   return NextResponse.json({ ok: true });

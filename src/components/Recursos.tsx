@@ -20,7 +20,7 @@ const FEATURES = [
   },
   {
     title: "Métricas que importam",
-    desc: "Visualizações, cliques e taxa de clique por link, e de onde vem cada visita. Veja o que converte.",
+    desc: "Conversas no WhatsApp, cliques por link e de onde vem cada visita, comparados à semana anterior. Resumo toda segunda no seu e-mail.",
     icon: <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />,
   },
   {
