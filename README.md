@@ -44,4 +44,4 @@ Qualquer PostgreSQL 14+ serve (Neon, Supabase, RDS…): aponte `DATABASE_URL` pa
 Não guarda IP nem cookies de rastreio. Cada visitante vira um hash diário (IP + navegador + perfil + dia + segredo), usado só para contar únicos e descartar repetições. Guarda origem (Instagram, Google…) e tipo de dispositivo.
 
 ## Próximos passos
-Ligar a cobrança em produção (chave de produção do Asaas); ícones de redes sociais, arrastar para reordenar, QR code; depois leads → robô de leads, Pix, domínio próprio, painel de agência.
+Primeiro pagamento real na cobrança (ligada em produção em 2026-10-21); ícones de redes sociais, arrastar para reordenar, QR code; depois leads → robô de leads, Pix, domínio próprio, painel de agência.

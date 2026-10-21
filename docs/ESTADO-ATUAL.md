@@ -2,17 +2,17 @@
 
 Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
 
-**Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. **Publicado em https://bio.codepath.dev.br** (2026-10-16). Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas, recuperação de senha e cobrança. Plano Grátis + Pro com cobrança pelo Asaas pronta (desligada em produção).
+**Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. **Publicado em https://bio.codepath.dev.br** (2026-10-16). Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas, recuperação de senha e cobrança. Plano Grátis + Pro com cobrança pelo Asaas **ligada em produção** (2026-10-21).
 
 **Marca e endereço:** produto da CodePath — "Linkbio by CodePath" no logo, rodapé, SEO/JSON-LD (`Organization` CodePath como publisher) e imagem de compartilhamento. Endereço de produção: `https://bio.codepath.dev.br` (via `NEXT_PUBLIC_SITE_URL`; o prefixo do endereço no painel sai dessa variável).
 
-**Banco de produção:** Postgres no Neon, com as migrações 0001–0005 aplicadas (sem seed).
+**Banco de produção:** Postgres no Neon, com as migrações 0001–0006 aplicadas (sem seed).
 
-**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `BILLING_ENABLED` (hoje `false`), `ASAAS_API_URL` (hoje sandbox), `ASAAS_API_KEY` (hoje a de sandbox), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
+**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `BILLING_ENABLED` (`true`), `ASAAS_API_URL` (produção), `ASAAS_API_KEY` (a de produção, compartilhada com o Ambiento), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`. A Vercel trata as variáveis de produção como sensíveis: `vercel env pull` as traz vazias. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
 
 **E-mail:** Resend, na mesma conta usada pelo Ambiento (chave compartilhada com o `ambiento-backend`), onde `codepath.dev.br` já está verificado (região sa-east-1). Remetente: `Linkbio by CodePath <nao-responda@codepath.dev.br>`. Envio de recuperação de senha testado em produção.
 
-**Cobrança (paywall):** pronta e testada de ponta a ponta em produção contra o sandbox do Asaas, mas **desligada** (`BILLING_ENABLED=false`) até existir a chave de produção do Asaas. Desligada, todo mundo tem o Pro. Ver seção 11.
+**Cobrança (paywall):** ligada em produção desde 2026-10-21, na conta Asaas do Ambiento. Antes, testada de ponta a ponta contra o sandbox. Falta o primeiro pagamento real. Ver seção 11.
 
 ---
 
@@ -122,7 +122,9 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 
 - **Paywalls (só no Grátis com a cobrança ligada):** o recurso aparece e, ao tentar usar, abre um aviso (`src/components/Paywall.tsx`, montado no layout do painel; textos em `src/lib/paywall.ts`) com o que o Pro inclui, os preços e botões Anual/Mensal que já abrem o checkout. Gatilhos: formatos Destaque/Bloco (com prévia do formato num celular), botão Adicionar no 6º link, 30/90 dias, Exportar CSV, métricas avançadas (aparecem borradas com dados de exemplo) e o interruptor do selo em Aparência (a prévia fica sem selo enquanto o aviso está aberto). O servidor continua barrando tudo. Eventos PostHog: `paywall_viewed` (com `feature`) e `pro_checkout_started`.
 - **Checkout:** `/dashboard/plano` → “Assinar mensal/anual” abre o checkout do Asaas (cartão recorrente, `externalReference = linkbio:<userId>`). Na volta, a tela recarrega sozinha até o webhook confirmar.
-- **Webhook:** `POST /api/asaas/webhook`, autenticado pelo cabeçalho `asaas-access-token` (`ASAAS_WEBHOOK_TOKEN`). Cada evento entra em `billing_events` (id único = entrega repetida ignorada) e é processado na hora; falhas são tentadas de novo (1 min, 5 min, 30 min, 2 h, 6 h) nas próximas entregas e no cron. Eventos de outros produtos na mesma conta Asaas (referência sem `linkbio:`) são ignorados.
+- **Webhook:** `POST /api/asaas/webhook`, autenticado pelo cabeçalho `asaas-access-token` (`ASAAS_WEBHOOK_TOKEN`). Cada evento entra em `billing_events` (id único = entrega repetida ignorada) e é processado na hora; falhas são tentadas de novo (1 min, 5 min, 30 min, 2 h, 6 h) nas próximas entregas e no cron.
+- **De quem é o evento:** customer do Asaas já conhecido, `externalReference`, id do checkout e id da assinatura. Em produção, a cobrança e a assinatura nascidas do checkout chegam com `externalReference` null, e o `CHECKOUT_PAID` com `customer` null: o primeiro pagamento só se liga ao usuário pelo `checkoutSession`. Por isso `billing_checkouts` (migração `0006`) guarda todo checkout aberto, e não só o último: o link de um checkout anterior ainda pode ser pago.
+- **Conta Asaas compartilhada com o Ambiento** (mesma chave de API), e todo webhook recebe os eventos da conta inteira. Evento com referência sem `linkbio:` ou com checkout que não está em `billing_checkouts` é do outro produto: marcado como processado, sem efeito e sem erro. O Ambiento faz o mesmo com os eventos do Linkbio. Revogar a chave derruba a cobrança dos dois.
 - **Estados:** ativo até o fim do período pago (+3 dias de folga para a renovação); cobrança recusada → 7 dias de carência ainda no Pro; cancelado → Pro até o fim do período; depois, volta ao Grátis sem apagar nada. Calculados na leitura.
 - **Trocar de ciclo ou de cartão / reativar:** novo checkout; a primeira cobrança só acontece quando o período pago acaba, e a assinatura antiga é encerrada no Asaas quando a nova nasce (nunca cobra duas vezes).
 - **Cortesia:** `subscriptions.courtesy_until` dá Pro grátis até uma data (ex.: pacote com site), definido por SQL.
@@ -130,16 +132,19 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 - **Cron diário** (`vercel.json`, 06h de Brasília): reprocessa eventos pendentes e encerra carências vencidas (cancela no Asaas).
 - **Testado em produção (sandbox), 2026-10-16:** limite de 5 links, página com selo, checkout aberto no Asaas, eventos reais (`PAYMENT_CONFIRMED` antes de `SUBSCRIPTION_CREATED`) ativando o Pro, 6º link e Destaque liberados, 90 dias de resultados, selo removido, cancelamento pelo painel refletido no Asaas (`SUBSCRIPTION_DELETED`). O preenchimento do checkout em si não pôde ser automatizado (reCAPTCHA); a assinatura foi criada pela API com os mesmos dados.
 
-**Para ligar em produção:**
-1. Chave de produção do Asaas (painel do Asaas → Integrações → Chave de API) em `ASAAS_API_KEY`, e `ASAAS_API_URL=https://api.asaas.com/v3`.
-2. Cadastrar o webhook no Asaas de produção: URL `https://bio.codepath.dev.br/api/asaas/webhook`, token = `ASAAS_WEBHOOK_TOKEN`, eventos `CHECKOUT_PAID`, `SUBSCRIPTION_CREATED/DELETED/INACTIVATED` e `PAYMENT_CREATED/CONFIRMED/RECEIVED/CREDIT_CARD_CAPTURE_REFUSED/OVERDUE/REFUNDED/DELETED`.
-3. `BILLING_ENABLED=true` na Vercel e novo deploy.
+**Em produção desde 2026-10-21:**
+1. Na Vercel (Production): `ASAAS_API_KEY` = chave de produção do Asaas (a mesma do Ambiento), `ASAAS_API_URL=https://api.asaas.com/v3`, `ASAAS_WEBHOOK_TOKEN` novo e `BILLING_ENABLED=true`.
+2. Webhook "Linkbio - produção" cadastrado no Asaas: URL `https://bio.codepath.dev.br/api/asaas/webhook`, token = `ASAAS_WEBHOOK_TOKEN`, eventos `CHECKOUT_PAID`, `SUBSCRIPTION_CREATED/DELETED/INACTIVATED` e `PAYMENT_CREATED/CONFIRMED/RECEIVED/CREDIT_CARD_CAPTURE_REFUSED/OVERDUE/REFUNDED/DELETED`.
+3. Conferido: o webhook responde 401 sem token e 200 com o token; no Asaas, os webhooks do Linkbio e do Ambiento estão ativos e sem pausa.
+
+**Ordem importa:** com `BILLING_ENABLED` diferente de `true`, o webhook responde 404, e o Asaas pausa a fila (`interrupted`) depois de falhas seguidas. Se a cobrança for desligada, desative o webhook no Asaas antes; ao religar, ligue a cobrança primeiro e o webhook depois. Fila pausada se retoma pelo painel ou com `PUT /v3/webhooks/{id}` (`interrupted: false`).
 
 ---
 
 ## Ainda não feito
 
-- **Ligar a cobrança em produção** (falta a chave de produção do Asaas; ver seção 11).
+- **Primeiro pagamento real em produção** (manual): assinar com uma conta de teste, conferir o Pro ativo e o evento entregue com 200 no histórico de webhooks do Asaas, depois estornar no Asaas e cancelar pelo painel.
+- **Chave do Asaas própria** para o Linkbio, se quiser revogar uma sem derrubar o outro produto (hoje é a mesma do Ambiento).
 - Plano Business (domínio próprio, leads → robô, Pix) e Agência.
 - **Chave própria do Resend** para o Linkbio (hoje usa a do Ambiento; revogar uma afeta os dois produtos).
 - Banco separado para os previews (ex.: branch do Neon), se for usar deploys de preview.
