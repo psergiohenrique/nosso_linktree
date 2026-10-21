@@ -12,7 +12,7 @@ Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rod
 
 **E-mail:** Resend, na mesma conta usada pelo Ambiento (chave compartilhada com o `ambiento-backend`), onde `codepath.dev.br` já está verificado (região sa-east-1). Remetente: `Linkbio by CodePath <nao-responda@codepath.dev.br>`. Envio de recuperação de senha testado em produção.
 
-**Cobrança (paywall):** ligada em produção desde 2026-10-21, na conta Asaas do Ambiento. Antes, testada de ponta a ponta contra o sandbox. Falta o primeiro pagamento real. Ver seção 11.
+**Cobrança (paywall):** ligada em produção desde 2026-10-21, na conta Asaas do Ambiento. Antes, testada de ponta a ponta contra o sandbox. Primeiro pagamento real em 2026-10-21 (Pro mensal de `leticiamoraes`, mantido como assinatura de verdade): eventos processados na primeira tentativa, Pro ativo e selo removido. Ver seção 11.
 
 ---
 
@@ -143,7 +143,7 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 
 ## Ainda não feito
 
-- **Primeiro pagamento real em produção** (manual): assinar com uma conta de teste, conferir o Pro ativo e o evento entregue com 200 no histórico de webhooks do Asaas, depois estornar no Asaas e cancelar pelo painel.
+- **Primeiro pagamento real em produção:** feito em 2026-10-21 (ver o resumo no topo). Falta ver uma renovação (20/11) e, um dia, um estorno e um cancelamento reais.
 - **Chave do Asaas própria** para o Linkbio, se quiser revogar uma sem derrubar o outro produto (hoje é a mesma do Ambiento).
 - Plano Business (domínio próprio, leads → robô, Pix) e Agência.
 - **Chave própria do Resend** para o Linkbio (hoje usa a do Ambiento; revogar uma afeta os dois produtos).
