@@ -114,6 +114,11 @@ export async function startCheckout(userId: string, cycle: Cycle) {
     userId,
     checkout.id,
   ]);
+  // Todos ficam guardados: o link de um checkout anterior ainda pode ser pago.
+  await query("insert into billing_checkouts (id, user_id) values ($1, $2) on conflict do nothing", [
+    checkout.id,
+    userId,
+  ]);
   return checkout.url;
 }
 
@@ -260,12 +265,20 @@ async function getSubscriptionRow(userId: string) {
 
 /**
  * De qual usuário é o evento. Em ordem: customer do Asaas (já visto antes), externalReference
- * ("linkbio:<id>"), id do checkout, id da assinatura. Referência de outro produto = ignorar.
+ * ("linkbio:<id>"), id do checkout (o do evento de checkout ou o checkoutSession da cobrança e da
+ * assinatura), id da assinatura. Em produção, o primeiro pagamento só se liga ao usuário pelo
+ * checkoutSession: chega sem referência e sem customer conhecido.
+ *
+ * A conta Asaas é compartilhada com o Ambiento e todo webhook recebe os eventos da conta inteira.
+ * Referência sem o nosso prefixo, ou checkout que não é nosso, é de outro produto: ignora de vez.
+ * Todo checkout aberto fica em billing_checkouts antes de a pessoa poder pagar, então checkout
+ * desconhecido nunca é evento adiantado.
  */
 async function resolveUser(env: AsaasEnvelope): Promise<string | null> {
   const customer = env.payment?.customer ?? env.subscription?.customer ?? env.checkout?.customer ?? null;
   const reference =
     env.payment?.externalReference ?? env.subscription?.externalReference ?? env.checkout?.externalReference ?? null;
+  const checkoutId = env.checkout?.id ?? env.payment?.checkoutSession ?? env.subscription?.checkoutSession ?? null;
   const gatewaySubId = env.payment?.subscription ?? env.subscription?.id ?? null;
 
   if (customer) {
@@ -283,11 +296,9 @@ async function resolveUser(env: AsaasEnvelope): Promise<string | null> {
         ?.user_id ?? null;
     }
   }
-  if (!userId && env.checkout?.id) {
+  if (!userId && checkoutId) {
     userId = (
-      await queryOne<{ user_id: string }>("select user_id from subscriptions where gateway_checkout_id = $1", [
-        env.checkout.id,
-      ])
+      await queryOne<{ user_id: string }>("select user_id from billing_checkouts where id = $1", [checkoutId])
     )?.user_id ?? null;
   }
   if (!userId && gatewaySubId) {
@@ -299,9 +310,10 @@ async function resolveUser(env: AsaasEnvelope): Promise<string | null> {
   }
 
   if (!userId) {
-    // Referência sem o nosso prefixo é de outro produto na mesma conta: ignora de vez.
+    // Outro produto na mesma conta: referência sem o nosso prefixo, ou checkout que não é nosso.
     if (reference && !reference.startsWith(REF_PREFIX)) return null;
-    throw new EarlyEventError(`nenhuma assinatura para ${customer ?? reference ?? env.checkout?.id ?? gatewaySubId}`);
+    if (checkoutId) return null;
+    throw new EarlyEventError(`nenhuma assinatura para ${customer ?? reference ?? gatewaySubId}`);
   }
 
   if (customer) {

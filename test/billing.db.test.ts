@@ -36,6 +36,11 @@ async function deliver(event: string, body: Record<string, unknown>, id = `evt_$
 // getPlan é memoizado por requisição com React cache; fora do Next cada chamada é nova.
 const plan = (userId: string) => getPlan(userId);
 
+// O pool é do arquivo inteiro: fecha depois do último describe.
+afterAll(async () => {
+  if (process.env.TEST_DATABASE_URL) await pool.end();
+});
+
 describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do Asaas", () => {
   let userId = "";
   const ref = () => `linkbio:${userId}`;
@@ -61,7 +66,6 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
   afterAll(async () => {
     await query("delete from users where id = $1", [userId]);
     await query("delete from billing_events where payload::text like $1", [`%${customer}%`]);
-    await pool.end();
   });
 
   it("autentica o webhook pelo token", () => {
@@ -202,5 +206,93 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
     const row = await queryOne<{ status: string }>("select status from subscriptions where user_id = $1", [userId]);
     expect(row!.status).toBe("expired");
     expect(await plan(userId)).toMatchObject({ pro: false, kind: "expired" });
+  });
+});
+
+describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: primeiro pagamento como o Asaas manda em produção", () => {
+  let userId = "";
+  const customer = `cus_${randomUUID().slice(0, 8)}`;
+  const subId = `sub_${randomUUID().slice(0, 8)}`;
+
+  beforeAll(async () => {
+    process.env.BILLING_ENABLED = "true";
+    const row = await queryOne<{ id: string }>(
+      "insert into users (email, password_hash) values ($1, 'scrypt$x$y') returning id",
+      [`producao-${randomUUID()}@exemplo.com`],
+    );
+    userId = row!.id;
+  });
+
+  afterAll(async () => {
+    await query("delete from users where id = $1", [userId]);
+    await query("delete from billing_events where payload::text like $1 or payload::text like $2", [
+      `%${customer}%`,
+      "%chk_ambiento%",
+    ]);
+  });
+
+  it("pagamento e assinatura sem referência se ligam pelo checkoutSession, mesmo de um checkout anterior", async () => {
+    asaas.createCheckout.mockResolvedValueOnce({ id: `chk_a_${subId}`, url: "https://asaas.com/c/a" });
+    asaas.createCheckout.mockResolvedValueOnce({ id: `chk_b_${subId}`, url: "https://asaas.com/c/b" });
+    await startCheckout(userId, "yearly");
+    await startCheckout(userId, "yearly");
+    // A pessoa paga pelo link do primeiro checkout, que ainda vale.
+    const checkoutSession = `chk_a_${subId}`;
+
+    // Ordem e forma vistas em produção (Ambiento, 2026-10-20): externalReference null nas cobranças
+    // e na assinatura, e o CHECKOUT_PAID por último, sem customer.
+    const payment = {
+      id: `pay_${subId}`,
+      customer,
+      subscription: subId,
+      checkoutSession,
+      externalReference: null,
+      value: 70.8,
+      dueDate: brDate(new Date()),
+    };
+    expect(await deliver("PAYMENT_CREATED", { payment })).toBe("done");
+    expect(await deliver("PAYMENT_CONFIRMED", { payment })).toBe("done");
+    expect(
+      await deliver("SUBSCRIPTION_CREATED", {
+        subscription: { id: subId, customer, cycle: "YEARLY", checkoutSession, externalReference: null },
+      }),
+    ).toBe("done");
+    expect(
+      await deliver("CHECKOUT_PAID", {
+        checkout: { id: checkoutSession, customer: null, externalReference: `linkbio:${userId}` },
+      }),
+    ).toBe("done");
+
+    expect(await plan(userId)).toMatchObject({ pro: true, kind: "active", cycle: "yearly" });
+    const sub = await queryOne("select gateway_customer_id, gateway_subscription_id from subscriptions where user_id = $1", [
+      userId,
+    ]);
+    expect(sub).toEqual({ gateway_customer_id: customer, gateway_subscription_id: subId });
+    const erros = await queryOne<{ n: number }>(
+      "select count(*)::int as n from billing_events where payload::text like $1 and error is not null",
+      [`%${customer}%`],
+    );
+    expect(erros!.n).toBe(0);
+  });
+
+  it("cobrança de um checkout de outro produto é ignorada de vez, sem erro", async () => {
+    const payment = {
+      id: "pay_chk_ambiento",
+      customer: "cus_do_ambiento",
+      subscription: "sub_do_ambiento",
+      checkoutSession: "chk_ambiento",
+      externalReference: null,
+      value: 49.9,
+      dueDate: brDate(new Date()),
+    };
+    const id = `evt_${randomUUID()}`;
+    expect(await deliver("PAYMENT_CONFIRMED", { payment }, id)).toBe("done");
+    expect(await queryOne("select 1 from invoices where gateway_payment_id = 'pay_chk_ambiento'")).toBeNull();
+    const row = await queryOne<{ processed_at: Date | null; error: string | null }>(
+      "select processed_at, error from billing_events where gateway_event_id = $1",
+      [id],
+    );
+    expect(row!.processed_at).not.toBeNull();
+    expect(row!.error).toBeNull();
   });
 });

@@ -99,6 +99,12 @@ export type AsaasPayment = {
   customer?: string;
   subscription?: string | null;
   externalReference?: string | null;
+  /**
+   * Id do checkout que originou a cobrança. Em produção é o único elo com o usuário no primeiro
+   * pagamento: cobrança e assinatura nascidas do checkout chegam com externalReference null, e o
+   * CHECKOUT_PAID com customer null (visto no Ambiento, mesma conta, em 2026-10-20).
+   */
+  checkoutSession?: string | null;
   value?: number;
   dueDate?: string;
   status?: string;
@@ -112,8 +118,14 @@ export type AsaasEnvelope = {
   event: string;
   dateCreated?: string;
   payment?: AsaasPayment;
-  subscription?: { id: string; customer?: string; externalReference?: string | null; cycle?: string };
-  checkout?: { id: string; customer?: string; externalReference?: string | null };
+  subscription?: {
+    id: string;
+    customer?: string;
+    externalReference?: string | null;
+    checkoutSession?: string | null;
+    cycle?: string;
+  };
+  checkout?: { id: string; customer?: string | null; externalReference?: string | null };
 };
 
 export function isEnvelope(body: unknown): body is AsaasEnvelope {
