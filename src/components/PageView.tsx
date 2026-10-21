@@ -26,6 +26,8 @@ export function pageViewStyle(a: Appearance): CSSProperties {
     "--bio-text": a.text_color,
     "--btn-bg": a.button_color,
     "--btn-text": a.button_text_color,
+    "--initial-bg": a.initial_bg_color ?? a.button_color,
+    "--initial-text": a.initial_text_color ?? a.button_text_color,
   } as CSSProperties;
 }
 

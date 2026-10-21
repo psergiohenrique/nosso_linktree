@@ -11,6 +11,9 @@ export type Appearance = {
   button_text_color: string;
   button_style: ButtonStyle;
   font: FontKey;
+  /** Círculo com a inicial (sem foto). Null: segue as cores do botão. */
+  initial_bg_color: string | null;
+  initial_text_color: string | null;
 };
 
 export type Profile = Appearance & {
@@ -76,6 +79,8 @@ export const THEME_PRESETS: { name: string; appearance: Appearance }[] = [
       button_text_color: "#17181a",
       button_style: "rounded",
       font: "manrope",
+      initial_bg_color: null,
+      initial_text_color: null,
     },
   },
   {
@@ -89,6 +94,8 @@ export const THEME_PRESETS: { name: string; appearance: Appearance }[] = [
       button_text_color: "#f4f2ec",
       button_style: "rounded",
       font: "manrope",
+      initial_bg_color: null,
+      initial_text_color: null,
     },
   },
   {
@@ -102,6 +109,8 @@ export const THEME_PRESETS: { name: string; appearance: Appearance }[] = [
       button_text_color: "#17181a",
       button_style: "pill",
       font: "bricolage",
+      initial_bg_color: null,
+      initial_text_color: null,
     },
   },
   {
@@ -115,6 +124,8 @@ export const THEME_PRESETS: { name: string; appearance: Appearance }[] = [
       button_text_color: "#17181a",
       button_style: "shadow",
       font: "bricolage",
+      initial_bg_color: null,
+      initial_text_color: null,
     },
   },
   {
@@ -128,6 +139,8 @@ export const THEME_PRESETS: { name: string; appearance: Appearance }[] = [
       button_text_color: "#0b3b5c",
       button_style: "outline",
       font: "manrope",
+      initial_bg_color: null,
+      initial_text_color: null,
     },
   },
   {
@@ -141,6 +154,8 @@ export const THEME_PRESETS: { name: string; appearance: Appearance }[] = [
       button_text_color: "#fbf7ef",
       button_style: "square",
       font: "serif",
+      initial_bg_color: null,
+      initial_text_color: null,
     },
   },
 ];

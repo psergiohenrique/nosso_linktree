@@ -1263,6 +1263,26 @@ textarea.field {
   gap: 20px;
   flex-wrap: wrap;
 }
+.initial-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.initial-sample {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 22px;
+  background: var(--initial-bg);
+  color: var(--initial-text);
+  border: 1px solid var(--rule);
+}
 .color-field {
   display: inline-flex;
   align-items: center;
@@ -1833,8 +1853,8 @@ textarea.field {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--btn-bg);
-  color: var(--btn-text);
+  background: var(--initial-bg, var(--btn-bg));
+  color: var(--initial-text, var(--btn-text));
   font-weight: 800;
   font-size: 36px;
 }

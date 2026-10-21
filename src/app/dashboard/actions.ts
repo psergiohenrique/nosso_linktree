@@ -56,11 +56,17 @@ export async function updateAppearance(formData: FormData) {
   if (upload) avatarId = upload.id;
   else if (formData.get("remove_avatar") === "1") avatarId = null;
 
+  // Círculo da inicial: sem cores próprias (null), segue as do botão.
+  const buttonColor = validColor(formData.get("button_color"), d.button_color);
+  const buttonTextColor = validColor(formData.get("button_text_color"), d.button_text_color);
+  const initialCustom = formData.get("initial_custom") === "1";
+
   await query(
     `update profiles set
        display_name = $2, bio = $3, avatar_id = $4,
        bg_type = $5, bg_color = $6, bg_color2 = $7, text_color = $8,
        button_color = $9, button_text_color = $10, button_style = $11, font = $12,
+       initial_bg_color = $13, initial_text_color = $14,
        updated_at = now()
      where id = $1`,
     [
@@ -72,10 +78,12 @@ export async function updateAppearance(formData: FormData) {
       validColor(formData.get("bg_color"), d.bg_color),
       validColor(formData.get("bg_color2"), d.bg_color2),
       validColor(formData.get("text_color"), d.text_color),
-      validColor(formData.get("button_color"), d.button_color),
-      validColor(formData.get("button_text_color"), d.button_text_color),
+      buttonColor,
+      buttonTextColor,
       oneOf(formData.get("button_style"), BUTTON_STYLES.map((b) => b.value), d.button_style),
       oneOf(formData.get("font"), FONTS.map((f) => f.value), d.font),
+      initialCustom ? validColor(formData.get("initial_bg_color"), buttonColor) : null,
+      initialCustom ? validColor(formData.get("initial_text_color"), buttonTextColor) : null,
     ],
   );
   if (avatarId !== profile.avatar_id) await deleteMedia(user.id, profile.avatar_id);

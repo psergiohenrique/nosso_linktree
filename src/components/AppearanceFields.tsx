@@ -21,6 +21,7 @@ type Props = {
 export default function AppearanceFields({ state, setState, avatarUrl, onAvatarFile, onRemoveAvatar }: Props) {
   const set = <K extends keyof PageViewProfile>(key: K, value: PageViewProfile[K]) =>
     setState((s) => ({ ...s, [key]: value }));
+  const initialCustom = state.initial_bg_color != null || state.initial_text_color != null;
 
   return (
     <>
@@ -155,6 +156,58 @@ export default function AppearanceFields({ state, setState, avatarUrl, onAvatarF
           </label>
         ))}
       </div>
+      <p className="hint">O botão de WhatsApp fica sempre verde, a cor que as pessoas reconhecem.</p>
+    </section>
+
+    <section className="card">
+      <h2 className="card-title">Círculo da inicial</h2>
+      <p className="hint">
+        {avatarUrl
+          ? "Aparece no lugar da foto. Como você enviou uma foto, ele só é usado se você a remover."
+          : "Aparece no lugar da foto, com a primeira letra do seu nome."}
+      </p>
+      <div className="initial-row">
+        <span className="initial-sample" style={pageViewStyle(state)} aria-hidden="true">
+          {(state.display_name || state.slug).charAt(0).toUpperCase()}
+        </span>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={!initialCustom}
+            onChange={(e) =>
+              setState((s) =>
+                e.target.checked
+                  ? { ...s, initial_bg_color: null, initial_text_color: null }
+                  : { ...s, initial_bg_color: s.button_color, initial_text_color: s.button_text_color },
+              )
+            }
+          />
+          Usar as cores do botão
+        </label>
+      </div>
+      <input type="hidden" name="initial_custom" value={initialCustom ? "1" : ""} />
+      {initialCustom && (
+        <div className="color-grid">
+          <label className="color-field">
+            <input
+              type="color"
+              name="initial_bg_color"
+              value={state.initial_bg_color ?? state.button_color}
+              onChange={(e) => set("initial_bg_color", e.target.value)}
+            />
+            Fundo do círculo
+          </label>
+          <label className="color-field">
+            <input
+              type="color"
+              name="initial_text_color"
+              value={state.initial_text_color ?? state.button_text_color}
+              onChange={(e) => set("initial_text_color", e.target.value)}
+            />
+            Letra
+          </label>
+        </div>
+      )}
     </section>
 
     <section className="card">
