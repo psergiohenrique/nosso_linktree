@@ -11,7 +11,7 @@ const LINKS = [
   { id: "comecar", label: "Começar" },
 ];
 
-export default function Nav() {
+export default function Nav({ loggedIn = false }: { loggedIn?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -35,12 +35,20 @@ export default function Nav() {
         </div>
 
         <div className="nav-actions">
-          <Link href="/login" className="btn btn-outline btn-sm">
-            Entrar
-          </Link>
-          <Link href="/login?modo=cadastro" className="btn btn-primary btn-sm">
-            Criar página
-          </Link>
+          {loggedIn ? (
+            <Link href="/dashboard" className="btn btn-primary btn-sm">
+              Meu painel
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="btn btn-outline btn-sm">
+                Entrar
+              </Link>
+              <Link href="/login?modo=cadastro" className="btn btn-primary btn-sm">
+                Criar página
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -6,17 +6,17 @@ const LINKS = [
   { href: "#como-funciona", label: "Como funciona" },
   { href: "#planos", label: "Planos" },
   { href: "/demo", label: "Exemplo" },
-  { href: "/login", label: "Entrar" },
 ];
 
-export default function Footer() {
+export default function Footer({ loggedIn = false }: { loggedIn?: boolean }) {
+  const links = [...LINKS, loggedIn ? { href: "/dashboard", label: "Meu painel" } : { href: "/login", label: "Entrar" }];
   return (
     <footer className="site-footer">
       <div className="wrap">
         <div className="footer-top">
           <Logo href="#hero" />
           <div className="footer-links">
-            {LINKS.map((link) => (
+            {links.map((link) => (
               <a key={link.href} href={link.href}>
                 {link.label}
               </a>

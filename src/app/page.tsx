@@ -7,6 +7,7 @@ import ComoFunciona from "@/components/ComoFunciona";
 import Planos from "@/components/Planos";
 import Cta from "@/components/Cta";
 import Footer from "@/components/Footer";
+import { getCurrentUser } from "@/server/auth";
 
 export const metadata: Metadata = {
   alternates: {
@@ -14,10 +15,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const loggedIn = Boolean(await getCurrentUser());
+
   return (
     <>
-      <Nav />
+      <Nav loggedIn={loggedIn} />
       <main>
         <Hero />
         <StatsBar />
@@ -26,7 +29,7 @@ export default function Home() {
         <Planos />
         <Cta />
       </main>
-      <Footer />
+      <Footer loggedIn={loggedIn} />
     </>
   );
 }
