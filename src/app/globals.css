@@ -706,6 +706,46 @@ img {
 textarea.field {
   resize: vertical;
 }
+.password-field {
+  position: relative;
+}
+.password-field .field {
+  padding-right: 48px;
+}
+.password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.password-toggle:hover,
+.password-toggle[aria-pressed="true"] {
+  color: var(--ink);
+}
+.password-toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-optional {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
 .field-label {
   display: block;
   font-size: 12px;
@@ -1267,6 +1307,26 @@ textarea.field {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+.whats-sample {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 200px;
+  height: 46px;
+  padding: 0 44px 0 18px;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: var(--whats-bg, var(--whats));
+  color: var(--whats-text, var(--white));
+  font-weight: 700;
+  font-size: 14px;
+}
+.whats-sample-icon {
+  position: absolute;
+  right: 14px;
+  width: 20px;
+  height: 20px;
 }
 .initial-sample {
   width: 56px;
@@ -2027,8 +2087,40 @@ textarea.field {
 }
 
 .bio-link-whats {
-  --btn-bg: var(--whats);
-  --btn-text: var(--white);
+  --btn-bg: var(--whats-bg, var(--whats));
+  --btn-text: var(--whats-text, var(--white));
+}
+/* Ícone do WhatsApp no canto direito do botão */
+.bio-whats-icon {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.bio-link-whats:not(.bio-featured):not(.bio-tile):not(.has-thumb) {
+  padding-inline: 52px;
+}
+.bio-size-sm .bio-whats-icon {
+  right: 14px;
+  width: 18px;
+  height: 18px;
+}
+.bio-size-lg .bio-whats-icon {
+  width: 26px;
+  height: 26px;
+}
+.bio-link-whats .bio-featured-title {
+  position: relative;
+  padding-inline: 52px;
+}
+.bio-tile .bio-whats-icon {
+  z-index: 1;
+  top: 12px;
+  right: 12px;
+  transform: none;
 }
 .bio-btn-pill {
   --btn-radius: 999px;

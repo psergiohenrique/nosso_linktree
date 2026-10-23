@@ -6,7 +6,7 @@ import posthog from "posthog-js";
 import { subscribePro } from "@/app/dashboard/actions";
 import { PRO_PRICES, formatBRL } from "@/lib/billing";
 import { PAYWALL, PAYWALL_PRO_LIST, type PaywallFeature } from "@/lib/paywall";
-import { THEME_PRESETS } from "@/lib/types";
+import { THEME_PRESETS, WHATSAPP_DEFAULT } from "@/lib/types";
 import PageView, { type PageViewLink, type PageViewProfile } from "./PageView";
 
 /**
@@ -42,6 +42,7 @@ export function PaywallButton({
 
 const SAMPLE_PROFILE: PageViewProfile = {
   ...THEME_PRESETS[2].appearance,
+  ...WHATSAPP_DEFAULT,
   slug: "sua-pagina",
   display_name: "Sua página",
   bio: "",

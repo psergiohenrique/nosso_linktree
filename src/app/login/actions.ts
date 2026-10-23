@@ -15,11 +15,12 @@ import { queryOne } from "@/server/db";
 import { sendMail } from "@/server/mail";
 import { clearAttempts, clientIp, isRateLimited, RATE_LIMIT_MESSAGE, recordAttempt } from "@/server/rate-limit";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { instagramHandle } from "@/lib/validation";
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-function back(mode: "entrar" | "cadastro", message: string): never {
-  redirect(`/login?modo=${mode}&error=${encodeURIComponent(message)}`);
+function back(message: string): never {
+  redirect(`/login?error=${encodeURIComponent(message)}`);
 }
 
 function readCredentials(formData: FormData) {
@@ -37,7 +38,7 @@ export async function signIn(formData: FormData) {
   const { email, password } = readCredentials(formData);
   const validEmail = EMAIL.test(email);
   const keys = { email: validEmail ? email : undefined, ip: (await clientIp()) || undefined };
-  if (await isRateLimited("signin", keys)) back("entrar", RATE_LIMIT_MESSAGE);
+  if (await isRateLimited("signin", keys)) back(RATE_LIMIT_MESSAGE);
 
   const user = validEmail
     ? await queryOne<{ id: string; password_hash: string }>("select id, password_hash from users where email = $1", [email])
@@ -45,7 +46,7 @@ export async function signIn(formData: FormData) {
   // Mesma mensagem para e-mail inexistente e senha errada.
   if (!user || !(await verifyPassword(password, user.password_hash))) {
     await recordAttempt("signin", keys);
-    back("entrar", "E-mail ou senha incorretos.");
+    back("E-mail ou senha incorretos.");
   }
 
   await clearAttempts("signin", { email });
@@ -53,21 +54,41 @@ export async function signIn(formData: FormData) {
   redirect("/dashboard");
 }
 
-export async function signUp(formData: FormData) {
+export type SignUpState = {
+  error?: string;
+  /** O que foi digitado (menos as senhas), para o formulário não voltar vazio depois de um erro. */
+  values?: { first_name: string; last_name: string; instagram: string; email: string };
+};
+
+export async function signUp(_prev: SignUpState, formData: FormData): Promise<SignUpState> {
   const { email, password } = readCredentials(formData);
+  const values = {
+    first_name: String(formData.get("first_name") ?? "").trim().slice(0, 60),
+    last_name: String(formData.get("last_name") ?? "").trim().slice(0, 60),
+    instagram: String(formData.get("instagram") ?? "").trim().slice(0, 200),
+    email,
+  };
+  const fail = (error: string): SignUpState => ({ error, values });
+
   const keys = { ip: (await clientIp()) || undefined };
-  if (await isRateLimited("signup", keys)) back("cadastro", RATE_LIMIT_MESSAGE);
+  if (await isRateLimited("signup", keys)) return fail(RATE_LIMIT_MESSAGE);
   await recordAttempt("signup", keys);
 
-  if (!EMAIL.test(email)) back("cadastro", "E-mail inválido.");
+  if (!values.first_name) return fail("Informe seu nome.");
+  if (!values.last_name) return fail("Informe seu sobrenome.");
+  const instagram = instagramHandle(values.instagram);
+  if (instagram === null) return fail("Instagram inválido: use só o usuário, como @seunegocio.");
+  if (!EMAIL.test(email)) return fail("E-mail inválido.");
   const invalid = passwordError(password);
-  if (invalid) back("cadastro", invalid);
+  if (invalid) return fail(invalid);
+  if (password !== String(formData.get("confirm") ?? "")) return fail("As senhas não conferem.");
 
   const user = await queryOne<{ id: string }>(
-    "insert into users (email, password_hash) values ($1, $2) on conflict (email) do nothing returning id",
-    [email, await hashPassword(password)],
+    `insert into users (email, password_hash, first_name, last_name, instagram) values ($1, $2, $3, $4, $5)
+     on conflict (email) do nothing returning id`,
+    [email, await hashPassword(password), values.first_name, values.last_name, instagram || null],
   );
-  if (!user) back("cadastro", "Já existe uma conta com esse e-mail.");
+  if (!user) return fail("Já existe uma conta com esse e-mail.");
 
   await createSession(user.id);
   redirect("/dashboard");

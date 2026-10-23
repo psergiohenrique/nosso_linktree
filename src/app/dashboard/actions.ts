@@ -8,8 +8,16 @@ import { pool, query, queryOne } from "@/server/db";
 import { deleteMedia, saveImage } from "@/server/media";
 import { getProfileByUser } from "@/server/profiles";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
-import { BUTTON_STYLES, FONTS, LINK_LAYOUTS, LINK_SIZES, THEME_PRESETS } from "@/lib/types";
-import { oneOf, safeUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
+import {
+  BUTTON_STYLES,
+  FONTS,
+  LINK_LAYOUTS,
+  LINK_SIZES,
+  THEME_PRESETS,
+  WHATSAPP_DEFAULT,
+  WHATSAPP_STYLES,
+} from "@/lib/types";
+import { MAX_URL_LENGTH, oneOf, safeUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
 import { emitPostHogLog } from "@/server/posthog-logs";
 import { setWeeklyReport } from "@/server/weekly-report";
 
@@ -67,6 +75,7 @@ export async function updateAppearance(formData: FormData) {
        bg_type = $5, bg_color = $6, bg_color2 = $7, text_color = $8,
        button_color = $9, button_text_color = $10, button_style = $11, font = $12,
        initial_bg_color = $13, initial_text_color = $14,
+       whatsapp_style = $15, whatsapp_color = $16, whatsapp_text_color = $17,
        updated_at = now()
      where id = $1`,
     [
@@ -84,6 +93,9 @@ export async function updateAppearance(formData: FormData) {
       oneOf(formData.get("font"), FONTS.map((f) => f.value), d.font),
       initialCustom ? validColor(formData.get("initial_bg_color"), buttonColor) : null,
       initialCustom ? validColor(formData.get("initial_text_color"), buttonTextColor) : null,
+      oneOf(formData.get("whatsapp_style"), WHATSAPP_STYLES.map((w) => w.value), WHATSAPP_DEFAULT.whatsapp_style),
+      validColor(formData.get("whatsapp_color"), WHATSAPP_DEFAULT.whatsapp_color),
+      validColor(formData.get("whatsapp_text_color"), WHATSAPP_DEFAULT.whatsapp_text_color),
     ],
   );
   if (avatarId !== profile.avatar_id) await deleteMedia(user.id, profile.avatar_id);
@@ -100,7 +112,12 @@ function readLink(formData: FormData, pro: boolean) {
   const rawTarget = String(formData.get("url") ?? "");
   const url =
     kind === "whatsapp" ? whatsappUrl(rawTarget, String(formData.get("message") ?? "")) : safeUrl(rawTarget);
-  if (!url) fail(kind === "whatsapp" ? "Número de WhatsApp inválido." : "URL inválida.");
+  if (!url) {
+    if (kind === "whatsapp") fail("Número de WhatsApp inválido.");
+    fail(rawTarget.length > MAX_URL_LENGTH ? "URL longa demais." : "URL inválida.");
+  }
+  // O banco aceita até 2048 caracteres; no WhatsApp a mensagem codificada pode passar disso.
+  if (url.length > MAX_URL_LENGTH) fail("Mensagem do WhatsApp longa demais: encurte o texto.");
 
   // Destaque e Bloco são do Pro. No Grátis, null: link novo vira botão e o editado mantém o que tinha
   // (a página mostra como botão enquanto estiver no Grátis; volta sozinho se assinar de novo).

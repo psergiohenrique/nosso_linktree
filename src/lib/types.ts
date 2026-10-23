@@ -16,13 +16,38 @@ export type Appearance = {
   initial_text_color: string | null;
 };
 
-export type Profile = Appearance & {
-  id: string;
-  slug: string;
-  display_name: string;
-  bio: string;
-  avatar_id: string | null;
+/**
+ * Botão de WhatsApp: verde do WhatsApp, igual aos outros botões (theme) ou cores próprias (custom).
+ * Fica fora de Appearance para os temas prontos não mexerem nele.
+ */
+export type WhatsappStyle = "green" | "theme" | "custom";
+
+export type WhatsappAppearance = {
+  whatsapp_style: WhatsappStyle;
+  whatsapp_color: string;
+  whatsapp_text_color: string;
 };
+
+export const WHATSAPP_DEFAULT: WhatsappAppearance = {
+  whatsapp_style: "green",
+  whatsapp_color: "#1f9d55",
+  whatsapp_text_color: "#ffffff",
+};
+
+export const WHATSAPP_STYLES: { value: WhatsappStyle; label: string }[] = [
+  { value: "green", label: "Verde do WhatsApp" },
+  { value: "theme", label: "Igual aos outros" },
+  { value: "custom", label: "Cores próprias" },
+];
+
+export type Profile = Appearance &
+  WhatsappAppearance & {
+    id: string;
+    slug: string;
+    display_name: string;
+    bio: string;
+    avatar_id: string | null;
+  };
 
 export type LinkLayout = "button" | "featured" | "tile";
 export type LinkSize = "sm" | "md" | "lg";

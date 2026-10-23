@@ -112,3 +112,12 @@ export async function requireUser() {
   if (!user) redirect("/login");
   return user;
 }
+
+/** Nome e sobrenome informados no cadastro (contas antigas: em branco). */
+export async function getUserName(userId: string) {
+  const row = await queryOne<{ first_name: string; last_name: string }>(
+    "select first_name, last_name from users where id = $1",
+    [userId],
+  );
+  return [row?.first_name, row?.last_name].filter(Boolean).join(" ");
+}

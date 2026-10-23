@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ImageInput from "@/components/ImageInput";
 import LinkOptions from "@/components/LinkOptions";
 import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
@@ -7,7 +8,7 @@ import PhonePreview from "@/components/PhonePreview";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
-import { requireUser } from "@/server/auth";
+import { getUserName, requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
 import { addLink, createProfile, deleteLink, moveLink, updateLink } from "./actions";
@@ -42,7 +43,14 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
               <label className="field-label" htmlFor="display_name">
                 Nome
               </label>
-              <input id="display_name" name="display_name" placeholder="Ex.: Barbearia do Zé" className="field" />
+              <input
+                id="display_name"
+                name="display_name"
+                maxLength={60}
+                defaultValue={(await getUserName(user.id)).slice(0, 60)}
+                placeholder="Ex.: Barbearia do Zé"
+                className="field"
+              />
             </div>
             <div>
               <label className="field-label" htmlFor="slug">
@@ -128,7 +136,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
             <LinkOptions proLayouts={plan.pro} />
             <label className="file-field">
               <span className="field-label">Imagem (opcional; recomendada para Destaque e Bloco)</span>
-              <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif" />
+              <ImageInput name="thumbnail" />
             </label>
             {/* No limite do Grátis o formulário continua aberto; o botão mostra o aviso do Pro. */}
             {atLimit ? (
@@ -187,7 +195,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                 <div className="card-row">
                   <label className="file-field file-field-inline">
                     <span>{link.thumbnail_id ? "Trocar imagem" : "Adicionar imagem"}</span>
-                    <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif" />
+                    <ImageInput name="thumbnail" />
                   </label>
                   {link.thumbnail_id && (
                     <label className="check">

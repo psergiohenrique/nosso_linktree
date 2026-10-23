@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { oneOf, safeUrl, validateSlug, validColor, whatsappUrl } from "@/lib/validation";
+import { instagramHandle, oneOf, safeUrl, validateSlug, validColor, whatsappUrl } from "@/lib/validation";
 
 describe("validateSlug", () => {
   it("normaliza e aceita 3–30 caracteres a-z0-9-", () => {
@@ -43,6 +43,10 @@ describe("safeUrl", () => {
     expect(safeUrl("file:///etc/passwd")).toBeNull();
     expect(safeUrl("   ")).toBeNull();
   });
+
+  it("recusa URLs maiores que o banco aceita", () => {
+    expect(safeUrl(`https://exemplo.com/${"a".repeat(2100)}`)).toBeNull();
+  });
 });
 
 describe("whatsappUrl", () => {
@@ -60,6 +64,22 @@ describe("whatsappUrl", () => {
   it("recusa números curtos ou longos demais", () => {
     expect(whatsappUrl("98765-4321", "")).toBeNull();
     expect(whatsappUrl("1".repeat(16), "")).toBeNull();
+  });
+});
+
+describe("instagramHandle", () => {
+  it("aceita @usuario, usuario e o link do perfil", () => {
+    expect(instagramHandle(" @Leticia.Moraes ")).toBe("leticia.moraes");
+    expect(instagramHandle("barbearia_do_ze")).toBe("barbearia_do_ze");
+    expect(instagramHandle("https://www.instagram.com/fulana/?hl=pt")).toBe("fulana");
+    expect(instagramHandle("instagram.com/fulana")).toBe("fulana");
+  });
+
+  it("vazio vira string vazia e inválido vira null", () => {
+    expect(instagramHandle("  ")).toBe("");
+    expect(instagramHandle("com espaço")).toBeNull();
+    expect(instagramHandle("a".repeat(31))).toBeNull();
+    expect(instagramHandle("https://exemplo.com/fulana")).toBeNull();
   });
 });
 

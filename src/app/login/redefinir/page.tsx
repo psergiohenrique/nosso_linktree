@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import Logo from "@/components/Logo";
+import PasswordInput from "@/components/PasswordInput";
 import { findPasswordReset, RESET_COOKIE } from "@/server/auth";
 import { resetPassword } from "../actions";
 
@@ -28,29 +29,13 @@ export default async function Redefinir({ searchParams }: { searchParams: Promis
                 <label className="field-label" htmlFor="password">
                   Nova senha
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className="field"
-                />
+                <PasswordInput id="password" name="password" minLength={8} autoComplete="new-password" />
               </div>
               <div>
                 <label className="field-label" htmlFor="confirm">
                   Repita a nova senha
                 </label>
-                <input
-                  id="confirm"
-                  name="confirm"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className="field"
-                />
+                <PasswordInput id="confirm" name="confirm" minLength={8} autoComplete="new-password" />
               </div>
               {error && <p className="notice notice-error">{error}</p>}
               <button className="btn btn-primary">Salvar nova senha</button>

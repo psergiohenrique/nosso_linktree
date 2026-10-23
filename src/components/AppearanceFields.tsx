@@ -1,7 +1,8 @@
 "use client";
 
-import { BUTTON_STYLES, FONTS, THEME_PRESETS, type Appearance } from "@/lib/types";
-import { pageViewStyle, type PageViewProfile } from "./PageView";
+import { BUTTON_STYLES, FONTS, THEME_PRESETS, WHATSAPP_STYLES, type Appearance } from "@/lib/types";
+import ImageInput from "./ImageInput";
+import { pageViewStyle, WhatsappIcon, type PageViewProfile } from "./PageView";
 
 const COLOR_FIELDS: { name: keyof Appearance; label: string }[] = [
   { name: "text_color", label: "Texto" },
@@ -39,19 +40,14 @@ export default function AppearanceFields({ state, setState, avatarUrl, onAvatarF
         <div className="avatar-actions">
           <label className="btn btn-outline btn-sm file-btn">
             {avatarUrl ? "Trocar foto" : "Enviar foto"}
-            <input
-              type="file"
-              name="avatar"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              onChange={(e) => onAvatarFile(e.target.files?.[0] ?? null)}
-            />
+            <ImageInput name="avatar" onFile={onAvatarFile} />
           </label>
           {avatarUrl && (
             <button type="button" className="btn btn-outline btn-sm btn-danger" onClick={onRemoveAvatar}>
               Remover
             </button>
           )}
-          <span className="hint">PNG, JPG, WEBP ou GIF até 2 MB</span>
+          <span className="hint">PNG, JPG, WEBP ou GIF. Fotos grandes são reduzidas automaticamente.</span>
         </div>
       </div>
       <input
@@ -156,7 +152,67 @@ export default function AppearanceFields({ state, setState, avatarUrl, onAvatarF
           </label>
         ))}
       </div>
-      <p className="hint">O botão de WhatsApp fica sempre verde, a cor que as pessoas reconhecem.</p>
+    </section>
+
+    <section className="card">
+      <h2 className="card-title">Botão do WhatsApp</h2>
+      <p className="hint">Os links de WhatsApp levam o ícone do WhatsApp no canto direito. Escolha a cor deles.</p>
+      <div className="segmented segmented-wrap" role="radiogroup" aria-label="Cor do botão do WhatsApp">
+        {WHATSAPP_STYLES.map((w) => (
+          <label key={w.value} className={state.whatsapp_style === w.value ? "active" : ""}>
+            <input
+              type="radio"
+              name="whatsapp_style"
+              value={w.value}
+              checked={state.whatsapp_style === w.value}
+              onChange={() =>
+                setState((s) => ({
+                  ...s,
+                  whatsapp_style: w.value,
+                  // Ao abrir "Cores próprias" pela primeira vez, parte das cores que o botão tinha.
+                  ...(w.value === "custom" && s.whatsapp_style === "theme"
+                    ? { whatsapp_color: s.button_color, whatsapp_text_color: s.button_text_color }
+                    : {}),
+                }))
+              }
+            />
+            {w.label}
+          </label>
+        ))}
+      </div>
+      <div className="initial-row">
+        <span className="whats-sample" style={pageViewStyle(state)} aria-hidden="true">
+          WhatsApp
+          <WhatsappIcon className="whats-sample-icon" />
+        </span>
+      </div>
+      {state.whatsapp_style === "custom" ? (
+        <div className="color-grid">
+          <label className="color-field">
+            <input
+              type="color"
+              name="whatsapp_color"
+              value={state.whatsapp_color}
+              onChange={(e) => set("whatsapp_color", e.target.value)}
+            />
+            Botão
+          </label>
+          <label className="color-field">
+            <input
+              type="color"
+              name="whatsapp_text_color"
+              value={state.whatsapp_text_color}
+              onChange={(e) => set("whatsapp_text_color", e.target.value)}
+            />
+            Texto e ícone
+          </label>
+        </div>
+      ) : (
+        <>
+          <input type="hidden" name="whatsapp_color" value={state.whatsapp_color} />
+          <input type="hidden" name="whatsapp_text_color" value={state.whatsapp_text_color} />
+        </>
+      )}
     </section>
 
     <section className="card">

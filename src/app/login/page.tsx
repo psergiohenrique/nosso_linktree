@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Logo from "@/components/Logo";
+import PasswordInput from "@/components/PasswordInput";
+import SignupForm from "@/components/SignupForm";
 import { getCurrentUser } from "@/server/auth";
-import { signIn, signUp } from "./actions";
+import { signIn } from "./actions";
 
 export const metadata: Metadata = {
   title: "Entrar",
@@ -27,30 +29,26 @@ export default async function Login({
         <p className="auth-text">
           {signup ? "Crie sua conta e monte sua página em minutos." : "Acesse o painel da sua página."}
         </p>
-        <form action={signup ? signUp : signIn} className="auth-form">
-          <div>
-            <label className="field-label" htmlFor="email">
-              E-mail
-            </label>
-            <input id="email" name="email" type="email" required autoComplete="email" className="field" />
-          </div>
-          <div>
-            <label className="field-label" htmlFor="password">
-              Senha
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={signup ? 8 : undefined}
-              autoComplete={signup ? "new-password" : "current-password"}
-              className="field"
-            />
-          </div>
-          {error && <p className="notice notice-error">{error}</p>}
-          <button className="btn btn-primary">{signup ? "Criar conta" : "Entrar"}</button>
-        </form>
+        {signup ? (
+          <SignupForm />
+        ) : (
+          <form action={signIn} className="auth-form">
+            <div>
+              <label className="field-label" htmlFor="email">
+                E-mail
+              </label>
+              <input id="email" name="email" type="email" required autoComplete="email" className="field" />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="password">
+                Senha
+              </label>
+              <PasswordInput id="password" name="password" autoComplete="current-password" />
+            </div>
+            {error && <p className="notice notice-error">{error}</p>}
+            <button className="btn btn-primary">Entrar</button>
+          </form>
+        )}
         {!signup && (
           <p className="auth-switch">
             <Link href="/login/recuperar">Esqueci minha senha</Link>

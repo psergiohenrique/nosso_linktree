@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { THEME_PRESETS, type LinkItem } from "@/lib/types";
+import { THEME_PRESETS, WHATSAPP_DEFAULT, type LinkItem } from "@/lib/types";
 import AppearanceFields from "./AppearanceFields";
 import LinkOptions from "./LinkOptions";
 import Logo from "./Logo";
@@ -13,6 +13,7 @@ type PlayLink = PageViewLink & { active: boolean };
 
 const EXAMPLE_PROFILE: PageViewProfile = {
   ...THEME_PRESETS[2].appearance,
+  ...WHATSAPP_DEFAULT,
   slug: "barbearia-do-ze",
   display_name: "Barbearia do Zé",
   bio: "Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.",
