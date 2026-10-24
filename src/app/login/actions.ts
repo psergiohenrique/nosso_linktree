@@ -113,7 +113,8 @@ async function sendVerificationCode(userId: string, email: string, firstName: st
   const hello = firstName ? `Olá, ${firstName}!` : "Olá!";
   return sendMail({
     to: email,
-    subject: `${code} é seu código de confirmação — ${SITE_NAME}`,
+    // O nome vem primeiro: a caixa de entrada do celular corta o fim de assuntos longos.
+    subject: `${SITE_NAME}: seu código de confirmação é ${code}`,
     text: `${hello}\n\nSeu código para confirmar o e-mail no ${SITE_NAME} é:\n\n${code}\n\nEle vale por 30 minutos. Se não foi você que se cadastrou, ignore este e-mail.`,
     html: `<p>${escapeHtml(hello)}</p><p>Seu código para confirmar o e-mail no ${SITE_NAME} é:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0">${code}</p><p>Ele vale por 30 minutos. Se não foi você que se cadastrou, ignore este e-mail.</p>`,
   });
