@@ -111,33 +111,47 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
         <form action={addLink} className="card card-new" data-posthog-event="link_created">
           <h2 className="card-title">Novo link</h2>
           <fieldset className="card-fieldset">
-            <select name="kind" className="field" defaultValue="link" aria-label="Tipo">
-              <option value="link">Link comum</option>
-              <option value="whatsapp">WhatsApp</option>
-            </select>
-            <input
-              name="title"
-              required
-              placeholder="Título (ex.: Agendar horário)"
-              aria-label="Título"
-              className="field"
-            />
-            <input
-              name="url"
-              required
-              placeholder="URL, ou número de WhatsApp com DDD"
-              aria-label="URL ou WhatsApp"
-              className="field"
-            />
-            <input
-              name="message"
-              placeholder="Mensagem inicial (só para WhatsApp)"
-              aria-label="Mensagem inicial"
-              className="field"
-            />
+            <div>
+              <label className="field-label" htmlFor="new-kind">
+                Tipo
+              </label>
+              <select id="new-kind" name="kind" className="field" defaultValue="link">
+                <option value="link">Link comum</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+            </div>
+            <div>
+              <label className="field-label" htmlFor="new-title">
+                Título
+              </label>
+              <input id="new-title" name="title" required placeholder="Ex.: Agendar horário" className="field" />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="new-url">
+                Link ou WhatsApp com DDD
+              </label>
+              <input
+                id="new-url"
+                name="url"
+                required
+                placeholder="https://… ou 11 99999-9999"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="field"
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="new-message">
+                Mensagem inicial <span className="field-optional">(só WhatsApp, opcional)</span>
+              </label>
+              <input id="new-message" name="message" placeholder="Ex.: Quero agendar" className="field" />
+            </div>
             <LinkOptions proLayouts={plan.pro} />
             <label className="file-field">
-              <span className="field-label">Imagem (opcional; recomendada para Destaque e Bloco)</span>
+              <span className="field-label">
+                Imagem <span className="field-optional">(opcional; boa para Destaque e Bloco)</span>
+              </span>
               <ImageInput name="thumbnail" />
             </label>
             {/* No limite do Grátis o formulário continua aberto; o botão mostra o aviso do Pro. */}

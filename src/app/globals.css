@@ -827,14 +827,14 @@ textarea.field {
 }
 
 /* Passo a passo do cadastro (SignupSteps.tsx) */
-.steps {
+.signup-steps {
   list-style: none;
   display: flex;
   gap: 8px;
   margin: 0 0 4px;
   padding: 0;
 }
-.step {
+.signup-step {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -846,7 +846,7 @@ textarea.field {
   color: var(--muted);
 }
 /* Traço ligando cada etapa à anterior (de bolinha a bolinha: 28px de diâmetro, 8px de gap) */
-.step + .step::before {
+.signup-step + .signup-step::before {
   content: "";
   position: absolute;
   top: 13px;
@@ -855,10 +855,10 @@ textarea.field {
   height: 2px;
   background: var(--rule);
 }
-.step-done + .step::before {
+.signup-step-done + .signup-step::before {
   background: var(--ink);
 }
-.step-dot {
+.signup-step-dot {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -868,15 +868,15 @@ textarea.field {
   border: 2px solid var(--rule);
   background: var(--white);
 }
-.step-current {
+.signup-step-current {
   color: var(--ink);
   font-weight: 700;
 }
-.step-current .step-dot {
+.signup-step-current .signup-step-dot {
   border-color: var(--ink);
   background: var(--lime);
 }
-.step-done .step-dot {
+.signup-step-done .signup-step-dot {
   border-color: var(--ink);
   background: var(--ink);
   color: var(--white);
@@ -884,7 +884,13 @@ textarea.field {
 .slug-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+}
+/* Sem espaço para os dois na mesma linha (celular estreito), o campo desce inteiro */
+.slug-row .field {
+  flex: 1 1 150px;
+  min-width: 0;
 }
 .slug-prefix {
   color: var(--muted);
@@ -1014,6 +1020,20 @@ textarea.field {
 .phone-live-screen > .bio {
   min-height: 100%;
 }
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+/* Fechar e o botão flutuante só existem no celular */
+.preview-close,
+.preview-fab {
+  display: none;
+}
+html.no-scroll {
+  overflow: hidden;
+}
 
 /* Cartões */
 .range {
@@ -1030,12 +1050,14 @@ textarea.field {
   color: var(--muted);
   padding: 6px 14px;
   border-radius: 999px;
+  white-space: nowrap;
 }
 .range a.active {
   background: var(--white);
   color: var(--ink);
 }
 .range button {
+  white-space: nowrap;
   font: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -1208,6 +1230,9 @@ textarea.field {
 .file-field input {
   font-size: 13px;
   font-family: var(--f-body);
+  /* O campo nativo tem largura própria e estoura o cartão no celular */
+  min-width: 0;
+  max-width: 100%;
 }
 .file-field input::file-selector-button {
   font-family: var(--f-body);
@@ -1226,9 +1251,12 @@ textarea.field {
 }
 .file-field-inline {
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   font-weight: 600;
+  min-width: 0;
+  max-width: 100%;
 }
 .file-btn {
   position: relative;
@@ -1362,6 +1390,10 @@ textarea.field {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+}
+.link-options > div {
+  min-width: 0;
+  max-width: 100%;
 }
 .link-options .field-label {
   margin-bottom: 6px;
@@ -2558,12 +2590,47 @@ textarea.field {
   .dash-grid {
     grid-template-columns: 1fr;
   }
+  /* No celular o editor vem primeiro; a prévia abre em tela cheia pelo botão flutuante (PreviewPanel). */
   .preview-col {
-    position: static;
-    order: -1;
+    display: none;
+  }
+  .preview-col.preview-open {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    gap: 12px;
+    padding: 16px var(--gutter) 24px;
+    background: var(--paper);
+    overflow-y: auto;
+  }
+  .preview-open .preview-head {
+    width: 100%;
+    max-width: 300px;
+    justify-content: space-between;
+  }
+  .preview-open .eyebrow {
+    margin: 0;
+  }
+  .preview-open .preview-close {
+    display: inline-flex;
+  }
+  .preview-open .phone-live {
+    width: min(300px, 100%);
+    flex-shrink: 0;
   }
   .phone-live-screen {
-    height: 480px;
+    height: min(600px, calc(100dvh - 120px));
+  }
+  .preview-fab {
+    display: inline-flex;
+    position: fixed;
+    left: var(--gutter);
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 50;
+    gap: 8px;
+    padding: 12px 18px;
+    box-shadow: 0 10px 30px rgba(23, 24, 26, 0.25);
   }
   .kpis {
     grid-template-columns: 1fr 1fr;
@@ -2577,7 +2644,38 @@ textarea.field {
   .dash-tabs {
     order: 3;
     width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .dash-tabs a,
+  .dash-tabs button {
+    flex: 1 0 auto;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 13px;
+    padding: 8px 6px;
+  }
+  /* Formato e Tamanho do link ocupam a largura do cartão, em colunas iguais */
+  .link-options {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .link-options .segmented {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    width: 100%;
+  }
+  .link-options .segmented label {
+    flex-direction: column;
     justify-content: center;
+    text-align: center;
+    gap: 4px;
+    padding: 8px 4px;
+  }
+  /* Abaixo de 16px o Safari do iPhone dá zoom ao tocar no campo e a tela fica desalinhada */
+  .field {
+    font-size: 16px;
   }
 }
 
@@ -2643,5 +2741,36 @@ textarea.field {
   }
   .dash-top-actions .btn-outline:first-child {
     display: none;
+  }
+  /* Resultados: tabelas e barras cabem na tela */
+  .stat-card {
+    padding: 16px;
+  }
+  .barlist-row {
+    grid-template-columns: minmax(0, 1fr) 22% auto;
+    gap: 8px;
+  }
+  .rank th,
+  .rank td {
+    padding: 8px 4px;
+  }
+  .rank th {
+    letter-spacing: 0.04em;
+  }
+  .range {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .range a,
+  .range button {
+    padding: 6px 9px;
+  }
+}
+
+/* Celular estreito: o botão da prévia sobe para não encostar no "Salvar aparência" */
+@media (max-width: 400px) {
+  .dash:has(.save-bar) .preview-fab {
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 60px);
   }
 }
