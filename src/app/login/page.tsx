@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Logo from "@/components/Logo";
 import PasswordInput from "@/components/PasswordInput";
 import SignupForm from "@/components/SignupForm";
+import SignupSteps from "@/components/SignupSteps";
 import { getCurrentUser } from "@/server/auth";
 import { signIn } from "./actions";
 
@@ -25,6 +26,7 @@ export default async function Login({
     <main className="auth">
       <Logo />
       <div className="auth-card">
+        {signup && <SignupSteps current={1} />}
         <h1 className="h2 auth-h1">{signup ? "Criar conta" : "Entrar"}</h1>
         <p className="auth-text">
           {signup ? "Crie sua conta e monte sua página em minutos." : "Acesse o painel da sua página."}

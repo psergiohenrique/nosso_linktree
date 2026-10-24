@@ -1,7 +1,15 @@
 // Integração com o Postgres: só roda com TEST_DATABASE_URL (veja `npm run test:db`).
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { consumePasswordReset, createPasswordReset, findPasswordReset, verifyPassword } from "@/server/auth";
+import {
+  confirmEmail,
+  consumePasswordReset,
+  createEmailVerification,
+  createPasswordReset,
+  findPasswordReset,
+  VERIFY_MAX_ATTEMPTS,
+  verifyPassword,
+} from "@/server/auth";
 import { pool, query, queryOne } from "@/server/db";
 import { clearAttempts, isRateLimited, RATE_RULES, recordAttempt } from "@/server/rate-limit";
 
@@ -89,6 +97,51 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: segurança da conta", ()
 
     it("token desconhecido não vale", async () => {
       expect(await findPasswordReset("token-inventado-que-nao-existe")).toBeNull();
+    });
+
+    it("redefinir a senha pelo link confirma o e-mail", async () => {
+      await query("update users set email_verified_at = null where id = $1", [userId]);
+      const token = await createPasswordReset(userId);
+      await consumePasswordReset(token, "nova-senha-123");
+      expect(await isVerified()).toBe(true);
+    });
+  });
+
+  const isVerified = async () =>
+    (await queryOne<{ v: boolean }>("select email_verified_at is not null as v from users where id = $1", [userId]))!.v;
+
+  describe("confirmação de e-mail", () => {
+    const wrongOf = (code: string) => String((Number(code) + 1) % 1_000_000).padStart(6, "0");
+
+    it("código certo confirma e não pode ser reusado", async () => {
+      await query("update users set email_verified_at = null where id = $1", [userId]);
+      const code = await createEmailVerification(userId);
+      expect(code).toMatch(/^\d{6}$/);
+      expect(await confirmEmail(userId, wrongOf(code))).toBe("wrong");
+      expect(await isVerified()).toBe(false);
+
+      expect(await confirmEmail(userId, code)).toBe("ok");
+      expect(await isVerified()).toBe(true);
+      expect(await confirmEmail(userId, code)).toBe("expired");
+    });
+
+    it("esgota as tentativas e o reenvio libera um código novo", async () => {
+      await query("update users set email_verified_at = null where id = $1", [userId]);
+      const code = await createEmailVerification(userId);
+      for (let i = 0; i < VERIFY_MAX_ATTEMPTS; i++) expect(await confirmEmail(userId, wrongOf(code))).toBe("wrong");
+      // Nem o código certo vale depois do limite.
+      expect(await confirmEmail(userId, code)).toBe("expired");
+
+      const fresh = await createEmailVerification(userId);
+      expect(await confirmEmail(userId, fresh)).toBe("ok");
+    });
+
+    it("código expirado não vale", async () => {
+      await query("update users set email_verified_at = null where id = $1", [userId]);
+      const code = await createEmailVerification(userId);
+      await query("update email_verifications set expires_at = now() - interval '1 minute' where user_id = $1", [userId]);
+      expect(await confirmEmail(userId, code)).toBe("expired");
+      expect(await isVerified()).toBe(false);
     });
   });
 });

@@ -5,6 +5,7 @@ import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
 import { PaywallButton } from "@/components/Paywall";
 import PhonePreview from "@/components/PhonePreview";
+import SignupSteps from "@/components/SignupSteps";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
@@ -35,6 +36,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
       <main className="auth">
         <Logo />
         <div className="auth-card">
+          <SignupSteps current={3} />
           <h1 className="h2 auth-h1">Crie sua página</h1>
           <p className="auth-text">Escolha o nome do seu negócio e o endereço da sua página.</p>
           {error}

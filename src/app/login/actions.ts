@@ -3,15 +3,18 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  confirmEmail,
   consumePasswordReset,
+  createEmailVerification,
   createPasswordReset,
   createSession,
   destroySession,
+  getCurrentUser,
   hashPassword,
   RESET_COOKIE,
   verifyPassword,
 } from "@/server/auth";
-import { queryOne } from "@/server/db";
+import { query, queryOne } from "@/server/db";
 import { sendMail } from "@/server/mail";
 import { clearAttempts, clientIp, isRateLimited, RATE_LIMIT_MESSAGE, recordAttempt } from "@/server/rate-limit";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -83,15 +86,79 @@ export async function signUp(_prev: SignUpState, formData: FormData): Promise<Si
   if (invalid) return fail(invalid);
   if (password !== String(formData.get("confirm") ?? "")) return fail("As senhas não conferem.");
 
+  // E-mail que já tem conta confirmada: recusa. Conta nunca confirmada com esse e-mail (ex.: alguém digitou
+  // o endereço errado) é reaproveitada com os dados novos; só entra quem receber o código.
   const user = await queryOne<{ id: string }>(
     `insert into users (email, password_hash, first_name, last_name, instagram) values ($1, $2, $3, $4, $5)
-     on conflict (email) do nothing returning id`,
+     on conflict (email) do update
+       set password_hash = excluded.password_hash, first_name = excluded.first_name,
+           last_name = excluded.last_name, instagram = excluded.instagram
+       where users.email_verified_at is null
+     returning id`,
     [email, await hashPassword(password), values.first_name, values.last_name, instagram || null],
   );
   if (!user) return fail("Já existe uma conta com esse e-mail.");
 
+  // Sessões de um cadastro anterior não confirmado deixam de valer.
+  await query("delete from sessions where user_id = $1", [user.id]);
+  const sent = await sendVerificationCode(user.id, email, values.first_name);
   await createSession(user.id);
+  redirect(sent ? "/login/confirmar" : `/login/confirmar?error=${encodeURIComponent(MAIL_FAILED)}`);
+}
+
+const MAIL_FAILED = "Não conseguimos enviar o código agora. Tente reenviar em instantes.";
+
+async function sendVerificationCode(userId: string, email: string, firstName: string) {
+  const code = await createEmailVerification(userId);
+  const hello = firstName ? `Olá, ${firstName}!` : "Olá!";
+  return sendMail({
+    to: email,
+    subject: `${code} é seu código de confirmação — ${SITE_NAME}`,
+    text: `${hello}\n\nSeu código para confirmar o e-mail no ${SITE_NAME} é:\n\n${code}\n\nEle vale por 30 minutos. Se não foi você que se cadastrou, ignore este e-mail.`,
+    html: `<p>${escapeHtml(hello)}</p><p>Seu código para confirmar o e-mail no ${SITE_NAME} é:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0">${code}</p><p>Ele vale por 30 minutos. Se não foi você que se cadastrou, ignore este e-mail.</p>`,
+  });
+}
+
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
+function backToConfirm(message: string): never {
+  redirect(`/login/confirmar?error=${encodeURIComponent(message)}`);
+}
+
+/** Passo 2 do cadastro: confere o código enviado por e-mail. */
+export async function verifyEmail(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.verified) redirect("/dashboard");
+
+  const code = String(formData.get("code") ?? "").replace(/\D/g, "");
+  if (code.length !== 6) backToConfirm("Digite os 6 números do código.");
+
+  const result = await confirmEmail(user.id, code);
+  if (result === "wrong") backToConfirm("Código incorreto. Confira o e-mail e tente de novo.");
+  if (result === "expired") backToConfirm("Esse código expirou ou teve tentativas demais. Peça um novo abaixo.");
   redirect("/dashboard");
+}
+
+export async function resendVerification() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.verified) redirect("/dashboard");
+
+  const keys = { email: user.email };
+  if (await isRateLimited("verify", keys)) backToConfirm(RATE_LIMIT_MESSAGE);
+  await recordAttempt("verify", keys);
+
+  const row = await queryOne<{ first_name: string }>("select first_name from users where id = $1", [user.id]);
+  if (!(await sendVerificationCode(user.id, user.email, row?.first_name ?? ""))) backToConfirm(MAIL_FAILED);
+  redirect("/login/confirmar?enviado=1");
+}
+
+/** E-mail digitado errado: sai e volta ao passo 1 (o cadastro não confirmado pode ser refeito). */
+export async function restartSignup() {
+  await destroySession();
+  redirect("/login?modo=cadastro");
 }
 
 export async function signOut() {

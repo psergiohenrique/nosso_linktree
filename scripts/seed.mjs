@@ -18,7 +18,10 @@ try {
   await client.query("delete from users where email = $1", [EMAIL]);
   const {
     rows: [user],
-  } = await client.query("insert into users (email, password_hash) values ($1, $2) returning id", [EMAIL, passwordHash]);
+  } = await client.query(
+    "insert into users (email, password_hash, email_verified_at) values ($1, $2, now()) returning id",
+    [EMAIL, passwordHash],
+  );
 
   await client.query(
     `insert into profiles (id, slug, display_name, bio, bg_type, bg_color, bg_color2, button_style, font)

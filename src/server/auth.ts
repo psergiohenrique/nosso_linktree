@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomInt, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { cache } from "react";
 import { cookies } from "next/headers";
@@ -11,7 +11,8 @@ const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number)
 export const SESSION_COOKIE = "lb_session";
 const SESSION_DAYS = 30;
 
-export type SessionUser = { id: string; email: string };
+/** verified: e-mail confirmado (sem isso o painel manda para /login/confirmar). */
+export type SessionUser = { id: string; email: string; verified: boolean };
 
 export async function hashPassword(password: string) {
   const salt = randomBytes(16);
@@ -56,7 +57,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
   return queryOne<SessionUser>(
-    `select u.id, u.email
+    `select u.id, u.email, u.email_verified_at is not null as verified
        from sessions s join users u on u.id = s.user_id
       where s.id = $1 and s.expires_at > now()`,
     [sha256(token)],
@@ -97,7 +98,9 @@ export async function consumePasswordReset(token: string, newPassword: string) {
         where id = $1 and used_at is null and expires_at > now()
         returning user_id
      ), u as (
-       update users set password_hash = $2 where id = (select user_id from r) returning id
+       -- O link chegou na caixa de entrada: isso também confirma o e-mail.
+       update users set password_hash = $2, email_verified_at = coalesce(email_verified_at, now())
+        where id = (select user_id from r) returning id
      ), s as (
        delete from sessions where user_id = (select id from u)
      )
@@ -110,7 +113,48 @@ export async function consumePasswordReset(token: string, newPassword: string) {
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (!user.verified) redirect("/login/confirmar");
   return user;
+}
+
+const VERIFY_MINUTES = 30;
+export const VERIFY_MAX_ATTEMPTS = 5;
+
+const codeHash = (userId: string, code: string) => sha256(`${process.env.APP_SECRET ?? ""}|verify|${userId}|${code}`);
+
+/** Gera um código de 6 dígitos (válido por 30 minutos) e invalida o anterior do usuário. */
+export async function createEmailVerification(userId: string) {
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  await query(
+    `insert into email_verifications (user_id, code_hash, expires_at)
+     values ($1, $2, now() + make_interval(mins => $3))
+     on conflict (user_id) do update
+       set code_hash = excluded.code_hash, attempts = 0, expires_at = excluded.expires_at, created_at = now()`,
+    [userId, codeHash(userId, code), VERIFY_MINUTES],
+  );
+  return code;
+}
+
+/**
+ * Confere o código e, se bater, marca o e-mail como confirmado.
+ * Cada palpite errado gasta uma das 5 tentativas do código; depois disso (ou expirado) é preciso reenviar.
+ */
+export async function confirmEmail(userId: string, code: string): Promise<"ok" | "wrong" | "expired"> {
+  const row = await queryOne<{ code_hash: string }>(
+    `update email_verifications set attempts = attempts + 1
+      where user_id = $1 and expires_at > now() and attempts < $2
+      returning code_hash`,
+    [userId, VERIFY_MAX_ATTEMPTS],
+  );
+  if (!row) return "expired";
+
+  const expected = Buffer.from(row.code_hash);
+  const actual = Buffer.from(codeHash(userId, code));
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return "wrong";
+
+  await query("update users set email_verified_at = coalesce(email_verified_at, now()) where id = $1", [userId]);
+  await query("delete from email_verifications where user_id = $1", [userId]);
+  return "ok";
 }
 
 /** Nome e sobrenome informados no cadastro (contas antigas: em branco). */

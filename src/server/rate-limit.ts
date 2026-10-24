@@ -8,15 +8,17 @@ import { query } from "./db";
  * Cada tentativa vira uma linha em `auth_attempts`, com a chave em hash (segredo + e-mail ou IP).
  */
 
-export type AuthAction = "signin" | "signup" | "reset";
+export type AuthAction = "signin" | "signup" | "reset" | "verify";
 type KeyKind = "email" | "ip";
 export type AttemptKeys = Partial<Record<KeyKind, string>>;
 
-// No login só as falhas contam (e o sucesso zera as do e-mail); no cadastro e na recuperação, todo pedido conta.
+// No login só as falhas contam (e o sucesso zera as do e-mail); no cadastro, na recuperação e no reenvio, todo pedido conta.
 export const RATE_RULES: Record<AuthAction, Partial<Record<KeyKind, { max: number; minutes: number }>>> = {
   signin: { email: { max: 5, minutes: 15 }, ip: { max: 30, minutes: 15 } },
   signup: { ip: { max: 5, minutes: 60 } },
   reset: { email: { max: 3, minutes: 60 }, ip: { max: 10, minutes: 60 } },
+  // Reenvio do código de confirmação do cadastro.
+  verify: { email: { max: 5, minutes: 60 } },
 };
 
 export const RATE_LIMIT_MESSAGE = "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
