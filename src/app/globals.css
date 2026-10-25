@@ -1963,8 +1963,7 @@ html.no-scroll {
   --btn-text: var(--ink);
   --btn-radius: 14px;
 
-  min-height: 100vh;
-  padding: 56px 20px 40px;
+  padding: 24px 20px;
   background: var(--bio-bg);
   color: var(--bio-text);
   font-family: var(--bio-font, var(--f-body));
