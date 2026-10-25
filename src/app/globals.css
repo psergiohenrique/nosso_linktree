@@ -1986,8 +1986,7 @@ html.no-scroll {
   --bio-font: var(--font-space-mono), ui-monospace, monospace;
 }
 .bio-inner {
-  max-width: 460px;
-  margin: 0 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
