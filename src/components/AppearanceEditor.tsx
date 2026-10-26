@@ -30,6 +30,8 @@ export default function AppearanceEditor({ profile, links, branding = true, pro 
   const [previewBranding, setPreviewBranding] = useState(branding);
   const [localAvatar, setLocalAvatar] = useState<string | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
+  const [localCoverImage, setLocalCoverImage] = useState<string | null>(null);
+  const [removeCoverImage, setRemoveCoverImage] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -37,7 +39,14 @@ export default function AppearanceEditor({ profile, links, branding = true, pro 
     };
   }, [localAvatar]);
 
+  useEffect(() => {
+    return () => {
+      if (localCoverImage) URL.revokeObjectURL(localCoverImage);
+    };
+  }, [localCoverImage]);
+
   const avatarUrl = localAvatar ?? (removeAvatar ? null : profile.avatar_url);
+  const coverImageUrl = localCoverImage ?? (removeCoverImage ? null : profile.cover_image_url);
 
   return (
     <div className="dash-grid">
@@ -59,8 +68,18 @@ export default function AppearanceEditor({ profile, links, branding = true, pro 
             setLocalAvatar(null);
             setRemoveAvatar(true);
           }}
+          coverImageUrl={coverImageUrl}
+          onCoverImageFile={(file) => {
+            setLocalCoverImage(file ? URL.createObjectURL(file) : null);
+            if (file) setRemoveCoverImage(false);
+          }}
+          onRemoveCoverImage={() => {
+            setLocalCoverImage(null);
+            setRemoveCoverImage(true);
+          }}
         />
         <input type="hidden" name="remove_avatar" value={removeAvatar ? "1" : ""} />
+        <input type="hidden" name="remove_cover_image" value={removeCoverImage ? "1" : ""} />
 
         <section className="card">
           <h2 className="card-title">Selo “Feito com Linkbio”</h2>
@@ -91,7 +110,11 @@ export default function AppearanceEditor({ profile, links, branding = true, pro 
         </div>
       </form>
 
-      <PhonePreview profile={{ ...state, avatar_url: avatarUrl }} links={links} branding={previewBranding} />
+      <PhonePreview
+        profile={{ ...state, avatar_url: avatarUrl, cover_image_url: coverImageUrl }}
+        links={links}
+        branding={previewBranding}
+      />
     </div>
   );
 }

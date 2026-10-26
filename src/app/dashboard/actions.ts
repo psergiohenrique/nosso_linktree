@@ -64,6 +64,12 @@ export async function updateAppearance(formData: FormData) {
   if (upload) avatarId = upload.id;
   else if (formData.get("remove_avatar") === "1") avatarId = null;
 
+  let coverImageId = profile.cover_image_id;
+  const coverUpload = await saveImage(user.id, formData.get("cover_image"));
+  if (coverUpload && "error" in coverUpload) fail(coverUpload.error, back);
+  if (coverUpload) coverImageId = coverUpload.id;
+  else if (formData.get("remove_cover_image") === "1") coverImageId = null;
+
   // Círculo da inicial: sem cores próprias (null), segue as do botão.
   const buttonColor = validColor(formData.get("button_color"), d.button_color);
   const buttonTextColor = validColor(formData.get("button_text_color"), d.button_text_color);
@@ -71,11 +77,11 @@ export async function updateAppearance(formData: FormData) {
 
   await query(
     `update profiles set
-       display_name = $2, bio = $3, avatar_id = $4,
-       bg_type = $5, bg_color = $6, bg_color2 = $7, text_color = $8,
-       button_color = $9, button_text_color = $10, button_style = $11, font = $12,
-       initial_bg_color = $13, initial_text_color = $14,
-       whatsapp_style = $15, whatsapp_color = $16, whatsapp_text_color = $17,
+       display_name = $2, bio = $3, avatar_id = $4, cover_image_id = $5,
+       bg_type = $6, bg_color = $7, bg_color2 = $8, text_color = $9,
+       button_color = $10, button_text_color = $11, button_style = $12, font = $13,
+       initial_bg_color = $14, initial_text_color = $15,
+       whatsapp_style = $16, whatsapp_color = $17, whatsapp_text_color = $18,
        updated_at = now()
      where id = $1`,
     [
@@ -83,6 +89,7 @@ export async function updateAppearance(formData: FormData) {
       String(formData.get("display_name") ?? "").trim().slice(0, 60),
       String(formData.get("bio") ?? "").trim().slice(0, 200),
       avatarId,
+      coverImageId,
       oneOf(formData.get("bg_type"), ["solid", "gradient"] as const, d.bg_type),
       validColor(formData.get("bg_color"), d.bg_color),
       validColor(formData.get("bg_color2"), d.bg_color2),
@@ -99,6 +106,7 @@ export async function updateAppearance(formData: FormData) {
     ],
   );
   if (avatarId !== profile.avatar_id) await deleteMedia(user.id, profile.avatar_id);
+  if (coverImageId !== profile.cover_image_id) await deleteMedia(user.id, profile.cover_image_id);
 
   refreshPublicPage(profile.slug);
   redirect(`${back}?ok=1`);

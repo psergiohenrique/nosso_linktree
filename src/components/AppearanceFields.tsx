@@ -16,10 +16,22 @@ type Props = {
   avatarUrl: string | null;
   onAvatarFile: (file: File | null) => void;
   onRemoveAvatar: () => void;
+  coverImageUrl: string | null;
+  onCoverImageFile: (file: File | null) => void;
+  onRemoveCoverImage: () => void;
 };
 
 /** Controles de perfil e aparência (usados pelo editor do painel e pelo playground do /demo). */
-export default function AppearanceFields({ state, setState, avatarUrl, onAvatarFile, onRemoveAvatar }: Props) {
+export default function AppearanceFields({
+  state,
+  setState,
+  avatarUrl,
+  onAvatarFile,
+  onRemoveAvatar,
+  coverImageUrl,
+  onCoverImageFile,
+  onRemoveCoverImage,
+}: Props) {
   const set = <K extends keyof PageViewProfile>(key: K, value: PageViewProfile[K]) =>
     setState((s) => ({ ...s, [key]: value }));
   const initialCustom = state.initial_bg_color != null || state.initial_text_color != null;
@@ -48,6 +60,24 @@ export default function AppearanceFields({ state, setState, avatarUrl, onAvatarF
             </button>
           )}
           <span className="hint">PNG, JPG, WEBP ou GIF. Fotos grandes são reduzidas automaticamente.</span>
+        </div>
+      </div>
+      <div className="cover-edit-row">
+        {coverImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coverImageUrl} alt="Prévia da foto de capa" className="cover-edit" />
+        )}
+        <div className="avatar-actions">
+          <label className="btn btn-outline btn-sm file-btn">
+            {coverImageUrl ? "Trocar foto de capa" : "Enviar foto de capa"}
+            <ImageInput name="cover_image" onFile={onCoverImageFile} />
+          </label>
+          {coverImageUrl && (
+            <button type="button" className="btn btn-outline btn-sm btn-danger" onClick={onRemoveCoverImage}>
+              Remover
+            </button>
+          )}
+          <span className="hint">Opcional. Use uma foto horizontal para melhor resultado.</span>
         </div>
       </div>
       <input

@@ -5,7 +5,7 @@ import { mediaUrl, type Appearance, type LinkItem, type Profile, type WhatsappAp
 
 export type PageViewProfile = Appearance &
   WhatsappAppearance &
-  Pick<Profile, "slug" | "display_name" | "bio"> & { avatar_url: string | null };
+  Pick<Profile, "slug" | "display_name" | "bio"> & { avatar_url: string | null; cover_image_url: string | null };
 
 export type PageViewLink = Pick<LinkItem, "id" | "title" | "url" | "kind" | "layout" | "size"> & {
   thumbnail_url: string | null;
@@ -123,7 +123,13 @@ export default function PageView({ profile, links, tracked = true, preview = fal
       className={`bio bio-font-${profile.font} bio-btn-${profile.button_style} ${preview ? "bio-preview" : ""}`}
       style={pageViewStyle(profile)}
     >
-      <div className="bio-inner">
+      {profile.cover_image_url && (
+        <div className="bio-cover">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={profile.cover_image_url} alt="" />
+        </div>
+      )}
+      <div className={`bio-inner ${profile.cover_image_url ? "has-cover" : ""}`}>
         <header className="bio-header">
           {profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -167,7 +173,11 @@ export default function PageView({ profile, links, tracked = true, preview = fal
  */
 export function toPageViewProps(profile: Profile, links: LinkItem[], pro = true) {
   return {
-    profile: { ...profile, avatar_url: profile.avatar_id ? mediaUrl(profile.avatar_id) : null },
+    profile: {
+      ...profile,
+      avatar_url: profile.avatar_id ? mediaUrl(profile.avatar_id) : null,
+      cover_image_url: profile.cover_image_id ? mediaUrl(profile.cover_image_id) : null,
+    },
     links: applyPlanToLinks(links, pro).map((l) => ({
       ...l,
       thumbnail_url: l.thumbnail_id ? mediaUrl(l.thumbnail_id) : null,

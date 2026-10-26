@@ -1301,6 +1301,19 @@ html.no-scroll {
   gap: 8px;
   flex-wrap: wrap;
 }
+.cover-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.cover-edit {
+  width: 160px;
+  height: 76px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  object-fit: cover;
+}
 .presets {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
@@ -1963,6 +1976,8 @@ html.no-scroll {
   --btn-text: var(--ink);
   --btn-radius: 14px;
 
+  min-height: 100vh;
+  min-height: 100dvh;
   padding: 24px 20px;
   background: var(--bio-bg);
   color: var(--bio-text);
@@ -1971,6 +1986,17 @@ html.no-scroll {
 .bio-preview {
   min-height: 100%;
   padding: 40px 16px 24px;
+}
+.bio-cover {
+  width: calc(100% + 40px);
+  height: clamp(140px, 18vw, 260px);
+  margin: -24px -20px 0;
+  overflow: hidden;
+}
+.bio-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .bio-font-manrope {
   --bio-font: var(--font-manrope), system-ui, sans-serif;
@@ -1986,10 +2012,24 @@ html.no-scroll {
 }
 .bio-inner {
   width: 100%;
+  max-width: 680px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 28px;
+}
+.bio-inner.has-cover {
+  position: relative;
+  z-index: 1;
+  margin-top: -48px;
+}
+.bio-preview .bio-cover {
+  width: calc(100% + 32px);
+  height: 100px;
+  margin: -40px -16px 0;
+}
+.bio-preview .bio-inner.has-cover {
+  margin-top: -40px;
 }
 .bio-header {
   display: flex;

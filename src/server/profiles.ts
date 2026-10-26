@@ -5,7 +5,7 @@ import { query, queryOne } from "./db";
 
 const PROFILE_COLUMNS = `id, slug, display_name, bio, avatar_id, bg_type, bg_color, bg_color2,
   text_color, button_color, button_text_color, button_style, font, initial_bg_color, initial_text_color,
-  whatsapp_style, whatsapp_color, whatsapp_text_color`;
+  whatsapp_style, whatsapp_color, whatsapp_text_color, cover_image_id`;
 
 export const getProfileByUser = cache((userId: string) =>
   queryOne<Profile>(`select ${PROFILE_COLUMNS} from profiles where id = $1`, [userId]),

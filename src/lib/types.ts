@@ -47,6 +47,7 @@ export type Profile = Appearance &
     display_name: string;
     bio: string;
     avatar_id: string | null;
+    cover_image_id: string | null;
   };
 
 export type LinkLayout = "button" | "featured" | "tile";

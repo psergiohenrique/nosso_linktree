@@ -47,6 +47,7 @@ const SAMPLE_PROFILE: PageViewProfile = {
   display_name: "Sua página",
   bio: "",
   avatar_url: "/demo/avatar.svg",
+  cover_image_url: null,
 };
 
 const SAMPLE_LINKS: Record<"featured" | "tile", PageViewLink[]> = {

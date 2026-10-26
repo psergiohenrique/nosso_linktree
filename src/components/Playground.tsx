@@ -18,6 +18,7 @@ const EXAMPLE_PROFILE: PageViewProfile = {
   display_name: "Barbearia do Zé",
   bio: "Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.",
   avatar_url: "/demo/avatar.svg",
+  cover_image_url: null,
 };
 
 const EXAMPLE_LINKS: PlayLink[] = [
@@ -71,6 +72,7 @@ export default function Playground() {
   const reset = () => {
     links.forEach((l) => revoke(l.thumbnail_url));
     revoke(profile.avatar_url);
+    revoke(profile.cover_image_url);
     setProfile(EXAMPLE_PROFILE);
     setLinks(EXAMPLE_LINKS);
   };
@@ -218,6 +220,15 @@ export default function Playground() {
                 onRemoveAvatar={() => {
                   revoke(profile.avatar_url);
                   setProfile((p) => ({ ...p, avatar_url: null }));
+                }}
+                coverImageUrl={profile.cover_image_url}
+                onCoverImageFile={(file) => {
+                  revoke(profile.cover_image_url);
+                  setProfile((p) => ({ ...p, cover_image_url: file ? URL.createObjectURL(file) : null }));
+                }}
+                onRemoveCoverImage={() => {
+                  revoke(profile.cover_image_url);
+                  setProfile((p) => ({ ...p, cover_image_url: null }));
                 }}
               />
             </>
