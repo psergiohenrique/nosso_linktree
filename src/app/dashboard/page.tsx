@@ -9,10 +9,11 @@ import SignupSteps from "@/components/SignupSteps";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
+import { isIndexable } from "@/lib/seo";
 import { getUserName, requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
-import { addLink, createProfile, deleteLink, moveLink, updateLink } from "./actions";
+import { addLink, createProfile, deleteLink, moveLink, toggleSearchIndexing, updateLink } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
   const plan = await getPlan(user.id);
   const preview = toPageViewProps(profile, links.filter((l) => l.is_active), plan.pro);
   const atLimit = !plan.pro && links.length >= FREE_LINK_LIMIT;
+  const indexed = isIndexable(profile, preview.links.length);
 
   return (
     <div className="dash-grid">
@@ -250,6 +252,25 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
             </div>
           );
         })}
+
+        <section className="card weekly-card">
+          <div>
+            <h2 className="card-title">Aparecer no Google</h2>
+            <p className="hint">
+              {!profile.search_indexing
+                ? "Desligado: sua página continua no ar para quem tem o link, mas não aparece nas buscas."
+                : indexed
+                  ? "Ligado: o Google pode mostrar sua página para quem buscar pelo seu nome. Pode levar alguns dias."
+                  : "Ligado, mas sua página só entra nas buscas quando tiver nome ou bio e pelo menos um link ativo."}
+            </p>
+          </div>
+          <form action={toggleSearchIndexing}>
+            <input type="hidden" name="on" value={profile.search_indexing ? "0" : "1"} />
+            <button className={`btn btn-sm ${profile.search_indexing ? "btn-outline" : "btn-primary"}`}>
+              {profile.search_indexing ? "Desligar" : "Ligar"}
+            </button>
+          </form>
+        </section>
       </main>
 
       <PhonePreview {...preview} />

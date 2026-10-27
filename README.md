@@ -28,7 +28,7 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 9,90/mês ou R$ 70,80/ano = R$ 5,90/mês) via Asaas. Ligada por `BILLING_ENABLED=true` (desligada, todos têm o Pro). Como funciona e como ligar em produção: [docs/ESTADO-ATUAL.md](docs/ESTADO-ATUAL.md#11-planos-e-cobrança-paywall).
 
 ## Estrutura
-- `src/app/[slug]` — página pública (cache de 60 s, atualizada ao salvar no painel)
+- `src/app/[slug]` — página pública (cache de 60 s, atualizada ao salvar no painel), com SEO próprio e imagem de compartilhamento gerada (`opengraph-image.tsx`); só vai para o Google com conteúdo mínimo e se o dono não desligar (regras em `src/lib/seo.ts`)
 - `src/app/go/[id]` — redireciona o link e registra o clique
 - `src/app/api/view` — registra a visualização
 - `src/app/media/[id]` — serve as imagens enviadas (guardadas no Postgres)

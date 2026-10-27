@@ -9,6 +9,8 @@ import { query, queryOne } from "./db";
 const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 
 export const SESSION_COOKIE = "lb_session";
+/** Só "1": avisa o navegador que há sessão (o menu da home, que é estática, mostra "Meu painel"). Não autentica nada. */
+export const LOGGED_COOKIE = "lb_logged";
 const SESSION_DAYS = 30;
 
 /** verified: e-mail confirmado (sem isso o painel manda para /login/confirmar). */
@@ -43,6 +45,7 @@ export async function createSession(userId: string) {
     path: "/",
     expires,
   });
+  store.set(LOGGED_COOKIE, "1", { sameSite: "lax", path: "/", expires, secure: process.env.NODE_ENV === "production" });
 }
 
 export async function destroySession() {
@@ -50,6 +53,7 @@ export async function destroySession() {
   const token = store.get(SESSION_COOKIE)?.value;
   if (token) await query("delete from sessions where id = $1", [sha256(token)]);
   store.delete(SESSION_COOKIE);
+  store.delete(LOGGED_COOKIE);
 }
 
 /** Usuário da sessão atual (memoizado por requisição) ou null. */

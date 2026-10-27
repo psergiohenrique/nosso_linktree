@@ -69,7 +69,8 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
   const common = {
     href: tracked ? `/go/${link.id}` : link.url,
     target: "_blank",
-    rel: "noopener noreferrer nofollow",
+    // ugc: links de usuário. Passam por /go (bloqueado no robots), então não transferem relevância.
+    rel: "noopener noreferrer nofollow ugc",
   };
   const tone = isWhats ? "bio-link-whats" : "";
   const icon = isWhats && <WhatsappIcon className="bio-whats-icon" />;
@@ -79,7 +80,7 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
       <a {...common} className={`bio-link bio-featured bio-size-${link.size} ${tone}`}>
         {img && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt="" className="bio-featured-img" />
+          <img src={img} alt="" loading="lazy" decoding="async" className="bio-featured-img" />
         )}
         <span className="bio-featured-title">
           {title}
@@ -94,7 +95,7 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
       <a {...common} className={`bio-link bio-tile bio-size-${link.size} ${tone} ${img ? "has-img" : ""}`}>
         {img && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt="" className="bio-tile-img" />
+          <img src={img} alt="" loading="lazy" decoding="async" className="bio-tile-img" />
         )}
         <span className="bio-tile-title">{title}</span>
         {icon}
@@ -106,7 +107,7 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
     <a {...common} className={`bio-link bio-size-${link.size} ${tone} ${img ? "has-thumb" : ""}`}>
       {img && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={img} alt="" width={44} height={44} className="bio-thumb" />
+        <img src={img} alt="" width={44} height={44} loading="lazy" decoding="async" className="bio-thumb" />
       )}
       <span className="bio-link-title">{title}</span>
       {icon}
@@ -126,14 +127,21 @@ export default function PageView({ profile, links, tracked = true, preview = fal
       {profile.cover_image_url && (
         <div className="bio-cover">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={profile.cover_image_url} alt="" />
+          <img src={profile.cover_image_url} alt="" fetchPriority="high" />
         </div>
       )}
       <div className={`bio-inner ${profile.cover_image_url ? "has-cover" : ""}`}>
         <header className="bio-header">
           {profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.avatar_url} alt="" width={96} height={96} className="bio-avatar" />
+            <img
+              src={profile.avatar_url}
+              alt={`Foto de ${name}`}
+              width={96}
+              height={96}
+              fetchPriority={profile.cover_image_url ? "auto" : "high"}
+              className="bio-avatar"
+            />
           ) : (
             <div className="bio-initial">{initial}</div>
           )}

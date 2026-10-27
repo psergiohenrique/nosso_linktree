@@ -1,4 +1,5 @@
 import { COMPANY_NAME, COMPANY_URL, SITE_NAME } from "@/lib/site";
+import FooterAccountLink from "./FooterAccountLink";
 import Logo from "./Logo";
 
 const LINKS = [
@@ -8,19 +9,19 @@ const LINKS = [
   { href: "/demo", label: "Exemplo" },
 ];
 
-export default function Footer({ loggedIn = false }: { loggedIn?: boolean }) {
-  const links = [...LINKS, loggedIn ? { href: "/dashboard", label: "Meu painel" } : { href: "/login", label: "Entrar" }];
+export default function Footer() {
   return (
     <footer className="site-footer">
       <div className="wrap">
         <div className="footer-top">
           <Logo href="#hero" />
           <div className="footer-links">
-            {links.map((link) => (
+            {LINKS.map((link) => (
               <a key={link.href} href={link.href}>
                 {link.label}
               </a>
             ))}
+            <FooterAccountLink />
           </div>
         </div>
         <div className="footer-bottom">

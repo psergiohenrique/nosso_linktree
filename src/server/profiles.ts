@@ -1,11 +1,12 @@
 import "server-only";
 import { cache } from "react";
 import type { LinkItem, Profile } from "@/lib/types";
+import { INDEXABLE_SQL } from "@/lib/seo";
 import { query, queryOne } from "./db";
 
 const PROFILE_COLUMNS = `id, slug, display_name, bio, avatar_id, bg_type, bg_color, bg_color2,
   text_color, button_color, button_text_color, button_style, font, initial_bg_color, initial_text_color,
-  whatsapp_style, whatsapp_color, whatsapp_text_color, cover_image_id`;
+  whatsapp_style, whatsapp_color, whatsapp_text_color, cover_image_id, search_indexing, updated_at`;
 
 export const getProfileByUser = cache((userId: string) =>
   queryOne<Profile>(`select ${PROFILE_COLUMNS} from profiles where id = $1`, [userId]),
@@ -32,3 +33,14 @@ export const getPublicPage = cache(async (slug: string) => {
   );
   return { profile, links };
 });
+
+/** Páginas que entram no sitemap (mesma regra de isIndexable), das editadas mais recentemente. */
+export function listIndexablePages(limit: number) {
+  return query<{ slug: string; updated_at: Date; avatar_id: string | null }>(
+    `select p.slug, p.updated_at, p.avatar_id from profiles p
+      where ${INDEXABLE_SQL}
+      order by p.updated_at desc
+      limit $1`,
+    [limit],
+  );
+}

@@ -48,6 +48,9 @@ export type Profile = Appearance &
     bio: string;
     avatar_id: string | null;
     cover_image_id: string | null;
+    /** Aparecer no Google (o usuário pode desligar). */
+    search_indexing: boolean;
+    updated_at: Date;
   };
 
 export type LinkLayout = "button" | "featured" | "tile";

@@ -32,8 +32,11 @@ async function requireProfile() {
   return { user, profile };
 }
 
-function refreshPublicPage(slug: string) {
-  revalidatePath(`/${slug}`);
+/** Invalida a página pública e marca a edição (updated_at vira o lastModified do sitemap). */
+async function refreshPublicPage(profile: { id: string; slug: string }) {
+  await query("update profiles set updated_at = now() where id = $1", [profile.id]);
+  revalidatePath(`/${profile.slug}`);
+  revalidatePath(`/${profile.slug}/opengraph-image`);
   revalidatePath("/dashboard", "layout");
 }
 
@@ -108,7 +111,7 @@ export async function updateAppearance(formData: FormData) {
   if (avatarId !== profile.avatar_id) await deleteMedia(user.id, profile.avatar_id);
   if (coverImageId !== profile.cover_image_id) await deleteMedia(user.id, profile.cover_image_id);
 
-  refreshPublicPage(profile.slug);
+  await refreshPublicPage(profile);
   redirect(`${back}?ok=1`);
 }
 
@@ -153,7 +156,7 @@ export async function addLink(formData: FormData) {
      values ($1, $2, $3, $4, $5, $6, $7, coalesce((select max(position) + 1 from links where profile_id = $1), 0))`,
     [user.id, link.kind, link.title, link.url, upload?.id ?? null, link.layout ?? "button", link.size],
   );
-  refreshPublicPage(profile.slug);
+  await refreshPublicPage(profile);
 }
 
 export async function updateLink(formData: FormData) {
@@ -176,7 +179,7 @@ export async function updateLink(formData: FormData) {
     [id, user.id, link.kind, link.title, link.url, thumbnailId, formData.get("is_active") === "on", link.layout ?? current.layout, link.size],
   );
   if (thumbnailId !== current.thumbnail_id) await deleteMedia(user.id, current.thumbnail_id);
-  refreshPublicPage(profile.slug);
+  await refreshPublicPage(profile);
 }
 
 export async function deleteLink(formData: FormData) {
@@ -186,7 +189,7 @@ export async function deleteLink(formData: FormData) {
     [String(formData.get("id")), user.id],
   );
   await deleteMedia(user.id, removed?.thumbnail_id);
-  refreshPublicPage(profile.slug);
+  await refreshPublicPage(profile);
 }
 
 export async function moveLink(formData: FormData) {
@@ -213,7 +216,7 @@ export async function moveLink(formData: FormData) {
   } finally {
     client.release();
   }
-  refreshPublicPage(profile.slug);
+  await refreshPublicPage(profile);
 }
 
 // ───────── Plano (cobrança) ─────────
@@ -249,4 +252,11 @@ export async function toggleWeeklyReport(formData: FormData) {
   const user = await requireUser();
   await setWeeklyReport(user.id, formData.get("on") === "1");
   revalidatePath("/dashboard/resultados");
+}
+
+/** Aparecer no Google: desligado, a página ganha noindex e sai do sitemap. */
+export async function toggleSearchIndexing(formData: FormData) {
+  const { user, profile } = await requireProfile();
+  await query("update profiles set search_indexing = $2 where id = $1", [user.id, formData.get("on") === "1"]);
+  await refreshPublicPage(profile);
 }

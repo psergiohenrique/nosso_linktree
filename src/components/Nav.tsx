@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
+import { useLoggedIn } from "./useLoggedIn";
 
 const LINKS = [
   { id: "recursos", label: "Recursos" },
@@ -11,7 +12,8 @@ const LINKS = [
   { id: "comecar", label: "Começar" },
 ];
 
-export default function Nav({ loggedIn = false }: { loggedIn?: boolean }) {
+export default function Nav() {
+  const loggedIn = useLoggedIn();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {

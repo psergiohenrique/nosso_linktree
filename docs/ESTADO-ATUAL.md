@@ -30,7 +30,9 @@ Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rod
 - Landing com seções: Nav, Hero, StatsBar, Recursos, Como funciona, Planos, CTA e Footer.
 - **Seção de preços** (`#planos`, link no menu e no rodapé): três cartões (Grátis R$ 0, Pro mensal R$ 9,90/mês, Pro anual R$ 5,90/mês = R$ 70,80/ano, “Mais vantajoso”, economia de 40%), tabela comparativa Grátis × Pro e 7 perguntas frequentes. Preços e limites vêm de `src/lib/billing.ts`. Com a cobrança desligada, mostra o aviso “Lançamento: todos os recursos do Pro liberados sem custo”. Os três planos também estão no JSON-LD (`offers`). Posicionamento definido a partir de Linktree, Beacons, Taplink, Lnk.bio, Abre.bio, Viber.Bio, Linkme e Linkhiver (out/2026). Preço baixado para R$ 9,90 / R$ 5,90 (2026-10-16): abaixo do Abre.bio (R$ 19,90/R$ 189,90) e do Linkhiver (R$ 17), na faixa do Linkme.
 - Animação de entrada ao rolar (`RevealWrapper`).
-- SEO: metadata global, JSON-LD (`SoftwareApplication` + `WebSite`), `sitemap.ts`, `robots.ts`, imagem Open Graph gerada (`opengraph-image.tsx`) e ícone.
+- SEO: título, descrição, Open Graph e JSON-LD (`SoftwareApplication` + `WebSite`) só da home (as outras páginas não herdam mais); imagem Open Graph gerada (`opengraph-image.tsx`), ícone, ícone da Apple, `manifest` e página 404 da marca. A home é estática (o menu descobre a sessão no navegador), o que melhora o tempo de carregamento.
+- `robots.txt` bloqueia `/dashboard`, `/admin`, `/login`, `/api/` e `/go/`; `/go` e `/api` também mandam `X-Robots-Tag: noindex`. `sitemap.xml` lista a home, o `/demo` e todas as páginas de usuários que podem ir para o Google (com data de edição e foto).
+- Search Console: a meta tag de verificação sai de `GOOGLE_SITE_VERIFICATION`.
 
 ## 3. Contas e login (`/login`)
 
@@ -74,6 +76,8 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 - Mesmo componente (`PageView`) usado na página pública, na prévia do painel e no `/demo`.
 - Cliques passam por `/go/[id]` (registra e redireciona com 302); visualizações são registradas por `/api/view`.
 - Imagens servidas por `/media/[id]` com cache imutável.
+- **SEO de cada página:** título “Nome (@endereço)”, descrição pela bio (sem bio, com os primeiros links), canonical, Open Graph/Twitter próprios, JSON-LD `ProfilePage` com as redes sociais (`sameAs`) e imagem de compartilhamento gerada com nome, foto e cores da página (`/[slug]/opengraph-image`). Endereço com maiúsculas redireciona (308) para o minúsculo. Links com `rel="nofollow ugc"`.
+- **Google:** a página só é indexada (e só entra no sitemap) com nome ou bio e pelo menos um link ativo; senão leva `noindex, follow`. Na aba Links, “Aparecer no Google” deixa o dono tirar a página da busca.
 
 ## 6. Imagens
 
@@ -149,6 +153,7 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 - **Chave própria do Resend** para o Linkbio (hoje usa a do Ambiento; revogar uma afeta os dois produtos).
 - Banco separado para os previews (ex.: branch do Neon), se for usar deploys de preview.
 - Testes de ponta a ponta (navegador) e de componentes.
+- **SEO, depois do deploy:** criar a propriedade no Google Search Console (`bio.codepath.dev.br`), pôr o código em `GOOGLE_SITE_VERIFICATION` na Vercel, enviar `sitemap.xml` e conferir uma página no Rich Results Test e no depurador de compartilhamento do Facebook. Depois: páginas de conteúdo por nicho e comparativos.
 - Ícones de redes sociais, arrastar para reordenar, QR code.
 - Login por link mágico (o PRD cita, mas hoje é e-mail + senha).
 - V2+: captura de leads → robô de leads, Pix/vendas, domínio próprio, painel de agência/white-label, templates por nicho, blocos (vídeo, mapa, cardápio), agendamento de links.
