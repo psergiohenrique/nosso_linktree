@@ -33,6 +33,7 @@ Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 9,90/mês ou R$ 70,
 - `src/app/api/view` — registra a visualização
 - `src/app/media/[id]` — serve as imagens enviadas (guardadas no Postgres)
 - `src/app/dashboard` — painel: Links, Aparência (prévia ao vivo), Resultados e Plano
+- `src/app/admin` — admin (só e-mails em `ADMIN_EMAILS`; os demais recebem 404): resumo com cadastros, planos, MRR e receita; lista de contas com busca; detalhe da conta (cadastro, página, links, assinatura, cobranças) e Pro de cortesia
 - `src/app/api/asaas/webhook` e `src/app/api/cron/billing` — webhook do Asaas e cron diário da cobrança
 - `src/server/` — banco, autenticação, upload, analytics, cobrança (Asaas)
 - `db/migrations` — SQL aplicado por `scripts/migrate.mjs`

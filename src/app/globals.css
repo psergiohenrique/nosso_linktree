@@ -2570,6 +2570,82 @@ html.no-scroll {
   opacity: 0.5;
 }
 
+/* ───────── Admin ───────── */
+
+.admin-kpis .kpi-num {
+  font-size: 28px;
+}
+.admin-scroll {
+  overflow-x: auto;
+}
+.admin-scroll .rank {
+  min-width: 640px;
+}
+.admin .rank a {
+  color: var(--ink);
+  font-weight: 700;
+}
+.admin .rank code,
+.admin-dl code {
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+.admin-dl th {
+  width: 40%;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  vertical-align: top;
+}
+.admin-url {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--muted);
+}
+.hint .admin-tag {
+  margin-left: 6px;
+  font-size: 11px;
+}
+.admin-tag-ok {
+  background: color-mix(in srgb, var(--whats) 14%, transparent);
+  color: var(--whats-dark);
+}
+.admin-tag-warn {
+  background: color-mix(in srgb, var(--lime) 45%, transparent);
+  color: var(--ink);
+}
+.admin-tag-bad {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+.admin-search {
+  display: flex;
+  gap: 8px;
+  width: min(100%, 420px);
+}
+.admin-search .field {
+  flex: 1;
+  min-width: 0;
+}
+.admin-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 @media (max-width: 900px) {
   .hero-grid {
     flex-direction: column;
