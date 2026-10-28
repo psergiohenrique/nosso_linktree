@@ -43,6 +43,7 @@ export function PaywallButton({
 const SAMPLE_PROFILE: PageViewProfile = {
   ...THEME_PRESETS[2].appearance,
   ...WHATSAPP_DEFAULT,
+  show_avatar: true,
   slug: "sua-pagina",
   display_name: "Sua página",
   bio: "",

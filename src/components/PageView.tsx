@@ -5,7 +5,7 @@ import { mediaUrl, type Appearance, type LinkItem, type Profile, type WhatsappAp
 
 export type PageViewProfile = Appearance &
   WhatsappAppearance &
-  Pick<Profile, "slug" | "display_name" | "bio"> & { avatar_url: string | null; cover_image_url: string | null };
+  Pick<Profile, "slug" | "display_name" | "bio" | "show_avatar"> & { avatar_url: string | null; cover_image_url: string | null };
 
 export type PageViewLink = Pick<LinkItem, "id" | "title" | "url" | "kind" | "layout" | "size"> & {
   thumbnail_url: string | null;
@@ -116,8 +116,8 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
 }
 
 export default function PageView({ profile, links, tracked = true, preview = false, branding = true }: Props) {
-  const name = profile.display_name || `@${profile.slug}`;
-  const initial = name.replace("@", "").charAt(0).toUpperCase();
+  const name = profile.display_name.trim();
+  const initial = (name || profile.slug).replace("@", "").charAt(0).toUpperCase();
 
   return (
     <main
@@ -132,11 +132,11 @@ export default function PageView({ profile, links, tracked = true, preview = fal
       )}
       <div className={`bio-inner ${profile.cover_image_url ? "has-cover" : ""}`}>
         <header className="bio-header">
-          {profile.avatar_url ? (
+          {profile.show_avatar && (profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={profile.avatar_url}
-              alt={`Foto de ${name}`}
+              alt={`Foto de ${name || `@${profile.slug}`}`}
               width={96}
               height={96}
               fetchPriority={profile.cover_image_url ? "auto" : "high"}
@@ -144,8 +144,8 @@ export default function PageView({ profile, links, tracked = true, preview = fal
             />
           ) : (
             <div className="bio-initial">{initial}</div>
-          )}
-          <h1 className="bio-name">{name}</h1>
+          ))}
+          {name && <h1 className="bio-name">{name}</h1>}
           {profile.bio && <p className="bio-text">{profile.bio}</p>}
         </header>
 

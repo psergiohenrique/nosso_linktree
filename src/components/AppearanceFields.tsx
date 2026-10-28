@@ -40,6 +40,10 @@ export default function AppearanceFields({
     <>
     <section className="card">
       <h2 className="card-title">Perfil</h2>
+      <label className="check">
+        <input type="checkbox" name="show_avatar" value="1" checked={state.show_avatar} onChange={(e) => set("show_avatar", e.target.checked)} />
+        Mostrar foto ou círculo com inicial na página
+      </label>
       <div className="avatar-row">
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -85,7 +89,7 @@ export default function AppearanceFields({
         value={state.display_name}
         onChange={(e) => set("display_name", e.target.value)}
         maxLength={60}
-        placeholder="Nome"
+        placeholder="Nome (opcional)"
         aria-label="Nome"
         className="field"
       />

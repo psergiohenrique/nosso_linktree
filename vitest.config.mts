@@ -11,7 +11,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["test/**/*.test.ts"],
+    include: ["test/**/*.test.{ts,tsx}"],
     // Testes com banco só rodam com TEST_DATABASE_URL (nunca usam o DATABASE_URL do .env.local).
     env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "", APP_SECRET: "segredo-de-teste" },
   },

@@ -47,6 +47,7 @@ export type Profile = Appearance &
     display_name: string;
     bio: string;
     avatar_id: string | null;
+    show_avatar: boolean;
     cover_image_id: string | null;
     /** Aparecer no Google (o usuário pode desligar). */
     search_indexing: boolean;

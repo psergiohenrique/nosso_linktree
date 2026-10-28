@@ -55,6 +55,27 @@ export async function createProfile(formData: FormData) {
   redirect("/dashboard");
 }
 
+export async function updateSlug(formData: FormData) {
+  const { user, profile } = await requireProfile();
+  const back = "/dashboard/aparencia";
+  const slug = validateSlug(String(formData.get("slug") ?? ""));
+  if (!slug) fail("Endereço inválido: use 3 a 30 letras minúsculas, números ou hífen.", back);
+
+  try {
+    await query("update profiles set slug = $2, updated_at = now() where id = $1", [user.id, slug]);
+  } catch (err) {
+    if (typeof err === "object" && err !== null && "code" in err && err.code === "23505") {
+      fail("Esse endereço já está em uso.", back);
+    }
+    throw err;
+  }
+  await refreshPublicPage(profile);
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/opengraph-image`);
+  revalidatePath("/sitemap.xml");
+  redirect(`${back}?endereco=1`);
+}
+
 /** Perfil (nome, bio, foto) e aparência, salvos juntos pelo editor de aparência. */
 export async function updateAppearance(formData: FormData) {
   const { user, profile } = await requireProfile();
@@ -84,7 +105,7 @@ export async function updateAppearance(formData: FormData) {
        bg_type = $6, bg_color = $7, bg_color2 = $8, text_color = $9,
        button_color = $10, button_text_color = $11, button_style = $12, font = $13,
        initial_bg_color = $14, initial_text_color = $15,
-       whatsapp_style = $16, whatsapp_color = $17, whatsapp_text_color = $18,
+       whatsapp_style = $16, whatsapp_color = $17, whatsapp_text_color = $18, show_avatar = $19,
        updated_at = now()
      where id = $1`,
     [
@@ -106,6 +127,7 @@ export async function updateAppearance(formData: FormData) {
       oneOf(formData.get("whatsapp_style"), WHATSAPP_STYLES.map((w) => w.value), WHATSAPP_DEFAULT.whatsapp_style),
       validColor(formData.get("whatsapp_color"), WHATSAPP_DEFAULT.whatsapp_color),
       validColor(formData.get("whatsapp_text_color"), WHATSAPP_DEFAULT.whatsapp_text_color),
+      formData.get("show_avatar") === "1",
     ],
   );
   if (avatarId !== profile.avatar_id) await deleteMedia(user.id, profile.avatar_id);

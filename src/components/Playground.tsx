@@ -14,6 +14,7 @@ type PlayLink = PageViewLink & { active: boolean };
 const EXAMPLE_PROFILE: PageViewProfile = {
   ...THEME_PRESETS[2].appearance,
   ...WHATSAPP_DEFAULT,
+  show_avatar: true,
   slug: "barbearia-do-ze",
   display_name: "Barbearia do Zé",
   bio: "Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.",
