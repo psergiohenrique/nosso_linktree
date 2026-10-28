@@ -15,12 +15,13 @@ Follows the same conventions as the sibling site projects (`../site-moraex`, `..
 - `npm run start` — run the production build
 - `npm run lint` — ESLint (flat config, `eslint-config-next`)
 - `npm run db:up` — start local Postgres (docker-compose, port 5435)
-- `npm run db:migrate` — apply pending `db/migrations/*.sql` (tracked in `schema_migrations`)
+- `npm run db:migrate` — apply pending `db/migrations/*.sql` (tracked in `schema_migrations`) to the local DB (`.env.local`)
+- `npm run db:migrate:prod` — same, against production Neon (`.env.neon`, gitignored, holds only `DATABASE_URL`). Run it **before** pushing code that needs a new migration
 - `npm run db:seed` — dev-only demo account + page + 30 days of events (credentials at the top of `scripts/seed.mjs`)
 - `npm test` — Vitest unit tests (`test/*.test.ts`); DB tests are skipped
 - `npm run test:db` — also runs `test/*.db.test.ts` against the local Docker Postgres (via `TEST_DATABASE_URL`, never `.env.local`)
 
-Env vars live in `.env.local` (see `.env.example`): `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, optional `RESEND_API_KEY` + `MAIL_FROM` (signup confirmation code and password-reset e-mail; without them, in dev the e-mail is printed to the server terminal), and billing: `BILLING_ENABLED`, `ASAAS_API_URL`, `ASAAS_API_KEY` (starts with `$`: single-quote it in `.env` files), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`; optional `ADMIN_EMAILS` (comma-separated, who can open `/admin`) and `GOOGLE_SITE_VERIFICATION` (Search Console meta tag). **`.env.local` points at the production Neon database**: `npm run db:migrate`/`db:seed` and `npm run start` use it. For local work, override inline: `DATABASE_URL=postgresql://linkbio:linkbio@localhost:5435/linkbio`.
+Env vars live in `.env.local` (see `.env.example`): `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, optional `RESEND_API_KEY` + `MAIL_FROM` (signup confirmation code and password-reset e-mail; without them, in dev the e-mail is printed to the server terminal), and billing: `BILLING_ENABLED`, `ASAAS_API_URL`, `ASAAS_API_KEY` (starts with `$`: single-quote it in `.env` files), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`; optional `ADMIN_EMAILS` (comma-separated, who can open `/admin`) and `GOOGLE_SITE_VERIFICATION` (Search Console meta tag). `.env.local` uses the local Docker DB; the production `DATABASE_URL` lives only in `.env.neon` (used by `db:migrate:prod`) and in Vercel. Never put the Neon URL back in `.env.local`: `db:seed`, `next dev` and `next start` read it.
 
 Tests live in `test/`; `vitest.config.mts` aliases `@` to `src` and stubs `server-only`.
 

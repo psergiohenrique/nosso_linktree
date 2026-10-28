@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Material de divulgação local (scripts de vídeo), fora do git e do app.
+    "midia externa/**",
   ]),
 ]);
 

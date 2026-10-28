@@ -39,7 +39,7 @@ Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 9,90/mês ou R$ 70,
 - `db/migrations` — SQL aplicado por `scripts/migrate.mjs`
 
 ## Trocar para um banco real
-Qualquer PostgreSQL 14+ serve (Neon, Supabase, RDS…): aponte `DATABASE_URL` para ele e rode `npm run db:migrate`. As imagens ficam na tabela `media`; se o volume crescer, dá para mover para um storage de objetos mudando só `src/server/media.ts` e a rota `/media/[id]`.
+Qualquer PostgreSQL 14+ serve (Neon, Supabase, RDS…): aponte `DATABASE_URL` para ele e rode `npm run db:migrate`. Produção (Neon): a URL fica só na Vercel e em `.env.neon` (fora do git, só com `DATABASE_URL=...`); migre com `npm run db:migrate:prod` **antes** de publicar código que dependa da migração nova. O `.env.local` aponta sempre para o Postgres do Docker. As imagens ficam na tabela `media`; se o volume crescer, dá para mover para um storage de objetos mudando só `src/server/media.ts` e a rota `/media/[id]`.
 
 ## Privacidade
 Não guarda IP nem cookies de rastreio. Cada visitante vira um hash diário (IP + navegador + perfil + dia + segredo), usado só para contar únicos e descartar repetições. Guarda origem (Instagram, Google…) e tipo de dispositivo.
