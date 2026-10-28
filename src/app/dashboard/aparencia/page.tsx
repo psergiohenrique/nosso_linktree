@@ -32,13 +32,6 @@ export default async function AparenciaPage({
       {error && <p className="notice notice-error dash-notice">{error}</p>}
       {ok && <p className="notice notice-ok dash-notice">Aparência salva.</p>}
       {endereco && <p className="notice notice-ok dash-notice">Endereço atualizado.</p>}
-      <form action={updateSlug} className="card">
-        <h2 className="card-title">Endereço da página</h2>
-        <label htmlFor="slug">Endereço</label>
-        <input id="slug" name="slug" className="field" defaultValue={profile.slug} minLength={3} maxLength={30} required />
-        <p className="hint">Use letras, números ou hífen. Ao alterar, o endereço antigo deixa de funcionar.</p>
-        <button className="btn btn-outline" type="submit">Salvar endereço</button>
-      </form>
       {/* key: remonta o editor com os dados salvos depois de cada envio */}
       <AppearanceEditor
         key={JSON.stringify(viewProfile)}
@@ -47,6 +40,7 @@ export default async function AparenciaPage({
         branding={branding}
         pro={plan.pro}
         action={updateAppearance}
+        slugAction={updateSlug}
       />
     </>
   );
