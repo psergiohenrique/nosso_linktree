@@ -1,6 +1,6 @@
 # Linkbio by CodePath
 
-Plataforma de link na bio para pequenos negócios e agências, produto da [CodePath](https://codepath.dev.br). Produção: **https://bio.codepath.dev.br** (páginas dos clientes em `bio.codepath.dev.br/<slug>`). Veja o produto e o escopo em [docs/PRD.md](docs/PRD.md).
+Plataforma de link na bio para pequenos negócios e agências, produto da [CodePath](https://codepath.dev.br). Produção: **https://linkbio.dev.br** (páginas dos clientes em `linkbio.dev.br/<slug>`). Veja o produto e o escopo em [docs/PRD.md](docs/PRD.md).
 
 **Estado:** `npm run lint`, `npm run build` e `npm test` passam. Publicado na Vercel (projeto `nosso_linktree`, push na `main` publica) com banco no Neon. Localmente roda com PostgreSQL em Docker.
 
@@ -23,6 +23,13 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 ## Testes
 - `npm test` — testes de unidade (Vitest), sem banco.
 - `npm run test:db` — inclui os testes de limite de tentativas, recuperação de senha e cobrança (webhook do Asaas simulado) no Postgres local do Docker (precisa de `db:up` e `db:migrate` com o `DATABASE_URL` do Docker).
+
+## PostHog
+A integração usa `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` e `NEXT_PUBLIC_POSTHOG_HOST` no `.env.local` e nas variáveis de ambiente da Vercel. Configure-os com a chave pública e o host de ingestão do projeto PostHog desejado; não coloque credenciais no repositório. Alterações nas variáveis públicas exigem uma nova build/publicação para valer no navegador.
+
+O SDK do navegador é inicializado no site e no painel, com captura de exceções; visualizações e cliques das páginas públicas dos clientes são enviados pelo servidor, sem identificador do visitante. Erros não tratados no servidor Node.js também são enviados ao Error Tracking pelo hook do Next.js. Para evitar exposição de dados pessoais, eles incluem apenas uma mensagem genérica, tipo de rota e digest numérico quando disponível, sem mensagem ou stack originais, URL, cabeçalhos ou identidade do visitante; isso limita o diagnóstico. Erros no runtime Edge não são enviados por essa integração.
+
+Para validar a troca de projeto, confira no PostHog se uma visita de teste e erros controlados de navegador e servidor aparecem em Web Analytics e Error Tracking, respectivamente. Não inclua dados pessoais nos erros de teste.
 
 ## Planos e cobrança
 Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 9,90/mês ou R$ 70,80/ano = R$ 5,90/mês) via Asaas. Ligada por `BILLING_ENABLED=true` (desligada, todos têm o Pro). Como funciona e como ligar em produção: [docs/ESTADO-ATUAL.md](docs/ESTADO-ATUAL.md#11-planos-e-cobrança-paywall).

@@ -4,7 +4,7 @@
 
 ## What this is
 
-Linkbio by CodePath: a "link in bio" platform for Brazilian small businesses and agencies, a product of CodePath (https://codepath.dev.br). Production URL: `https://bio.codepath.dev.br` (customer pages at `/<slug>`); the company's own site lives at the apex domain in another project. Brand constants (`SITE_NAME`, `COMPANY_NAME`, `COMPANY_URL`, `SITE_HOST`) are in `src/lib/site.ts`. Product scope is in `docs/PRD.md`. Built with Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + PostgreSQL (via `pg`, raw SQL). The backend lives in this repo (`src/server/`); locally Postgres runs in Docker. All user-facing copy is Portuguese (pt-BR).
+Linkbio by CodePath: a "link in bio" platform for Brazilian small businesses and agencies, a product of CodePath (https://codepath.dev.br). Production URL: `https://linkbio.dev.br` (customer pages at `/<slug>`); the company's own site is hosted in another project. Brand constants (`SITE_NAME`, `COMPANY_NAME`, `COMPANY_URL`, `SITE_HOST`) are in `src/lib/site.ts`. Product scope is in `docs/PRD.md`. Built with Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + PostgreSQL (via `pg`, raw SQL). The backend lives in this repo (`src/server/`); locally Postgres runs in Docker. All user-facing copy is Portuguese (pt-BR).
 
 Follows the same conventions as the sibling site projects (`../site-moraex`, `../site_leticia_moraes`).
 

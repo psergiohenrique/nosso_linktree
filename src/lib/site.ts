@@ -1,6 +1,6 @@
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
-/** Host exibido antes do slug (ex.: bio.codepath.dev.br). */
+/** Host exibido antes do slug (ex.: linkbio.dev.br). */
 export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, "");
 
 export const SITE_NAME = "Linkbio";

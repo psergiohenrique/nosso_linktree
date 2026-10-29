@@ -2,13 +2,13 @@
 
 Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
 
-**Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. **Publicado em https://bio.codepath.dev.br** (2026-10-16). Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas, recuperação de senha e cobrança. Plano Grátis + Pro com cobrança pelo Asaas **ligada em produção** (2026-10-21).
+**Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. Endereço atual: **https://linkbio.dev.br**. Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas, recuperação de senha e cobrança. Plano Grátis + Pro com cobrança pelo Asaas **ligada em produção** (2026-10-21).
 
-**Marca e endereço:** produto da CodePath — "Linkbio by CodePath" no logo, rodapé, SEO/JSON-LD (`Organization` CodePath como publisher) e imagem de compartilhamento. Endereço de produção: `https://bio.codepath.dev.br` (via `NEXT_PUBLIC_SITE_URL`; o prefixo do endereço no painel sai dessa variável).
+**Marca e endereço:** produto da CodePath — "Linkbio by CodePath" no logo, rodapé, SEO/JSON-LD (`Organization` CodePath como publisher) e imagem de compartilhamento. Endereço de produção: `https://linkbio.dev.br` (via `NEXT_PUBLIC_SITE_URL`; o prefixo do endereço no painel sai dessa variável).
 
 **Banco de produção:** Postgres no Neon, com as migrações 0001–0006 aplicadas (sem seed).
 
-**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `bio.codepath.dev.br` (DNS de codepath.dev.br já é da Vercel). Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `BILLING_ENABLED` (`true`), `ASAAS_API_URL` (produção), `ASAAS_API_KEY` (a de produção, compartilhada com o Ambiento), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`. A Vercel trata as variáveis de produção como sensíveis: `vercel env pull` as traz vazias. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
+**Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `linkbio.dev.br`. Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `BILLING_ENABLED` (`true`), `ASAAS_API_URL` (produção), `ASAAS_API_KEY` (a de produção, compartilhada com o Ambiento), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`. A Vercel trata as variáveis de produção como sensíveis: `vercel env pull` as traz vazias. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
 
 **E-mail:** Resend, na mesma conta usada pelo Ambiento (chave compartilhada com o `ambiento-backend`), onde `codepath.dev.br` já está verificado (região sa-east-1). Remetente: `Linkbio by CodePath <nao-responda@codepath.dev.br>`. Envio de recuperação de senha testado em produção.
 
@@ -138,7 +138,7 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 
 **Em produção desde 2026-10-21:**
 1. Na Vercel (Production): `ASAAS_API_KEY` = chave de produção do Asaas (a mesma do Ambiento), `ASAAS_API_URL=https://api.asaas.com/v3`, `ASAAS_WEBHOOK_TOKEN` novo e `BILLING_ENABLED=true`.
-2. Webhook "Linkbio - produção" cadastrado no Asaas: URL `https://bio.codepath.dev.br/api/asaas/webhook`, token = `ASAAS_WEBHOOK_TOKEN`, eventos `CHECKOUT_PAID`, `SUBSCRIPTION_CREATED/DELETED/INACTIVATED` e `PAYMENT_CREATED/CONFIRMED/RECEIVED/CREDIT_CARD_CAPTURE_REFUSED/OVERDUE/REFUNDED/DELETED`.
+2. Webhook "Linkbio - produção" no Asaas: conferir se a URL está atualizada para `https://linkbio.dev.br/api/asaas/webhook`, token = `ASAAS_WEBHOOK_TOKEN`, eventos `CHECKOUT_PAID`, `SUBSCRIPTION_CREATED/DELETED/INACTIVATED` e `PAYMENT_CREATED/CONFIRMED/RECEIVED/CREDIT_CARD_CAPTURE_REFUSED/OVERDUE/REFUNDED/DELETED`.
 3. Conferido: o webhook responde 401 sem token e 200 com o token; no Asaas, os webhooks do Linkbio e do Ambiento estão ativos e sem pausa.
 
 **Ordem importa:** com `BILLING_ENABLED` diferente de `true`, o webhook responde 404, e o Asaas pausa a fila (`interrupted`) depois de falhas seguidas. Se a cobrança for desligada, desative o webhook no Asaas antes; ao religar, ligue a cobrança primeiro e o webhook depois. Fila pausada se retoma pelo painel ou com `PUT /v3/webhooks/{id}` (`interrupted: false`).
@@ -153,7 +153,7 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 - **Chave própria do Resend** para o Linkbio (hoje usa a do Ambiento; revogar uma afeta os dois produtos).
 - Banco separado para os previews (ex.: branch do Neon), se for usar deploys de preview.
 - Testes de ponta a ponta (navegador) e de componentes.
-- **SEO, depois do deploy:** criar a propriedade no Google Search Console (`bio.codepath.dev.br`), pôr o código em `GOOGLE_SITE_VERIFICATION` na Vercel, enviar `sitemap.xml` e conferir uma página no Rich Results Test e no depurador de compartilhamento do Facebook. Depois: páginas de conteúdo por nicho e comparativos.
+- **SEO, depois do deploy:** criar a propriedade no Google Search Console (`linkbio.dev.br`), pôr o código em `GOOGLE_SITE_VERIFICATION` na Vercel, enviar `sitemap.xml` e conferir uma página no Rich Results Test e no depurador de compartilhamento do Facebook. Depois: páginas de conteúdo por nicho e comparativos.
 - Ícones de redes sociais, arrastar para reordenar, QR code.
 - Login por link mágico (o PRD cita, mas hoje é e-mail + senha).
 - V2+: captura de leads → robô de leads, Pix/vendas, domínio próprio, painel de agência/white-label, templates por nicho, blocos (vídeo, mapa, cardápio), agendamento de links.

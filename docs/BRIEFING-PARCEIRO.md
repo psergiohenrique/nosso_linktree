@@ -1,6 +1,6 @@
 # Linkbio — Briefing para o líder técnico
 
-Versão 1.0 · 2026-10-15 · Rascunho para alinhamento (marca: Linkbio by CodePath, em bio.codepath.dev.br)
+Versão 1.0 · 2026-10-15 · Rascunho para alinhamento (marca: Linkbio by CodePath, em linkbio.dev.br)
 
 Este documento reúne (1) a análise de mercado feita no início, (2) o produto do MVP e (3) o que precisa de revisão técnica. O PRD completo está em [PRD.md](PRD.md). A personalização por cliente e os módulos opcionais (barbearia x arquiteta) estão em [PERSONALIZACAO-POR-CLIENTE.md](PERSONALIZACAO-POR-CLIENTE.md).
 
@@ -8,7 +8,7 @@ Este documento reúne (1) a análise de mercado feita no início, (2) o produto 
 
 ## 1. Contexto
 
-Queremos criar um "link na bio" próprio para **vender como produto** (assinatura). É um produto da CodePath, independente da Cozimax, mas pensado para conversar com o que já temos: a plataforma de venda de sites e o robô de lead management. Num primeiro momento fica atrelado à empresa: marca **Linkbio by CodePath** no endereço **bio.codepath.dev.br**.
+Queremos criar um "link na bio" próprio para **vender como produto** (assinatura). É um produto da CodePath, independente da Cozimax, mas pensado para conversar com o que já temos: a plataforma de venda de sites e o robô de lead management. A marca é **Linkbio by CodePath**, no endereço **linkbio.dev.br**.
 
 ## 2. Análise de mercado
 
@@ -112,7 +112,7 @@ Captura de lead → robô de leads (webhook/API) · Pix e vendas · assinatura e
 
 **Estado atual — importante**
 - `npm run lint`, `npm run build` e `npm test` passam; o fluxo foi testado localmente com dados de exemplo.
-- Testes automatizados (Vitest) de validação, origem do tráfego, limite de tentativas e recuperação de senha. Publicado em https://bio.codepath.dev.br (Vercel + Neon).
+- Testes automatizados (Vitest) de validação, origem do tráfego, limite de tentativas e recuperação de senha. Endereço atual: https://linkbio.dev.br (Vercel + Neon).
 - Recuperação de senha por e-mail (Resend) e limite de tentativas em login, cadastro e recuperação.
 
 **Pontos que pedimos para revisar**
@@ -126,7 +126,7 @@ Captura de lead → robô de leads (webhook/API) · Pix e vendas · assinatura e
 ---
 
 ## 5. Decisões em aberto
-- Nome e domínio próprios no futuro (por ora: Linkbio by CodePath em bio.codepath.dev.br).
+- Marca do produto: Linkbio by CodePath, no domínio linkbio.dev.br.
 - Gateway de cobrança: Asaas (mesma conta do Ambiento); Grátis + Pro implementados e ligados em produção (2026-10-21).
 - Integração com o robô de leads: webhook simples ou API compartilhada.
 - Hospedagem: Vercel + Postgres gerenciado (Neon, Supabase…) ou VPS própria.

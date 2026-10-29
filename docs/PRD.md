@@ -1,8 +1,8 @@
 # PRD — Linkbio by CodePath
 
-Plataforma de "link na bio" para pequenos negócios e agências brasileiras. Produto da CodePath (https://codepath.dev.br), independente da Cozimax, mas pensado para integrar com o ecossistema (sites + robô de leads). Endereço: **bio.codepath.dev.br** (páginas dos clientes em `bio.codepath.dev.br/<slug>`).
+Plataforma de "link na bio" para pequenos negócios e agências brasileiras. Produto da CodePath (https://codepath.dev.br), independente da Cozimax, mas pensado para integrar com o ecossistema (sites + robô de leads). Endereço: **linkbio.dev.br** (páginas dos clientes em `linkbio.dev.br/<slug>`).
 
-Status: rascunho v0.2 · 2026-10-16 · publicado em bio.codepath.dev.br.
+Status: rascunho v0.2 · 2026-10-16 · endereço atual: linkbio.dev.br.
 
 ## 1. Problema
 
@@ -96,7 +96,7 @@ Bundle: Pro grátis por 12 meses para quem compra site (já suportado por `court
 
 ## 10. Questões em aberto
 
-- Nome e domínio próprios no futuro (por ora: Linkbio by CodePath em bio.codepath.dev.br).
+- Marca do produto: Linkbio by CodePath, no domínio linkbio.dev.br.
 - Gateway de cobrança: decidido Asaas (mesma conta do Ambiento).
 - Modelo de integração com o robô (webhook simples vs. API compartilhada).
 - Hospedagem (Vercel + Postgres gerenciado vs. VPS própria).

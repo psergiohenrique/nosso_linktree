@@ -8,12 +8,12 @@ const INSTAGRAM_APP =
 
 describe("classifySource", () => {
   it("sem referrer é acesso direto", () => {
-    expect(classifySource(null, CHROME, "linkbio.com.br")).toEqual({ source: "direto", host: null });
+    expect(classifySource(null, CHROME, "linkbio.dev.br")).toEqual({ source: "direto", host: null });
   });
 
   it("navegador interno do app vence o referrer", () => {
-    expect(classifySource("https://www.google.com/", INSTAGRAM_APP, "linkbio.com.br").source).toBe("instagram");
-    expect(classifySource(null, INSTAGRAM_APP, "linkbio.com.br").source).toBe("instagram");
+    expect(classifySource("https://www.google.com/", INSTAGRAM_APP, "linkbio.dev.br").source).toBe("instagram");
+    expect(classifySource(null, INSTAGRAM_APP, "linkbio.dev.br").source).toBe("instagram");
   });
 
   it("reconhece redes pelo host do referrer, com ou sem www/subdomínio", () => {
@@ -31,7 +31,7 @@ describe("classifySource", () => {
   });
 
   it("referrer do próprio site conta como direto", () => {
-    expect(classifySource("https://www.linkbio.com.br/outra", CHROME, "linkbio.com.br")).toEqual({
+    expect(classifySource("https://www.linkbio.dev.br/outra", CHROME, "linkbio.dev.br")).toEqual({
       source: "direto",
       host: null,
     });
