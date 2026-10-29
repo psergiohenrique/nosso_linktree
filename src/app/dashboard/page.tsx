@@ -7,6 +7,7 @@ import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
 import { PaywallButton } from "@/components/Paywall";
 import PhonePreview from "@/components/PhonePreview";
+import ProfileQRCode from "@/components/ProfileQRCode";
 import SignupSteps from "@/components/SignupSteps";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
@@ -251,6 +252,8 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
             </div>
           );
         })}
+
+        <ProfileQRCode slug={profile.slug} />
 
         <section className="card weekly-card">
           <div>

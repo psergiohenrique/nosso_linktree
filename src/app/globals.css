@@ -998,6 +998,33 @@ textarea.field {
   color: var(--muted);
 }
 
+.qr-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.qr-copy {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+.qr-url {
+  color: var(--ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.qr-image {
+  width: 160px;
+  height: 160px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
 /* Prévia no celular */
 .preview-col {
   position: sticky;
