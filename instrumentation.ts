@@ -1,3 +1,4 @@
+import type { Instrumentation } from "next";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { BatchLogRecordProcessor, LoggerProvider } from "@opentelemetry/sdk-logs";
@@ -22,6 +23,15 @@ export const posthogLogProvider =
         ],
       })
     : null;
+
+export const onRequestError: Instrumentation.onRequestError = async (error, _request, context) => {
+  if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { captureServerError } = await import("./src/server/posthog-errors");
+  const digest = typeof error === "object" && error !== null && "digest" in error && typeof error.digest === "string"
+    ? error.digest
+    : undefined;
+  await captureServerError(digest, context.routeType);
+};
 
 export function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
