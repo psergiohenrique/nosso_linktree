@@ -1,4 +1,6 @@
 import Link from "next/link";
+import AddLinkButton from "@/components/AddLinkButton";
+import DeleteLinkButton from "@/components/DeleteLinkButton";
 import ImageInput from "@/components/ImageInput";
 import LinkOptions from "@/components/LinkOptions";
 import Logo from "@/components/Logo";
@@ -162,7 +164,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                 Adicionar
               </PaywallButton>
             ) : (
-              <button className="btn btn-primary">Adicionar</button>
+              <AddLinkButton />
             )}
           </fieldset>
           {atLimit && (
@@ -244,10 +246,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                     ↓
                   </button>
                 </form>
-                <form action={deleteLink} className="push" data-posthog-event="link_deleted">
-                  <input type="hidden" name="id" value={link.id} />
-                  <button className="btn btn-outline btn-sm btn-danger">Excluir</button>
-                </form>
+                <DeleteLinkButton id={link.id} title={link.title} action={deleteLink} />
               </div>
             </div>
           );

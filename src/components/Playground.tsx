@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { THEME_PRESETS, WHATSAPP_DEFAULT, type LinkItem } from "@/lib/types";
 import AppearanceFields from "./AppearanceFields";
+import DeleteLinkButton from "./DeleteLinkButton";
 import LinkOptions from "./LinkOptions";
 import Logo from "./Logo";
 import type { PageViewLink, PageViewProfile } from "./PageView";
@@ -197,9 +198,7 @@ export default function Playground() {
                     >
                       ↓
                     </button>
-                    <button type="button" className="btn btn-outline btn-sm btn-danger push" onClick={() => remove(link)}>
-                      Excluir
-                    </button>
+                    <DeleteLinkButton id={link.id} title={link.title} onConfirm={() => remove(link)} />
                   </div>
                 </div>
               ))}

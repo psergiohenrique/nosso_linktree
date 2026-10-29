@@ -1830,6 +1830,14 @@ html.no-scroll {
   font-weight: 700;
 }
 
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
 /* Aviso de recurso Pro (Paywall.tsx) */
 .paywall {
   margin: auto;
@@ -1841,6 +1849,9 @@ html.no-scroll {
   max-width: min(760px, calc(100vw - 32px));
   width: 100%;
   box-shadow: 0 40px 100px rgba(23, 24, 26, 0.35);
+}
+.confirm-dialog {
+  max-width: min(440px, calc(100vw - 32px));
 }
 .paywall::backdrop {
   background: rgba(23, 24, 26, 0.55);
