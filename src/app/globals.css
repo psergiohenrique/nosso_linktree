@@ -2921,9 +2921,13 @@ html.no-scroll {
   }
 }
 
-/* Celular estreito: o botão da prévia sobe para não encostar no "Salvar aparência" */
+/* Celular estreito: o botão da prévia sobe para não encostar no "Salvar aparência".
+   No login, um botão ocupa a largura do cartão (nada ao lado). */
 @media (max-width: 400px) {
   .dash:has(.save-bar) .preview-fab {
     bottom: calc(max(16px, env(safe-area-inset-bottom)) + 60px);
+  }
+  .auth-form .btn {
+    width: 100%;
   }
 }

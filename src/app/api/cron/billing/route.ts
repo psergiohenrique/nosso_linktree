@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { billingEnabled, expireOverdue, processPending } from "@/server/billing";
+import { purgeExpiredLoginLinks } from "@/server/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -12,9 +13,10 @@ export async function GET(request: NextRequest) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!billingEnabled()) return NextResponse.json({ skipped: "billing desligado" });
+  const purged = await purgeExpiredLoginLinks();
+  if (!billingEnabled()) return NextResponse.json({ skipped: "billing desligado", purged });
 
   const processed = await processPending(100);
   const expired = await expireOverdue();
-  return NextResponse.json({ processed, expired });
+  return NextResponse.json({ processed, expired, purged });
 }

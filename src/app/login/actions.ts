@@ -1,14 +1,19 @@
 "use server";
 
+import { after } from "next/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { LOGIN_LINK_COOKIE, LOGIN_LINK_MINUTES } from "@/lib/login-link";
 import {
   confirmEmail,
+  consumeLoginLink,
   consumePasswordReset,
   createEmailVerification,
+  createLoginLink,
   createPasswordReset,
   createSession,
   destroySession,
+  findLoginLink,
   getCurrentUser,
   hashPassword,
   RESET_COOKIE,
@@ -16,6 +21,7 @@ import {
 } from "@/server/auth";
 import { query, queryOne } from "@/server/db";
 import { sendMail } from "@/server/mail";
+import { captureAuthEvent } from "@/server/posthog-events";
 import { clearAttempts, clientIp, isRateLimited, RATE_LIMIT_MESSAGE, recordAttempt } from "@/server/rate-limit";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { instagramHandle } from "@/lib/validation";
@@ -54,6 +60,7 @@ export async function signIn(formData: FormData) {
 
   await clearAttempts("signin", { email });
   await createSession(user.id);
+  after(() => captureAuthEvent({ event: "login_succeeded", distinctId: user.id, method: "password" }));
   redirect("/dashboard");
 }
 
@@ -204,6 +211,68 @@ export async function resetPassword(formData: FormData) {
   store.delete(RESET_COOKIE);
   if (!userId) redirect("/login/redefinir");
 
+  await createSession(userId);
+  redirect("/dashboard");
+}
+
+export type MagicLinkState = {
+  error?: string;
+  sent?: boolean;
+  /** O que a pessoa digitou, para reenviar sem colocar o e-mail na URL. */
+  email?: string;
+  /** Muda a cada envio e reinicia a espera do botão Reenviar. */
+  sentAt?: number;
+};
+
+/** Pede um link de entrada. A resposta é a mesma exista ou não a conta. */
+export async function requestMagicLink(prev: MagicLinkState, formData: FormData): Promise<MagicLinkState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!EMAIL.test(email)) return { error: "E-mail inválido.", email };
+
+  const keys = { email, ip: (await clientIp()) || undefined };
+  if (await isRateLimited("magic", keys)) {
+    return { error: RATE_LIMIT_MESSAGE, email, sent: prev.sent, sentAt: prev.sentAt };
+  }
+  await recordAttempt("magic", keys);
+
+  const user = await queryOne<{ id: string }>("select id from users where email = $1", [email]);
+  if (user) {
+    const token = await createLoginLink(user.id);
+    const link = `${SITE_URL}/login/entrar?token=${encodeURIComponent(token)}`;
+    const minutes = String(LOGIN_LINK_MINUTES);
+    await sendMail({
+      to: email,
+      subject: `Entrar sem senha — ${SITE_NAME}`,
+      text: `Recebemos um pedido para entrar na sua conta do ${SITE_NAME} sem senha.\n\nAbra o link abaixo (vale por ${minutes} minutos). Ele funciona neste ou em outro aparelho:\n${link}\n\nNa página, confirme que quer entrar. Se não foi você, ignore este e-mail: ninguém acessa a conta só de receber a mensagem.`,
+      html: `<p>Recebemos um pedido para entrar na sua conta do ${SITE_NAME} sem senha.</p><p><a href="${link}">Entrar agora</a> (o link vale por ${minutes} minutos e funciona neste ou em outro aparelho).</p><p>Na página, confirme que quer entrar. Se não foi você, ignore este e-mail: ninguém acessa a conta só de receber a mensagem.</p>`,
+    });
+    after(() => captureAuthEvent({ event: "magic_link_requested", distinctId: user.id }));
+  }
+  return { sent: true, email, sentAt: Date.now() };
+}
+
+/** O botão da página de confirmação. O GET do link não passa por aqui. */
+export async function consumeMagicLink() {
+  const store = await cookies();
+  const token = store.get(LOGIN_LINK_COOKIE)?.value ?? "";
+  if (!token) redirect("/login/entrar");
+
+  const userId = await consumeLoginLink(token);
+  store.delete(LOGIN_LINK_COOKIE);
+  if (!userId) {
+    const link = await findLoginLink(token);
+    const reason = link.status === "valid" ? "invalid" : link.status;
+    after(() =>
+      captureAuthEvent({
+        event: "magic_link_login_failed",
+        distinctId: link.userId ?? "",
+        reason,
+      }),
+    );
+    redirect("/login/entrar");
+  }
+
+  after(() => captureAuthEvent({ event: "magic_link_login_succeeded", distinctId: userId }));
   await createSession(userId);
   redirect("/dashboard");
 }

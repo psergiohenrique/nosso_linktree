@@ -42,18 +42,58 @@ export function bioEventPayload({ profileId, event, link }: BioEvent) {
   };
 }
 
-/** Use dentro de after(): não atrasa a resposta e nunca lança erro. */
-export async function captureBioEvent(input: BioEvent) {
+/**
+ * Eventos de autenticação. Nunca incluem e-mail nem token.
+ * distinctId é o id do usuário; sem id (token inválido) o evento não cria pessoa no PostHog.
+ */
+export type AuthCapture =
+  | { event: "magic_link_requested"; distinctId: string }
+  | { event: "magic_link_login_succeeded"; distinctId: string }
+  | { event: "magic_link_login_failed"; distinctId: string; reason: "expired" | "used" | "invalid" }
+  | { event: "login_succeeded"; distinctId: string; method: "password" };
+
+function safeDistinctId(id: string) {
+  if (!id || id.includes("@") || id.includes("token=")) return "";
+  return id;
+}
+
+export function authEventPayload(input: AuthCapture, now = new Date()) {
+  const distinctId = safeDistinctId(input.distinctId);
+  const anonymous = !distinctId;
+  const properties: Record<string, unknown> = { $geoip_disable: true };
+  if (anonymous) properties.$process_person_profile = false;
+  if (input.event === "magic_link_login_failed") properties.reason = input.reason;
+  if (input.event === "login_succeeded") properties.method = input.method;
+  return {
+    api_key: key,
+    event: input.event,
+    distinct_id: anonymous ? "magic-link" : distinctId,
+    timestamp: now.toISOString(),
+    properties,
+  };
+}
+
+async function postToPostHog(payload: unknown) {
   if (!key || !host) return;
   try {
     const res = await fetch(`${host}/i/v0/e/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bioEventPayload(input)),
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) console.error(`[posthog] evento recusado (${res.status})`);
   } catch (err) {
     console.error("[posthog] falha ao enviar evento", err);
   }
+}
+
+/** Use dentro de after(): não atrasa a resposta e nunca lança erro. */
+export async function captureBioEvent(input: BioEvent) {
+  await postToPostHog(bioEventPayload(input));
+}
+
+/** Use dentro de after(): não atrasa a resposta e nunca lança erro. */
+export async function captureAuthEvent(input: AuthCapture) {
+  await postToPostHog(authEventPayload(input));
 }
