@@ -38,13 +38,25 @@ const INVOICE_TONE: Record<InvoiceStatus, "ok" | "warn" | "bad" | "neutral"> = {
   canceled: "neutral",
 };
 
+/** Rótulo do estado. Pro mantém os textos de hoje; Business aparece pelo nome. */
+export function planLabel(plan: PlanState): string {
+  if (plan.product === "business" || plan.tier === "business") {
+    if (plan.kind === "active") return "Business ativo";
+    if (plan.kind === "canceling") return "Business cancelando";
+    if (plan.kind === "past_due") return "Business em carência";
+    if (plan.kind === "expired") return "Business expirado";
+    if (plan.kind === "canceled") return "Business cancelado";
+  }
+  return PLAN_LABEL[plan.kind];
+}
+
 export function PlanTag({ plan }: { plan: PlanState }) {
   const cycle = plan.cycle && ["active", "canceling", "past_due"].includes(plan.kind)
     ? plan.cycle === "yearly" ? " · anual" : " · mensal"
     : "";
   return (
     <span className={`admin-tag admin-tag-${PLAN_TONE[plan.kind]}`}>
-      {PLAN_LABEL[plan.kind]}
+      {planLabel(plan)}
       {cycle}
     </span>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import PageView, { toPageViewProps } from "@/components/PageView";
+import PageView from "@/components/PageView";
+import { linkAccess, toPageViewProps } from "@/components/to-page-view";
 import ViewTracker from "@/components/ViewTracker";
 import { applyPlanToLinks } from "@/lib/billing";
 import {
@@ -30,7 +31,7 @@ async function load(slug: string) {
   const data = await getPublicPage(slug);
   if (!data) return null;
   const plan = await getPlan(data.profile.id);
-  return { ...data, plan, visible: applyPlanToLinks(data.links, plan.pro) };
+  return { ...data, plan, visible: applyPlanToLinks(data.links, linkAccess(plan)) };
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -69,7 +70,7 @@ export default async function PublicPage({ params }: Params) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }} />
-      <PageView {...toPageViewProps(profile, links, plan.pro)} />
+      <PageView {...toPageViewProps(profile, links, plan)} />
       <ViewTracker profileId={data.profile.id} />
     </>
   );

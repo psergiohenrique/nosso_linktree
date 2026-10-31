@@ -13,6 +13,7 @@ const asaas = vi.hoisted(() => ({
 vi.mock("@/server/asaas", async (importOriginal) => ({ ...(await importOriginal<object>()), ...asaas }));
 vi.mock("@/server/mail", () => ({ sendMail: vi.fn(async () => true) }));
 
+import { addMonths } from "@/lib/billing";
 import {
   cancelPlan,
   expireOverdue,
@@ -26,6 +27,8 @@ import { pool, query, queryOne } from "@/server/db";
 
 const brDate = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const daysFromNow = (n: number) => new Date(Date.now() + n * 86_400_000);
+/** O período gravado na fatura é o do ciclo (addMonths), não a diferença de calendário. */
+const periodIs = (due: Date, end: Date, months: number) => end.toISOString() === addMonths(due, months).toISOString();
 
 /** Entrega um evento como o webhook faria e devolve o resultado do processamento. */
 async function deliver(event: string, body: Record<string, unknown>, id = `evt_${randomUUID()}`) {
@@ -78,6 +81,11 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
     expect((await plan(userId)).kind).toBe("free");
     const url = await startCheckout(userId, "monthly");
     expect(url).toContain("asaas.com");
+    const saved = await queryOne<{ plan: string; cycle: string }>(
+      "select plan, cycle from billing_checkouts where user_id = $1 order by created_at desc limit 1",
+      [userId],
+    );
+    expect(saved).toEqual({ plan: "pro", cycle: "monthly" });
 
     const input = asaas.createCheckout.mock.calls[0][0] as unknown as Record<string, unknown>;
     expect(input).toMatchObject({ externalReference: ref(), valueCents: 990, cycle: "MONTHLY" });
@@ -109,7 +117,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
     expect(await deliver("PAYMENT_CREATED", { payment })).toBe("done");
 
     const state = await plan(userId);
-    expect(state).toMatchObject({ pro: true, kind: "active", cycle: "monthly" });
+    expect(state).toMatchObject({ pro: true, tier: "pro", product: "pro", kind: "active", cycle: "monthly" });
     expect(state.until!.getTime()).toBeGreaterThan(daysFromNow(27).getTime());
 
     const inv = await queryOne<{ status: string; amount_cents: number; receipt_url: string }>(
@@ -156,7 +164,12 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: cobrança via webhook do
 
     await deliver("SUBSCRIPTION_CREATED", { subscription: { id: subId2, customer, cycle: "YEARLY", externalReference: ref() } });
     expect(asaas.cancelGatewaySubscription).toHaveBeenCalledWith(subId);
-    expect(await plan(userId)).toMatchObject({ pro: true, kind: "active", cycle: "yearly" });
+    expect(await plan(userId)).toMatchObject({ pro: true, tier: "pro", product: "pro", kind: "active", cycle: "yearly" });
+    const yearlyCheckout = await queryOne<{ plan: string; cycle: string }>(
+      "select plan, cycle from billing_checkouts where user_id = $1 order by created_at desc limit 1",
+      [userId],
+    );
+    expect(yearlyCheckout).toEqual({ plan: "pro", cycle: "yearly" });
   });
 
   it("cancelar mantém o Pro até o fim do período; nova assinatura desfaz o cancelamento", async () => {
@@ -263,7 +276,12 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: primeiro pagamento como 
       }),
     ).toBe("done");
 
-    expect(await plan(userId)).toMatchObject({ pro: true, kind: "active", cycle: "yearly" });
+    expect(await plan(userId)).toMatchObject({ pro: true, tier: "pro", product: "pro", kind: "active", cycle: "yearly" });
+    const inv = await queryOne<{ due_at: Date; period_end: Date }>(
+      "select due_at, period_end from invoices where gateway_payment_id = $1",
+      [payment.id],
+    );
+    expect(periodIs(inv!.due_at, inv!.period_end, 12)).toBe(true);
     const sub = await queryOne("select gateway_customer_id, gateway_subscription_id from subscriptions where user_id = $1", [
       userId,
     ]);
@@ -294,5 +312,105 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: primeiro pagamento como 
     );
     expect(row!.processed_at).not.toBeNull();
     expect(row!.error).toBeNull();
+  });
+});
+
+describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: ciclo explícito e plano, sem mudar o Pro atual", () => {
+  let userId = "";
+  const customer = `cus_${randomUUID().slice(0, 8)}`;
+
+  beforeAll(async () => {
+    process.env.BILLING_ENABLED = "true";
+    const row = await queryOne<{ id: string }>(
+      "insert into users (email, password_hash) values ($1, 'scrypt$x$y') returning id",
+      [`ciclo-${randomUUID()}@exemplo.com`],
+    );
+    userId = row!.id;
+  });
+
+  afterAll(async () => {
+    await query("delete from users where id = $1", [userId]);
+    await query("delete from billing_events where payload::text like $1", [`%${customer}%`]);
+  });
+
+  it("checkout antigo, sem ciclo gravado, ainda mapeia R$ 9,90 e R$ 70,80", async () => {
+    const checkoutId = `chk_legado_${userId.slice(0, 8)}`;
+    await query("insert into subscriptions (user_id) values ($1)", [userId]);
+    await query("insert into billing_checkouts (id, user_id, plan) values ($1, $2, 'pro')", [checkoutId, userId]);
+    const stored = await queryOne<{ cycle: string | null }>("select cycle from billing_checkouts where id = $1", [
+      checkoutId,
+    ]);
+    expect(stored!.cycle).toBeNull();
+
+    const monthly = {
+      id: `pay_legado_m_${userId.slice(0, 8)}`,
+      customer,
+      subscription: `sub_legado_${userId.slice(0, 8)}`,
+      checkoutSession: checkoutId,
+      value: 9.9,
+      dueDate: brDate(new Date()),
+    };
+    expect(await deliver("PAYMENT_CONFIRMED", { payment: monthly })).toBe("done");
+    const monthInv = await queryOne<{ due_at: Date; period_end: Date }>(
+      "select due_at, period_end from invoices where gateway_payment_id = $1",
+      [monthly.id],
+    );
+    expect(periodIs(monthInv!.due_at, monthInv!.period_end, 1)).toBe(true);
+
+    const yearly = { ...monthly, id: `pay_legado_y_${userId.slice(0, 8)}`, value: 70.8 };
+    expect(await deliver("PAYMENT_CONFIRMED", { payment: yearly })).toBe("done");
+    const yearInv = await queryOne<{ due_at: Date; period_end: Date }>(
+      "select due_at, period_end from invoices where gateway_payment_id = $1",
+      [yearly.id],
+    );
+    expect(periodIs(yearInv!.due_at, yearInv!.period_end, 12)).toBe(true);
+    expect(await plan(userId)).toMatchObject({ pro: true, tier: "pro", product: "pro" });
+  });
+
+  it("ciclo gravado vence o valor: R$ 70,80 mensal cobre um mês, e Business não vira Pro", async () => {
+    const other = await queryOne<{ id: string }>(
+      "insert into users (email, password_hash) values ($1, 'scrypt$x$y') returning id",
+      [`business-${randomUUID()}@exemplo.com`],
+    );
+    const id = other!.id;
+    const checkoutId = `chk_biz_${id.slice(0, 8)}`;
+    const subId = `sub_biz_${id.slice(0, 8)}`;
+    try {
+      await query("insert into subscriptions (user_id) values ($1)", [id]);
+      await query(
+        "insert into billing_checkouts (id, user_id, plan, cycle) values ($1, $2, 'business', 'monthly')",
+        [checkoutId, id],
+      );
+      const payment = {
+        id: `pay_biz_${id.slice(0, 8)}`,
+        customer: `cus_biz_${id.slice(0, 8)}`,
+        subscription: subId,
+        checkoutSession: checkoutId,
+        value: 70.8,
+        dueDate: brDate(new Date()),
+      };
+      expect(await deliver("PAYMENT_CONFIRMED", { payment })).toBe("done");
+      const inv = await queryOne<{ due_at: Date; period_end: Date }>(
+        "select due_at, period_end from invoices where gateway_payment_id = $1",
+        [payment.id],
+      );
+      expect(periodIs(inv!.due_at, inv!.period_end, 1)).toBe(true);
+      expect(periodIs(inv!.due_at, inv!.period_end, 12)).toBe(false);
+      expect(
+        await deliver("SUBSCRIPTION_CREATED", {
+          subscription: { id: subId, customer: payment.customer, cycle: "MONTHLY", checkoutSession: checkoutId },
+        }),
+      ).toBe("done");
+      expect(await plan(id)).toMatchObject({
+        pro: true,
+        tier: "business",
+        product: "business",
+        kind: "active",
+        cycle: "monthly",
+      });
+    } finally {
+      await query("delete from users where id = $1", [id]);
+      await query("delete from billing_events where payload::text like $1", [`%${checkoutId}%`]);
+    }
   });
 });

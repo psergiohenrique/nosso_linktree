@@ -6,16 +6,19 @@ import type { PoolClient } from "pg";
 import {
   addMonths,
   canCancel,
-  cycleForAmount,
   formatBRL,
   formatDateBR,
   GRACE_DAYS,
+  hasTier,
   INVOICE_STATUS_BY_EVENT,
   nextInvoiceStatus,
+  periodForCycle,
   planState,
   PRO_PRICES,
   type Cycle,
   type InvoiceStatus,
+  type PaidPlan,
+  type PlanState,
   type SubscriptionRow,
 } from "@/lib/billing";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -44,7 +47,7 @@ export const billingEnabled = () => process.env.BILLING_ENABLED === "true";
 /** Prefixo do externalReference: separa os nossos eventos dos de outros produtos na mesma conta Asaas. */
 export const REF_PREFIX = "linkbio:";
 
-const SUB_COLUMNS = `status, cycle, current_period_end, grace_ends_at, canceled_at, courtesy_until,
+const SUB_COLUMNS = `status, plan, cycle, current_period_end, grace_ends_at, canceled_at, courtesy_until,
   gateway_subscription_id, card_brand, card_last4`;
 
 export const getSubscription = cache((userId: string) =>
@@ -55,6 +58,18 @@ export const getSubscription = cache((userId: string) =>
 export const getPlan = cache(async (userId: string) =>
   planState(await getSubscription(userId), { billingEnabled: billingEnabled() }),
 );
+
+/**
+ * Recusa a action se a conta não tem o nível. Business inclui o Pro.
+ * Cortesia e lançamento são Pro: não passam em "business".
+ */
+export function requireTier(plan: PlanState, tier: "pro" | "business") {
+  if (!hasTier(plan, tier)) {
+    throw new BillingError(
+      tier === "business" ? "Esse recurso faz parte do plano Business." : "Esse recurso faz parte do plano Pro.",
+    );
+  }
+}
 
 export type InvoiceRow = {
   id: string;
@@ -115,10 +130,12 @@ export async function startCheckout(userId: string, cycle: Cycle) {
     checkout.id,
   ]);
   // Todos ficam guardados: o link de um checkout anterior ainda pode ser pago.
-  await query("insert into billing_checkouts (id, user_id) values ($1, $2) on conflict do nothing", [
-    checkout.id,
-    userId,
-  ]);
+  // plan e cycle explícitos: o webhook não deduz pelo valor. Este checkout é só o Pro;
+  // o Business ainda não tem preço nem botão.
+  await query(
+    "insert into billing_checkouts (id, user_id, plan, cycle) values ($1, $2, 'pro', $3) on conflict do nothing",
+    [checkout.id, userId, cycle],
+  );
   return checkout.url;
 }
 
@@ -226,10 +243,11 @@ async function applyEvent(env: AsaasEnvelope) {
     const old = current?.gateway_subscription_id;
     if (old && old !== env.subscription.id) await cancelGatewaySubscription(old);
     const cycle = env.subscription.cycle === "YEARLY" ? "yearly" : env.subscription.cycle === "MONTHLY" ? "monthly" : null;
+    const checkout = await checkoutOf(env.subscription.checkoutSession);
     await query(
-      `update subscriptions set gateway_subscription_id = $2, cycle = coalesce($3, cycle), canceled_at = null,
-              updated_at = now() where user_id = $1`,
-      [userId, env.subscription.id, cycle],
+      `update subscriptions set gateway_subscription_id = $2, cycle = coalesce($3, cycle),
+              plan = coalesce($4, plan), canceled_at = null, updated_at = now() where user_id = $1`,
+      [userId, env.subscription.id, cycle, checkout?.plan ?? null],
     );
     await refreshPublicPage(userId);
     return;
@@ -247,10 +265,10 @@ async function applyEvent(env: AsaasEnvelope) {
   }
 
   const invoiceStatus = INVOICE_STATUS_BY_EVENT[env.event];
-  if (invoiceStatus && env.payment) {
+    if (invoiceStatus && env.payment) {
     const result = await mirrorInvoice(userId, env.payment, invoiceStatus);
-    if (result.becamePaid) await notifyPaid(userId, env.payment, result.periodEnd);
-    if (result.graceStarted) await notifyFailed(userId, env.payment, result.graceStarted);
+    if (result.becamePaid) await notifyPaid(userId, env.payment, result.periodEnd, result.product);
+    if (result.graceStarted) await notifyFailed(userId, env.payment, result.graceStarted, result.product);
     if (result.becamePaid || result.graceStarted) await refreshPublicPage(userId);
   }
   // CHECKOUT_PAID e os demais: resolveUser já guardou o customer; nada mais a fazer.
@@ -260,6 +278,15 @@ async function getSubscriptionRow(userId: string) {
   return queryOne<{ gateway_subscription_id: string | null; gateway_customer_id: string | null }>(
     "select gateway_subscription_id, gateway_customer_id from subscriptions where user_id = $1",
     [userId],
+  );
+}
+
+/** Checkout nosso, com o produto e o ciclo escolhidos na hora de abrir. Cycle null = checkout antigo. */
+async function checkoutOf(checkoutId: string | null | undefined) {
+  if (!checkoutId) return null;
+  return queryOne<{ plan: PaidPlan; cycle: Cycle | null }>(
+    "select plan, cycle from billing_checkouts where id = $1",
+    [checkoutId],
   );
 }
 
@@ -347,22 +374,43 @@ async function inTransaction<T>(fn: (client: PoolClient) => Promise<T>) {
 }
 
 /**
- * Espelha a cobrança numa fatura e ajusta a assinatura: pagamento ativa/renova o Pro;
+ * Espelha a cobrança numa fatura e ajusta a assinatura: pagamento ativa/renova o plano;
  * recusa começa a carência (uma vez só). Sob bloqueio da linha da assinatura.
+ * O período sai do ciclo gravado no checkout. Sem ciclo (checkout antigo), o valor
+ * ainda distingue o mensal do anual do Pro.
  */
 async function mirrorInvoice(userId: string, payment: AsaasPayment, incoming: InvoiceStatus) {
   return inTransaction(async (db) => {
     const sub = (
-      await db.query<{ status: string; current_period_end: Date | null; gateway_subscription_id: string | null; grace_ends_at: Date | null }>(
-        "select status, current_period_end, gateway_subscription_id, grace_ends_at from subscriptions where user_id = $1 for update",
+      await db.query<{
+        status: string;
+        plan: PaidPlan;
+        current_period_end: Date | null;
+        gateway_subscription_id: string | null;
+        grace_ends_at: Date | null;
+      }>(
+        "select status, plan, current_period_end, gateway_subscription_id, grace_ends_at from subscriptions where user_id = $1 for update",
         [userId],
       )
     ).rows[0];
     if (!sub) throw new EarlyEventError(`assinatura de ${userId} sumiu`);
 
+    const checkout = payment.checkoutSession
+      ? (
+          await db.query<{ plan: PaidPlan; cycle: Cycle | null }>(
+            "select plan, cycle from billing_checkouts where id = $1",
+            [payment.checkoutSession],
+          )
+        ).rows[0]
+      : undefined;
+
     const cents = Math.round((payment.value ?? 0) * 100);
     const dueAt = dueDateOf(payment);
-    const periodEnd = addMonths(dueAt, PRO_PRICES[cycleForAmount(cents)].months);
+    const periodEnd = addMonths(dueAt, periodForCycle(checkout?.cycle ?? null, cents).months);
+    // Só a cobrança da assinatura viva troca o produto. Checkout antigo não traz plano novo.
+    const live =
+      !payment.subscription || !sub.gateway_subscription_id || payment.subscription === sub.gateway_subscription_id;
+    const nextPlan = live ? (checkout?.plan ?? null) : null;
 
     const existing = (
       await db.query<{ status: InvoiceStatus }>("select status from invoices where gateway_payment_id = $1", [payment.id])
@@ -384,20 +432,21 @@ async function mirrorInvoice(userId: string, payment: AsaasPayment, incoming: In
     const becamePaid = status === "paid" && existing?.status !== "paid";
     if (becamePaid) {
       // Cobrança da assinatura viva (ou sem vínculo ainda) desfaz um cancelamento pendente.
-      const live = !payment.subscription || !sub.gateway_subscription_id || payment.subscription === sub.gateway_subscription_id;
       if (periodEnd > new Date()) {
         await db.query(
           `update subscriptions set status = 'active', activated_at = coalesce(activated_at, now()),
                   grace_ends_at = null, canceled_at = case when $3 then null else canceled_at end,
+                  plan = coalesce($4, plan),
                   current_period_end = greatest(coalesce(current_period_end, $2), $2), updated_at = now()
             where user_id = $1`,
-          [userId, periodEnd, live],
+          [userId, periodEnd, live, nextPlan],
         );
       } else {
         // Pagamento de um período que já acabou (evento muito atrasado) não reabre o acesso.
         await db.query(
-          "update subscriptions set current_period_end = greatest(coalesce(current_period_end, $2), $2) where user_id = $1",
-          [userId, periodEnd],
+          `update subscriptions set plan = coalesce($3, plan),
+                  current_period_end = greatest(coalesce(current_period_end, $2), $2) where user_id = $1`,
+          [userId, periodEnd, nextPlan],
         );
       }
     }
@@ -425,7 +474,8 @@ async function mirrorInvoice(userId: string, payment: AsaasPayment, incoming: In
       ],
     );
 
-    return { becamePaid, graceStarted, periodEnd };
+    const product: PaidPlan = nextPlan ?? sub.plan;
+    return { becamePaid, graceStarted, periodEnd, product };
   });
 }
 
@@ -470,28 +520,30 @@ async function userEmail(userId: string) {
   return (await queryOne<{ email: string }>("select email from users where id = $1", [userId]))?.email ?? null;
 }
 
-async function notifyPaid(userId: string, payment: AsaasPayment, periodEnd: Date) {
+async function notifyPaid(userId: string, payment: AsaasPayment, periodEnd: Date, product: PaidPlan) {
   const email = await userEmail(userId);
   if (!email) return;
   const amount = formatBRL(Math.round((payment.value ?? 0) * 100));
   const until = formatDateBR(periodEnd);
+  const nome = product === "business" ? "Business" : "Pro";
   await sendMail({
     to: email,
-    subject: `Pagamento confirmado — ${SITE_NAME} Pro`,
-    text: `Recebemos ${amount}. Seu plano Pro está ativo até ${until}.\n\nGerencie em ${SITE_URL}/dashboard/plano`,
-    html: `<p>Recebemos <strong>${amount}</strong>. Seu plano Pro está ativo até <strong>${until}</strong>.</p><p><a href="${SITE_URL}/dashboard/plano">Gerenciar assinatura</a></p>`,
+    subject: `Pagamento confirmado — ${SITE_NAME} ${nome}`,
+    text: `Recebemos ${amount}. Seu plano ${nome} está ativo até ${until}.\n\nGerencie em ${SITE_URL}/dashboard/plano`,
+    html: `<p>Recebemos <strong>${amount}</strong>. Seu plano ${nome} está ativo até <strong>${until}</strong>.</p><p><a href="${SITE_URL}/dashboard/plano">Gerenciar assinatura</a></p>`,
   }).catch((err) => console.error("[billing] e-mail de pagamento", err));
 }
 
-async function notifyFailed(userId: string, payment: AsaasPayment, graceEndsAt: Date) {
+async function notifyFailed(userId: string, payment: AsaasPayment, graceEndsAt: Date, product: PaidPlan) {
   const email = await userEmail(userId);
   if (!email) return;
   const amount = formatBRL(Math.round((payment.value ?? 0) * 100));
   const until = formatDateBR(graceEndsAt);
+  const nome = product === "business" ? "Business" : "Pro";
   await sendMail({
     to: email,
     subject: `Não conseguimos cobrar seu cartão — ${SITE_NAME}`,
-    text: `A cobrança de ${amount} do plano Pro não passou. Atualize o cartão até ${until} para não voltar ao plano Grátis.\n\n${SITE_URL}/dashboard/plano`,
-    html: `<p>A cobrança de <strong>${amount}</strong> do plano Pro não passou.</p><p>Atualize o cartão até <strong>${until}</strong> para não voltar ao plano Grátis.</p><p><a href="${SITE_URL}/dashboard/plano">Atualizar cartão</a></p>`,
+    text: `A cobrança de ${amount} do plano ${nome} não passou. Atualize o cartão até ${until} para não voltar ao plano Grátis.\n\n${SITE_URL}/dashboard/plano`,
+    html: `<p>A cobrança de <strong>${amount}</strong> do plano ${nome} não passou.</p><p>Atualize o cartão até <strong>${until}</strong> para não voltar ao plano Grátis.</p><p><a href="${SITE_URL}/dashboard/plano">Atualizar cartão</a></p>`,
   }).catch((err) => console.error("[billing] e-mail de falha", err));
 }

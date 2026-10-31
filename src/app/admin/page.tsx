@@ -47,7 +47,9 @@ export default async function AdminPage() {
         <div className="kpi">
           <div className="kpi-num">{pro}</div>
           <div className="kpi-label">Com Pro</div>
-          <span className="kpi-delta">{summary.plans.courtesy} de cortesia</span>
+          <span className="kpi-delta">
+            {summary.plans.courtesy} de cortesia · {summary.business} Business
+          </span>
         </div>
         <div className="kpi kpi-whats">
           <div className="kpi-num">{formatBRL(summary.mrrCents)}</div>
@@ -72,6 +74,10 @@ export default async function AdminPage() {
                   <td className="num">{summary.plans[kind]}</td>
                 </tr>
               ))}
+              <tr>
+                <td>Business com acesso</td>
+                <td className="num">{summary.business}</td>
+              </tr>
             </tbody>
           </table>
         </section>

@@ -57,10 +57,15 @@ export type Profile = Appearance &
 export type LinkLayout = "button" | "featured" | "tile";
 export type LinkSize = "sm" | "md" | "lg";
 
+export type PixConfig = {
+  merchantName: string;
+  merchantCity: string;
+};
+
 export type LinkItem = {
   id: string;
   profile_id: string;
-  kind: "link" | "whatsapp";
+  kind: "link" | "whatsapp" | "pix";
   title: string;
   url: string;
   thumbnail_id: string | null;
@@ -68,6 +73,8 @@ export type LinkItem = {
   size: LinkSize;
   position: number;
   is_active: boolean;
+  /** Pix: nome e cidade do recebedor. Null nos outros tipos. */
+  config?: PixConfig | null;
 };
 
 export const BUTTON_STYLES: { value: ButtonStyle; label: string }[] = [

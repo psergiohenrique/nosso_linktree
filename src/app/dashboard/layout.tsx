@@ -4,6 +4,7 @@ import DashTabs from "@/components/DashTabs";
 import Logo from "@/components/Logo";
 import { PaywallDialog } from "@/components/Paywall";
 import { requireUser } from "@/server/auth";
+import { pixEnabled } from "@/lib/pix";
 import { billingEnabled, getPlan } from "@/server/billing";
 import { getProfileByUser } from "@/server/profiles";
 import { signOut } from "../login/actions";
@@ -45,7 +46,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </header>
       {children}
-      {!plan.pro && <PaywallDialog />}
+      {(!plan.pro || pixEnabled()) && <PaywallDialog />}
     </div>
   );
 }

@@ -14,7 +14,7 @@ export const getProfileByUser = cache((userId: string) =>
 
 export function getLinksByProfile(profileId: string) {
   return query<LinkItem>(
-    `select id, profile_id, kind, title, url, thumbnail_id, layout, size, position, is_active
+    `select id, profile_id, kind, title, url, thumbnail_id, layout, size, position, is_active, config
        from links where profile_id = $1 order by position`,
     [profileId],
   );
@@ -27,7 +27,7 @@ export const getPublicPage = cache(async (slug: string) => {
   ]);
   if (!profile) return null;
   const links = await query<LinkItem>(
-    `select id, profile_id, kind, title, url, thumbnail_id, layout, size, position, is_active
+    `select id, profile_id, kind, title, url, thumbnail_id, layout, size, position, is_active, config
        from links where profile_id = $1 and is_active order by position`,
     [profile.id],
   );
