@@ -35,13 +35,14 @@ const INVOICE_LABEL: Record<InvoiceStatus, string> = {
 function statusCopy(plan: PlanState): { title: string; text: string; tone: "ok" | "warn" | "neutral" } {
   const until = plan.until ? formatDateBR(plan.until) : "";
   const cycle = plan.cycle ? ` ${CYCLE_LABEL[plan.cycle]}` : "";
+  const nome = plan.tier === "business" ? "Business" : "Pro";
   switch (plan.kind) {
     case "active":
-      return { title: `Pro${cycle} ativo`, text: `Próxima cobrança em ${until}.`, tone: "ok" };
+      return { title: `${nome}${cycle} ativo`, text: `Próxima cobrança em ${until}.`, tone: "ok" };
     case "canceling":
       return {
         title: "Cancelamento pedido",
-        text: `Você continua no Pro até ${until}. Depois, sua página volta ao plano Grátis — nada é apagado.`,
+        text: `Você continua no ${nome} até ${until}. Depois, sua página volta ao plano Grátis — nada é apagado.`,
         tone: "warn",
       };
     case "past_due":
@@ -58,7 +59,7 @@ function statusCopy(plan: PlanState): { title: string; text: string; tone: "ok" 
       };
     case "expired":
       return {
-        title: "Pro encerrado",
+        title: plan.product === "business" ? "Business encerrado" : "Pro encerrado",
         text: "A cobrança não foi regularizada e sua página voltou ao plano Grátis. Seus links continuam salvos: assine para liberar tudo de novo.",
         tone: "neutral",
       };
@@ -142,7 +143,7 @@ export default async function PlanoPage({
           <h2 className="card-title">Cancelar a assinatura?</h2>
           <p>
             {plan.until && plan.kind === "active"
-              ? `Você continua no Pro até ${formatDateBR(plan.until)} e não haverá novas cobranças. Depois, a página volta ao plano Grátis: mostra os ${FREE_LINK_LIMIT} primeiros links, como botão e com o selo. Nada é apagado.`
+              ? `Você continua no ${plan.tier === "business" ? "Business" : "Pro"} até ${formatDateBR(plan.until)} e não haverá novas cobranças. Depois, a página volta ao plano Grátis: mostra os ${FREE_LINK_LIMIT} primeiros links, como botão e com o selo. Nada é apagado.`
               : "Não haverá novas cobranças e sua página volta ao plano Grátis. Nada é apagado."}
           </p>
           <div className="card-row">
@@ -150,7 +151,7 @@ export default async function PlanoPage({
               <button className="btn btn-outline btn-sm btn-danger">Sim, cancelar</button>
             </form>
             <Link href="/dashboard/plano" className="btn btn-primary btn-sm">
-              Manter o Pro
+              Manter o {plan.tier === "business" ? "Business" : "Pro"}
             </Link>
           </div>
         </section>

@@ -39,8 +39,15 @@ export const PRO_FEATURES = [
 
 export type SubscriptionStatus = "pending" | "active" | "past_due" | "expired";
 
+/** Acesso agora. Business inclui tudo do Pro. */
+export type PlanTier = "free" | "pro" | "business";
+/** Produto gravado em subscriptions.plan. Não é um preço: o Business ainda não tem valor. */
+export type PaidPlan = "pro" | "business";
+
 export type SubscriptionRow = {
   status: SubscriptionStatus;
+  /** Produto da linha. Default no banco: pro. Cortesia não promove isto a Business. */
+  plan: PaidPlan;
   cycle: Cycle;
   current_period_end: Date | null;
   grace_ends_at: Date | null;
@@ -62,50 +69,74 @@ export type PlanKind =
   | "canceled"; // cancelou e o período acabou
 
 export type PlanState = {
+  /** true para Pro e Business (e para cortesia e lançamento, que continuam sendo Pro). */
   pro: boolean;
+  /** Acesso agora. Lançamento e cortesia são Pro: não liberam o que é só do Business. */
+  tier: PlanTier;
+  /** Produto da assinatura, mesmo vencida. Null sem linha em subscriptions. */
+  product: PaidPlan | null;
   kind: PlanKind;
-  /** Até quando o Pro vale (fim do período, da carência ou da cortesia). */
+  /** Até quando o acesso pago vale (fim do período, da carência ou da cortesia). */
   until: Date | null;
   cycle: Cycle | null;
 };
 
 const DAY = 86_400_000;
+const TIER_RANK: Record<PlanTier, number> = { free: 0, pro: 1, business: 2 };
 
 /** Estado do plano, sempre calculado na leitura (nada depende de um job ter rodado). */
 export function planState(
   sub: SubscriptionRow | null,
   { billingEnabled, now = new Date() }: { billingEnabled: boolean; now?: Date },
 ): PlanState {
-  if (!billingEnabled) return { pro: true, kind: "launch", until: null, cycle: null };
+  // Cobrança desligada: todos têm o Pro, não o Business. O que é só do Business continua fechado.
+  if (!billingEnabled) return { pro: true, tier: "pro", product: null, kind: "launch", until: null, cycle: null };
 
   const paid = paidState(sub, now);
   if (paid.pro || !sub?.courtesy_until || sub.courtesy_until <= now) return paid;
-  return { pro: true, kind: "courtesy", until: sub.courtesy_until, cycle: null };
+  // Cortesia segue dando só o Pro, mesmo que a linha tenha sido Business um dia.
+  return { pro: true, tier: "pro", product: sub.plan, kind: "courtesy", until: sub.courtesy_until, cycle: null };
+}
+
+/** Business inclui o Pro. Cortesia e lançamento contam como Pro, não como Business. */
+export function hasTier(state: PlanState, tier: PlanTier) {
+  return TIER_RANK[state.tier] >= TIER_RANK[tier];
 }
 
 function paidState(sub: SubscriptionRow | null, now: Date): PlanState {
-  const base = { cycle: sub?.cycle ?? null };
-  if (!sub) return { ...base, pro: false, kind: "free", until: null };
+  const cycle = sub?.cycle ?? null;
+  const product = sub?.plan ?? null;
+  const tier: PlanTier = product === "business" ? "business" : "pro";
+  const open = (kind: PlanKind, until: Date | null): PlanState => ({
+    pro: true,
+    tier,
+    product,
+    kind,
+    until,
+    cycle,
+  });
+  const closed = (kind: PlanKind): PlanState => ({
+    pro: false,
+    tier: "free",
+    product,
+    kind,
+    until: null,
+    cycle,
+  });
+
+  if (!sub) return closed("free");
 
   if (sub.status === "active" && sub.current_period_end) {
     const end = sub.current_period_end;
-    if (sub.canceled_at) {
-      return end > now
-        ? { ...base, pro: true, kind: "canceling", until: end }
-        : { ...base, pro: false, kind: "canceled", until: null };
-    }
-    if (end.getTime() + RENEWAL_TOLERANCE_DAYS * DAY > now.getTime()) {
-      return { ...base, pro: true, kind: "active", until: end };
-    }
-    return { ...base, pro: false, kind: "expired", until: null };
+    if (sub.canceled_at) return end > now ? open("canceling", end) : closed("canceled");
+    if (end.getTime() + RENEWAL_TOLERANCE_DAYS * DAY > now.getTime()) return open("active", end);
+    return closed("expired");
   }
   if (sub.status === "past_due") {
-    return sub.grace_ends_at && sub.grace_ends_at > now
-      ? { ...base, pro: true, kind: "past_due", until: sub.grace_ends_at }
-      : { ...base, pro: false, kind: "expired", until: null };
+    return sub.grace_ends_at && sub.grace_ends_at > now ? open("past_due", sub.grace_ends_at) : closed("expired");
   }
-  if (sub.status === "expired") return { ...base, pro: false, kind: "expired", until: null };
-  return { ...base, pro: false, kind: "free", until: null };
+  if (sub.status === "expired") return closed("expired");
+  return closed("free");
 }
 
 /** Pode abrir um checkout: assinar, reativar, trocar de ciclo ou de cartão. */
@@ -143,9 +174,23 @@ export function nextInvoiceStatus(current: InvoiceStatus, incoming: InvoiceStatu
   return INVOICE_RANK[incoming] >= INVOICE_RANK[current] ? incoming : current;
 }
 
-/** Ciclo de uma cobrança pelo valor (o pagamento do Asaas não diz o ciclo). */
+/**
+ * Ciclo de uma cobrança antiga pelo valor. O pagamento do Asaas não diz o ciclo, e os
+ * checkouts anteriores a 0015 não gravaram um. Só os preços do Pro de hoje passam por aqui
+ * (R$ 9,90 mensal, R$ 70,80 anual). Cobrança nova usa o ciclo do checkout: ver periodForCycle.
+ */
 export function cycleForAmount(cents: number): Cycle {
   return cents >= PRO_PRICES.yearly.cents / 2 ? "yearly" : "monthly";
+}
+
+/**
+ * Meses que a cobrança cobre. O ciclo gravado no checkout vence: o valor não decide,
+ * então um segundo preço não é lido como o anual do Pro. Sem ciclo (checkout antigo),
+ * continua a dedução pelo valor, que para R$ 9,90 e R$ 70,80 dá o mesmo de antes.
+ */
+export function periodForCycle(cycle: Cycle | null, cents: number): { cycle: Cycle; months: number } {
+  const resolved = cycle ?? cycleForAmount(cents);
+  return { cycle: resolved, months: PRO_PRICES[resolved].months };
 }
 
 export function addMonths(date: Date, months: number) {
@@ -156,10 +201,25 @@ export function addMonths(date: Date, months: number) {
 
 // ───────── Página pública ─────────
 
-/** O que o plano Grátis mostra: os primeiros links ativos, todos como botão. */
-export function applyPlanToLinks<T extends { layout: LinkLayout }>(links: T[], pro: boolean): T[] {
-  if (pro) return links;
-  return links.slice(0, FREE_LINK_LIMIT).map((l) => (l.layout === "button" ? l : { ...l, layout: "button" }));
+export type LinkAccess = {
+  pro: boolean;
+  /** Bloco Pix na página pública. Só o Business, e só com o recurso ligado. */
+  pix?: boolean;
+};
+
+/**
+ * O que a página mostra. Fora do Business (ou com o Pix desligado) o bloco some, sem apagar.
+ * No Grátis, os primeiros links ativos, todos como botão. Um Pix oculto não ocupa uma das vagas.
+ */
+export function applyPlanToLinks<T extends { layout: LinkLayout; kind?: string }>(
+  links: T[],
+  access: boolean | LinkAccess,
+): T[] {
+  const pro = typeof access === "boolean" ? access : access.pro;
+  const pix = typeof access === "boolean" ? false : access.pix === true;
+  const visible = !pix && links.some((l) => l.kind === "pix") ? links.filter((l) => l.kind !== "pix") : links;
+  if (pro) return visible;
+  return visible.slice(0, FREE_LINK_LIMIT).map((l) => (l.layout === "button" ? l : { ...l, layout: "button" }));
 }
 
 export const formatBRL = (cents: number) =>

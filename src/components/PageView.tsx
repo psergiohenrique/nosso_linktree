@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { applyPlanToLinks } from "@/lib/billing";
-import { mediaUrl, type Appearance, type LinkItem, type Profile, type WhatsappAppearance } from "@/lib/types";
+import { type Appearance, type LinkItem, type Profile, type WhatsappAppearance } from "@/lib/types";
+import PixBlock from "./PixBlock";
 
 export type PageViewProfile = Appearance &
   WhatsappAppearance &
@@ -9,6 +9,9 @@ export type PageViewProfile = Appearance &
 
 export type PageViewLink = Pick<LinkItem, "id" | "title" | "url" | "kind" | "layout" | "size"> & {
   thumbnail_url: string | null;
+  /** BR Code e o SVG do QR, já prontos. Só vêm preenchidos quando o Pix está na página. */
+  pixCode?: string | null;
+  pixSvg?: string | null;
 };
 
 type Props = {
@@ -150,16 +153,21 @@ export default function PageView({ profile, links, tracked = true, preview = fal
         </header>
 
         <nav className="bio-links" aria-label="Links">
-          {groupTiles(links).map((group) =>
-            Array.isArray(group) ? (
-              <div key={group[0].id} className="bio-tiles">
-                {group.map((link) => (
-                  <BioLink key={link.id} link={link} tracked={tracked} />
-                ))}
-              </div>
-            ) : (
-              <BioLink key={group.id} link={group} tracked={tracked} />
-            ),
+          {groupTiles(links.map((link) => (link.kind === "pix" ? { ...link, layout: "button" as const } : link))).map(
+            (group) =>
+              Array.isArray(group) ? (
+                <div key={group[0].id} className="bio-tiles">
+                  {group.map((link) => (
+                    <BioLink key={link.id} link={link} tracked={tracked} />
+                  ))}
+                </div>
+              ) : group.kind === "pix" ? (
+                group.pixCode ? (
+                  <PixBlock key={group.id} title={group.title} code={group.pixCode} svg={group.pixSvg ?? null} />
+                ) : null
+              ) : (
+                <BioLink key={group.id} link={group} tracked={tracked} />
+              ),
           )}
         </nav>
 
@@ -173,23 +181,4 @@ export default function PageView({ profile, links, tracked = true, preview = fal
       </div>
     </main>
   );
-}
-
-/**
- * Converte perfil e links do banco nas props da página (ids de mídia viram URLs) e aplica o plano:
- * no Grátis, só os primeiros links, todos como botão, e com o selo.
- */
-export function toPageViewProps(profile: Profile, links: LinkItem[], pro = true) {
-  return {
-    profile: {
-      ...profile,
-      avatar_url: profile.avatar_id ? mediaUrl(profile.avatar_id) : null,
-      cover_image_url: profile.cover_image_id ? mediaUrl(profile.cover_image_id) : null,
-    },
-    links: applyPlanToLinks(links, pro).map((l) => ({
-      ...l,
-      thumbnail_url: l.thumbnail_id ? mediaUrl(l.thumbnail_id) : null,
-    })),
-    branding: !pro,
-  };
 }
