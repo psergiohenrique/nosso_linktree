@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { LOGIN_LINK_MINUTES } from "@/lib/login-link";
 import { query, queryOne } from "./db";
 
 const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
@@ -22,7 +23,9 @@ export async function hashPassword(password: string) {
   return `scrypt$${salt.toString("base64")}$${hash.toString("base64")}`;
 }
 
-export async function verifyPassword(password: string, stored: string) {
+/** stored nulo: conta sem senha (o dono confirmou o e-mail pelo link e ainda não definiu uma). Nunca confere. */
+export async function verifyPassword(password: string, stored: string | null) {
+  if (!stored) return false;
   const [scheme, saltB64, hashB64] = stored.split("$");
   if (scheme !== "scrypt" || !saltB64 || !hashB64) return false;
   const expected = Buffer.from(hashB64, "base64");
@@ -70,6 +73,89 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
 
 export const RESET_COOKIE = "lb_reset";
 const RESET_MINUTES = 60;
+
+export type LoginLinkFailure = "expired" | "used" | "invalid";
+
+export type LoginLinkLookup =
+  | { status: "valid"; email: string; userId: string }
+  | { status: LoginLinkFailure; userId: string | null };
+
+/**
+ * Cria um link de login (válido por 15 minutos) e invalida os anteriores do usuário.
+ * Devolve o token em claro só para o e-mail; no banco fica o sha256.
+ */
+export async function createLoginLink(userId: string) {
+  const token = randomBytes(32).toString("base64url");
+  await query(
+    `with removed as (delete from login_links where user_id = $2)
+     insert into login_links (id, user_id, expires_at)
+     values ($1, $2, now() + make_interval(mins => $3))`,
+    [sha256(token), userId, LOGIN_LINK_MINUTES],
+  );
+  return token;
+}
+
+/** Estado do token sem consumi-lo. GET da página de confirmação usa isto. */
+export async function findLoginLink(token: string): Promise<LoginLinkLookup> {
+  const tokenHash = sha256(token);
+  const row = await queryOne<{ user_id: string; email: string; used: boolean; expired: boolean }>(
+    `select l.user_id, u.email,
+            l.used_at is not null as used,
+            l.expires_at <= now() as expired
+       from login_links l
+       join users u on u.id = l.user_id
+      where l.id = $1`,
+    [tokenHash],
+  );
+  // A busca já é pelo sha256 do token (o token em claro nunca vai ao banco), então não há o que comparar depois.
+  if (!row) return { status: "invalid", userId: null };
+  if (row.used) return { status: "used", userId: row.user_id };
+  if (row.expired) return { status: "expired", userId: row.user_id };
+  return { status: "valid", email: row.email, userId: row.user_id };
+}
+
+/**
+ * Consome o link (uma única vez), confirma o e-mail e devolve o id do usuário.
+ * Conta que já estava confirmada: é só login, as outras sessões e a senha ficam como estão.
+ * Conta que ainda NÃO estava confirmada: quem a criou pode não ser o dono do e-mail (o cadastro aceita
+ * qualquer endereço), então, ao confirmar, apaga todas as sessões e anula a senha. Quem cadastrou o
+ * e-mail alheio perde o acesso; o dono define a senha depois, pela redefinição.
+ * Null se o token for inválido, usado ou expirado.
+ */
+export async function consumeLoginLink(token: string) {
+  const row = await queryOne<{ id: string }>(
+    `with l as (
+       update login_links set used_at = now()
+        where id = $1 and used_at is null and expires_at > now()
+        returning user_id
+     ), prev as (
+       -- Estado de antes do update (as CTEs enxergam o mesmo snapshot).
+       select id from users where id = (select user_id from l) and email_verified_at is null
+     ), s as (
+       delete from sessions where user_id in (select id from prev)
+     ), u as (
+       update users
+          set email_verified_at = coalesce(email_verified_at, now()),
+              password_hash = case when email_verified_at is null then null else password_hash end
+        where id = (select user_id from l)
+        returning id
+     )
+     select id from u`,
+    [sha256(token)],
+  );
+  return row?.id ?? null;
+}
+
+/** Apaga links vencidos ou usados há mais de um dia. O cron diário e a limpeza de auth_attempts chamam isto. */
+export async function purgeExpiredLoginLinks() {
+  const rows = await query<{ id: string }>(
+    `delete from login_links
+      where expires_at < now() - interval '1 day'
+         or (used_at is not null and used_at < now() - interval '1 day')
+      returning id`,
+  );
+  return rows.length;
+}
 
 /** Cria um token de redefinição de senha (válido por 1 hora) e invalida os anteriores do usuário. */
 export async function createPasswordReset(userId: string) {
