@@ -131,9 +131,12 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: segurança da conta", ()
   const isVerified = async () =>
     (await queryOne<{ v: boolean }>("select email_verified_at is not null as v from users where id = $1", [userId]))!.v;
 
+  const passwordHash = async () =>
+    (await queryOne<{ p: string | null }>("select password_hash as p from users where id = $1", [userId]))!.p;
+
   describe("link mágico", () => {
-    it("entra uma única vez, confirma o e-mail e mantém as sessões", async () => {
-      await query("update users set email_verified_at = null where id = $1", [userId]);
+    it("conta já confirmada: entra uma única vez e mantém as sessões e a senha", async () => {
+      await query("update users set email_verified_at = now(), password_hash = 'scrypt$x$y' where id = $1", [userId]);
       const sessionId = `sessao-magic-${randomUUID()}`;
       await query("insert into sessions (id, user_id, expires_at) values ($1, $2, now() + interval '1 day')", [
         sessionId,
@@ -145,10 +148,59 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: segurança da conta", ()
       expect(await consumeLoginLink(token)).toBe(userId);
       expect(await isVerified()).toBe(true);
       expect(await queryOne("select 1 from sessions where id = $1", [sessionId])).not.toBeNull();
+      expect(await passwordHash()).toBe("scrypt$x$y");
       await query("delete from sessions where id = $1", [sessionId]);
 
       expect((await findLoginLink(token)).status).toBe("used");
       expect(await consumeLoginLink(token)).toBeNull();
+    });
+
+    it("conta não confirmada: confirma o e-mail, apaga todas as sessões e anula a senha", async () => {
+      await query("update users set email_verified_at = null, password_hash = 'scrypt$x$y' where id = $1", [userId]);
+      const sessionIds = [`sessao-a-${randomUUID()}`, `sessao-b-${randomUUID()}`];
+      for (const id of sessionIds) {
+        await query("insert into sessions (id, user_id, expires_at) values ($1, $2, now() + interval '1 day')", [id, userId]);
+      }
+      const token = await createLoginLink(userId);
+
+      expect(await consumeLoginLink(token)).toBe(userId);
+      expect(await isVerified()).toBe(true);
+      expect(await passwordHash()).toBeNull();
+      for (const id of sessionIds) expect(await queryOne("select 1 from sessions where id = $1", [id])).toBeNull();
+    });
+
+    it("sessões de outra conta não são tocadas", async () => {
+      const other = await queryOne<{ id: string }>(
+        "insert into users (email, password_hash) values ($1, 'scrypt$x$y') returning id",
+        [`outra-${randomUUID()}@exemplo.com`],
+      );
+      const otherSession = `sessao-outra-${randomUUID()}`;
+      await query("insert into sessions (id, user_id, expires_at) values ($1, $2, now() + interval '1 day')", [
+        otherSession,
+        other!.id,
+      ]);
+      await query("update users set email_verified_at = null where id = $1", [userId]);
+      expect(await consumeLoginLink(await createLoginLink(userId))).toBe(userId);
+      expect(await queryOne("select 1 from sessions where id = $1", [otherSession])).not.toBeNull();
+      expect(await queryOne<{ p: string }>("select password_hash as p from users where id = $1", [other!.id])).toEqual({
+        p: "scrypt$x$y",
+      });
+      await query("delete from users where id = $1", [other!.id]);
+    });
+
+    it("link inválido não apaga sessões nem a senha de conta não confirmada", async () => {
+      await query("update users set email_verified_at = null, password_hash = 'scrypt$x$y' where id = $1", [userId]);
+      const sessionId = `sessao-intacta-${randomUUID()}`;
+      await query("insert into sessions (id, user_id, expires_at) values ($1, $2, now() + interval '1 day')", [
+        sessionId,
+        userId,
+      ]);
+      const token = await createLoginLink(userId);
+      await query("update login_links set expires_at = now() - interval '1 minute' where user_id = $1", [userId]);
+      expect(await consumeLoginLink(token)).toBeNull();
+      expect(await queryOne("select 1 from sessions where id = $1", [sessionId])).not.toBeNull();
+      expect(await passwordHash()).toBe("scrypt$x$y");
+      await query("delete from sessions where id = $1", [sessionId]);
     });
 
     it("não grava o token em claro e vale cerca de 15 minutos", async () => {

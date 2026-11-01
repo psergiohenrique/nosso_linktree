@@ -13,7 +13,11 @@ export async function GET(request: NextRequest) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const purged = await purgeExpiredLoginLinks();
+  // A limpeza é secundária: se falhar, a cobrança abaixo roda do mesmo jeito.
+  const purged = await purgeExpiredLoginLinks().catch((err) => {
+    console.error("[cron] falha ao limpar links de login vencidos", err);
+    return null;
+  });
   if (!billingEnabled()) return NextResponse.json({ skipped: "billing desligado", purged });
 
   const processed = await processPending(100);

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { LOGIN_LINK_COOKIE, LOGIN_LINK_MINUTES, LOGIN_LINK_TOKEN } from "@/lib/login-link";
+import { LOGIN_LINK_COOKIE, LOGIN_LINK_MINUTES, LOGIN_LINK_PATH, LOGIN_LINK_TOKEN } from "@/lib/login-link";
 
 const SESSION_COOKIE = "lb_session";
 const LOGGED_COOKIE = "lb_logged";
@@ -23,7 +23,7 @@ function receiveLoginLink(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      path: "/",
+      path: LOGIN_LINK_PATH,
       maxAge: LOGIN_LINK_MINUTES * 60,
     });
   }

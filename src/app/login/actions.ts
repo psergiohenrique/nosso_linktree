@@ -3,7 +3,7 @@
 import { after } from "next/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { LOGIN_LINK_COOKIE, LOGIN_LINK_MINUTES } from "@/lib/login-link";
+import { LOGIN_LINK_COOKIE, LOGIN_LINK_MINUTES, LOGIN_LINK_PATH } from "@/lib/login-link";
 import {
   confirmEmail,
   consumeLoginLink,
@@ -50,7 +50,7 @@ export async function signIn(formData: FormData) {
   if (await isRateLimited("signin", keys)) back(RATE_LIMIT_MESSAGE);
 
   const user = validEmail
-    ? await queryOne<{ id: string; password_hash: string }>("select id, password_hash from users where email = $1", [email])
+    ? await queryOne<{ id: string; password_hash: string | null }>("select id, password_hash from users where email = $1", [email])
     : null;
   // Mesma mensagem para e-mail inexistente e senha errada.
   if (!user || !(await verifyPassword(password, user.password_hash))) {
@@ -183,17 +183,23 @@ export async function requestPasswordReset(formData: FormData) {
   if (await isRateLimited("reset", keys)) redirect(`/login/recuperar?error=${encodeURIComponent(RATE_LIMIT_MESSAGE)}`);
   await recordAttempt("reset", keys);
 
-  const user = await queryOne<{ id: string }>("select id from users where email = $1", [email]);
-  if (user) {
-    const token = await createPasswordReset(user.id);
-    const link = `${SITE_URL}/api/redefinir-senha?token=${token}`;
-    await sendMail({
-      to: email,
-      subject: `Redefinir sua senha — ${SITE_NAME}`,
-      text: `Recebemos um pedido para redefinir a senha da sua conta no ${SITE_NAME}.\n\nAbra o link abaixo (vale por 1 hora):\n${link}\n\nSe não foi você, ignore este e-mail; sua senha continua a mesma.`,
-      html: `<p>Recebemos um pedido para redefinir a senha da sua conta no ${SITE_NAME}.</p><p><a href="${link}">Criar nova senha</a> (o link vale por 1 hora).</p><p>Se não foi você, ignore este e-mail; sua senha continua a mesma.</p>`,
-    });
-  }
+  // A busca, a criação do token e o envio ficam fora da resposta: o tempo dela não revela se a conta existe.
+  after(async () => {
+    try {
+      const user = await queryOne<{ id: string }>("select id from users where email = $1", [email]);
+      if (!user) return;
+      const token = await createPasswordReset(user.id);
+      const link = `${SITE_URL}/api/redefinir-senha?token=${token}`;
+      await sendMail({
+        to: email,
+        subject: `Redefinir sua senha — ${SITE_NAME}`,
+        text: `Recebemos um pedido para redefinir a senha da sua conta no ${SITE_NAME}.\n\nAbra o link abaixo (vale por 1 hora):\n${link}\n\nSe não foi você, ignore este e-mail; sua senha continua a mesma.`,
+        html: `<p>Recebemos um pedido para redefinir a senha da sua conta no ${SITE_NAME}.</p><p><a href="${link}">Criar nova senha</a> (o link vale por 1 hora).</p><p>Se não foi você, ignore este e-mail; sua senha continua a mesma.</p>`,
+      });
+    } catch (err) {
+      console.error("[auth] falha ao enviar a redefinição de senha", err);
+    }
+  });
   redirect("/login/recuperar?enviado=1");
 }
 
@@ -235,19 +241,25 @@ export async function requestMagicLink(prev: MagicLinkState, formData: FormData)
   }
   await recordAttempt("magic", keys);
 
-  const user = await queryOne<{ id: string }>("select id from users where email = $1", [email]);
-  if (user) {
-    const token = await createLoginLink(user.id);
-    const link = `${SITE_URL}/login/entrar?token=${encodeURIComponent(token)}`;
-    const minutes = String(LOGIN_LINK_MINUTES);
-    await sendMail({
-      to: email,
-      subject: `Entrar sem senha — ${SITE_NAME}`,
-      text: `Recebemos um pedido para entrar na sua conta do ${SITE_NAME} sem senha.\n\nAbra o link abaixo (vale por ${minutes} minutos). Ele funciona neste ou em outro aparelho:\n${link}\n\nNa página, confirme que quer entrar. Se não foi você, ignore este e-mail: ninguém acessa a conta só de receber a mensagem.`,
-      html: `<p>Recebemos um pedido para entrar na sua conta do ${SITE_NAME} sem senha.</p><p><a href="${link}">Entrar agora</a> (o link vale por ${minutes} minutos e funciona neste ou em outro aparelho).</p><p>Na página, confirme que quer entrar. Se não foi você, ignore este e-mail: ninguém acessa a conta só de receber a mensagem.</p>`,
-    });
-    after(() => captureAuthEvent({ event: "magic_link_requested", distinctId: user.id }));
-  }
+  // A busca, a criação do link e o envio ficam fora da resposta: o tempo dela não revela se a conta existe.
+  after(async () => {
+    try {
+      const user = await queryOne<{ id: string }>("select id from users where email = $1", [email]);
+      if (!user) return;
+      const token = await createLoginLink(user.id);
+      const link = `${SITE_URL}/login/entrar?token=${encodeURIComponent(token)}`;
+      const minutes = String(LOGIN_LINK_MINUTES);
+      await sendMail({
+        to: email,
+        subject: `Entrar sem senha — ${SITE_NAME}`,
+        text: `Recebemos um pedido para entrar na sua conta do ${SITE_NAME} sem senha.\n\nAbra o link abaixo (vale por ${minutes} minutos). Ele funciona neste ou em outro aparelho:\n${link}\n\nNa página, confirme que quer entrar. Se não foi você, ignore este e-mail: ninguém acessa a conta só de receber a mensagem.`,
+        html: `<p>Recebemos um pedido para entrar na sua conta do ${SITE_NAME} sem senha.</p><p><a href="${link}">Entrar agora</a> (o link vale por ${minutes} minutos e funciona neste ou em outro aparelho).</p><p>Na página, confirme que quer entrar. Se não foi você, ignore este e-mail: ninguém acessa a conta só de receber a mensagem.</p>`,
+      });
+      await captureAuthEvent({ event: "magic_link_requested", distinctId: user.id });
+    } catch (err) {
+      console.error("[auth] falha ao enviar o link de entrada", err);
+    }
+  });
   return { sent: true, email, sentAt: Date.now() };
 }
 
@@ -258,7 +270,7 @@ export async function consumeMagicLink() {
   if (!token) redirect("/login/entrar");
 
   const userId = await consumeLoginLink(token);
-  store.delete(LOGIN_LINK_COOKIE);
+  store.delete({ name: LOGIN_LINK_COOKIE, path: LOGIN_LINK_PATH });
   if (!userId) {
     const link = await findLoginLink(token);
     const reason = link.status === "valid" ? "invalid" : link.status;

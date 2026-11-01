@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { LOGIN_LINK_COOKIE } from "@/lib/login-link";
+import { LOGIN_LINK_COOKIE, LOGIN_LINK_PATH } from "@/lib/login-link";
 import { proxy } from "@/proxy";
 
 const TOKEN = "abcdefghijklmnopqrstuvwxyz012345";
@@ -20,6 +20,9 @@ describe("proxy do link mágico", () => {
     expect(setCookie.toLowerCase()).toContain("httponly");
     expect(setCookie.toLowerCase()).toContain("samesite=lax");
     expect(setCookie).toContain("Max-Age=900");
+    // Só as rotas de /login/entrar leem o cookie: ele não viaja para o resto do site.
+    expect(setCookie).toContain("Path=/login/entrar");
+    expect(LOGIN_LINK_PATH).toBe("/login/entrar");
     expect(res.headers.get("location")).not.toContain(TOKEN);
   });
 

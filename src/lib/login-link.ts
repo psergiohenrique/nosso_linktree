@@ -1,6 +1,13 @@
 /** Cookie httpOnly com o token do link mágico. O proxy e as actions usam o mesmo nome. */
 export const LOGIN_LINK_COOKIE = "lb_magic";
 
+/**
+ * Path do cookie: só é lido na página /login/entrar, na action `consumeMagicLink` (enviada por essa página)
+ * e em /login/entrar/falha. Fora disso (painel, páginas públicas, /go, /api) ele não precisa viajar.
+ * Apagar o cookie exige o mesmo path.
+ */
+export const LOGIN_LINK_PATH = "/login/entrar";
+
 /** Validade do link. É login, não troca de senha (a recuperação usa 60 minutos). */
 export const LOGIN_LINK_MINUTES = 15;
 

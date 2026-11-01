@@ -23,7 +23,9 @@ export async function hashPassword(password: string) {
   return `scrypt$${salt.toString("base64")}$${hash.toString("base64")}`;
 }
 
-export async function verifyPassword(password: string, stored: string) {
+/** stored nulo: conta sem senha (o dono confirmou o e-mail pelo link e ainda não definiu uma). Nunca confere. */
+export async function verifyPassword(password: string, stored: string | null) {
+  if (!stored) return false;
   const [scheme, saltB64, hashB64] = stored.split("$");
   if (scheme !== "scrypt" || !saltB64 || !hashB64) return false;
   const expected = Buffer.from(hashB64, "base64");
@@ -78,15 +80,6 @@ export type LoginLinkLookup =
   | { status: "valid"; email: string; userId: string }
   | { status: LoginLinkFailure; userId: string | null };
 
-/** Hash fixo só para a comparação em tempo constante quando o token não existe. */
-const LOGIN_LINK_DUMMY = sha256("login-link-dummy");
-
-function tokenHashEquals(tokenHash: string, stored: string | undefined) {
-  const actual = Buffer.from(tokenHash);
-  const expected = Buffer.from(stored ?? LOGIN_LINK_DUMMY);
-  return actual.length === expected.length && timingSafeEqual(actual, expected);
-}
-
 /**
  * Cria um link de login (válido por 15 minutos) e invalida os anteriores do usuário.
  * Devolve o token em claro só para o e-mail; no banco fica o sha256.
@@ -105,8 +98,8 @@ export async function createLoginLink(userId: string) {
 /** Estado do token sem consumi-lo. GET da página de confirmação usa isto. */
 export async function findLoginLink(token: string): Promise<LoginLinkLookup> {
   const tokenHash = sha256(token);
-  const row = await queryOne<{ id: string; user_id: string; email: string; used: boolean; expired: boolean }>(
-    `select l.id, l.user_id, u.email,
+  const row = await queryOne<{ user_id: string; email: string; used: boolean; expired: boolean }>(
+    `select l.user_id, u.email,
             l.used_at is not null as used,
             l.expires_at <= now() as expired
        from login_links l
@@ -114,8 +107,8 @@ export async function findLoginLink(token: string): Promise<LoginLinkLookup> {
       where l.id = $1`,
     [tokenHash],
   );
-  // A busca já é pelo hash. A comparação em tempo constante cobre o caso de o token não existir.
-  if (!row || !tokenHashEquals(tokenHash, row.id)) return { status: "invalid", userId: null };
+  // A busca já é pelo sha256 do token (o token em claro nunca vai ao banco), então não há o que comparar depois.
+  if (!row) return { status: "invalid", userId: null };
   if (row.used) return { status: "used", userId: row.user_id };
   if (row.expired) return { status: "expired", userId: row.user_id };
   return { status: "valid", email: row.email, userId: row.user_id };
@@ -123,24 +116,34 @@ export async function findLoginLink(token: string): Promise<LoginLinkLookup> {
 
 /**
  * Consome o link (uma única vez), confirma o e-mail e devolve o id do usuário.
- * Não encerra as outras sessões: é login, não troca de senha.
+ * Conta que já estava confirmada: é só login, as outras sessões e a senha ficam como estão.
+ * Conta que ainda NÃO estava confirmada: quem a criou pode não ser o dono do e-mail (o cadastro aceita
+ * qualquer endereço), então, ao confirmar, apaga todas as sessões e anula a senha. Quem cadastrou o
+ * e-mail alheio perde o acesso; o dono define a senha depois, pela redefinição.
  * Null se o token for inválido, usado ou expirado.
  */
 export async function consumeLoginLink(token: string) {
-  const tokenHash = sha256(token);
-  const row = await queryOne<{ id: string; link_id: string }>(
+  const row = await queryOne<{ id: string }>(
     `with l as (
        update login_links set used_at = now()
         where id = $1 and used_at is null and expires_at > now()
-        returning id, user_id
+        returning user_id
+     ), prev as (
+       -- Estado de antes do update (as CTEs enxergam o mesmo snapshot).
+       select id from users where id = (select user_id from l) and email_verified_at is null
+     ), s as (
+       delete from sessions where user_id in (select id from prev)
+     ), u as (
+       update users
+          set email_verified_at = coalesce(email_verified_at, now()),
+              password_hash = case when email_verified_at is null then null else password_hash end
+        where id = (select user_id from l)
+        returning id
      )
-     update users set email_verified_at = coalesce(email_verified_at, now())
-      where id = (select user_id from l)
-      returning id, (select id from l) as link_id`,
-    [tokenHash],
+     select id from u`,
+    [sha256(token)],
   );
-  if (!row || !tokenHashEquals(tokenHash, row.link_id)) return null;
-  return row.id;
+  return row?.id ?? null;
 }
 
 /** Apaga links vencidos ou usados há mais de um dia. O cron diário e a limpeza de auth_attempts chamam isto. */

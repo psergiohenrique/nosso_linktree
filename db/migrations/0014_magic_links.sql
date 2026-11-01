@@ -14,3 +14,7 @@ create index login_links_user_idx on login_links (user_id);
 alter table auth_attempts drop constraint auth_attempts_action_check;
 alter table auth_attempts add constraint auth_attempts_action_check
   check (action in ('signin', 'signup', 'reset', 'verify', 'magic'));
+
+-- Conta sem senha: quem confirma o e-mail pelo link de uma conta que nunca foi confirmada perde a senha
+-- gravada no cadastro (pode ter sido de outra pessoa). O dono define a senha pela redefinição.
+alter table users alter column password_hash drop not null;

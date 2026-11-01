@@ -1,6 +1,6 @@
 import { after, NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import { LOGIN_LINK_COOKIE } from "@/lib/login-link";
+import { LOGIN_LINK_COOKIE, LOGIN_LINK_PATH } from "@/lib/login-link";
 import { findLoginLink } from "@/server/auth";
 import { captureAuthEvent } from "@/server/posthog-events";
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/",
+    path: LOGIN_LINK_PATH,
     maxAge: 0,
   });
   after(() =>
