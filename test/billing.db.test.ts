@@ -414,3 +414,152 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: ciclo explícito e plano
     }
   });
 });
+
+describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: plano só muda com o pagamento e ciclo da renovação", () => {
+  const created: string[] = [];
+
+  beforeAll(() => {
+    process.env.BILLING_ENABLED = "true";
+  });
+
+  afterAll(async () => {
+    for (const id of created) {
+      await query("delete from billing_events where payload::text like $1", [`%${id.slice(0, 8)}%`]);
+      await query("delete from users where id = $1", [id]);
+    }
+  });
+
+  /** Conta Pro ativa com assinatura viva no ciclo dado (como depois do primeiro pagamento). */
+  async function proAccount(cycle: "monthly" | "yearly") {
+    const row = await queryOne<{ id: string }>(
+      "insert into users (email, password_hash) values ($1, 'scrypt$x$y') returning id",
+      [`plano-${randomUUID()}@exemplo.com`],
+    );
+    const id = row!.id;
+    created.push(id);
+    const short = id.slice(0, 8);
+    await query(
+      `insert into subscriptions (user_id, status, plan, cycle, current_period_end, gateway_customer_id, gateway_subscription_id)
+       values ($1, 'active', 'pro', $2, now() + interval '10 days', $3, $4)`,
+      [id, cycle, `cus_${short}`, `sub_${short}`],
+    );
+    return { id, short, customer: `cus_${short}`, subscription: `sub_${short}` };
+  }
+
+  it("Pro que abre um checkout Business continua Pro até o pagamento ser confirmado", async () => {
+    const acc = await proAccount("monthly");
+    const checkoutId = `chk_up_${acc.short}`;
+    await query("insert into billing_checkouts (id, user_id, plan, cycle) values ($1, $2, 'business', 'monthly')", [
+      checkoutId,
+      acc.id,
+    ]);
+    const newSub = `sub_novo_${acc.short}`;
+
+    // A assinatura nova nasce antes do pagamento: ainda não é Business.
+    expect(
+      await deliver("SUBSCRIPTION_CREATED", {
+        subscription: { id: newSub, customer: acc.customer, cycle: "MONTHLY", checkoutSession: checkoutId },
+      }),
+    ).toBe("done");
+    expect(await plan(acc.id)).toMatchObject({ pro: true, tier: "pro", product: "pro", kind: "active" });
+    expect((await queryOne<{ plan: string }>("select plan from subscriptions where user_id = $1", [acc.id]))!.plan).toBe("pro");
+
+    // Cobrança ainda não paga (PENDING/CREATED): continua Pro.
+    const payment = {
+      id: `pay_up_${acc.short}`,
+      customer: acc.customer,
+      subscription: newSub,
+      checkoutSession: checkoutId,
+      value: 99,
+      dueDate: brDate(new Date()),
+    };
+    expect(await deliver("PAYMENT_CREATED", { payment })).toBe("done");
+    expect(await plan(acc.id)).toMatchObject({ tier: "pro", product: "pro" });
+
+    // Pagamento confirmado: agora sim, Business.
+    expect(await deliver("PAYMENT_CONFIRMED", { payment })).toBe("done");
+    expect(await plan(acc.id)).toMatchObject({ pro: true, tier: "business", product: "business", kind: "active" });
+  });
+
+  it("checkout Business que não é pago (assinatura criada e depois recusada) não promove a conta", async () => {
+    const acc = await proAccount("monthly");
+    const checkoutId = `chk_rec_${acc.short}`;
+    await query("insert into billing_checkouts (id, user_id, plan, cycle) values ($1, $2, 'business', 'monthly')", [
+      checkoutId,
+      acc.id,
+    ]);
+    await deliver("SUBSCRIPTION_CREATED", {
+      subscription: { id: `sub_rec_${acc.short}`, customer: acc.customer, cycle: "MONTHLY", checkoutSession: checkoutId },
+    });
+    await deliver("PAYMENT_REPROVED_BY_RISK_ANALYSIS", {
+      payment: {
+        id: `pay_rec_${acc.short}`,
+        customer: acc.customer,
+        subscription: `sub_rec_${acc.short}`,
+        checkoutSession: checkoutId,
+        value: 99,
+        dueDate: brDate(new Date()),
+      },
+    });
+    expect((await plan(acc.id)).tier).toBe("pro");
+  });
+
+  it("renovação sem checkoutSession usa o ciclo da assinatura, não o valor", async () => {
+    // Anual: o valor (R$ 9,90) seria lido como mensal, mas o ciclo da assinatura manda.
+    const yearly = await proAccount("yearly");
+    const renewYear = {
+      id: `pay_ry_${yearly.short}`,
+      customer: yearly.customer,
+      subscription: yearly.subscription,
+      value: 9.9,
+      dueDate: brDate(new Date()),
+    };
+    expect(await deliver("PAYMENT_CONFIRMED", { payment: renewYear })).toBe("done");
+    const yearInv = await queryOne<{ due_at: Date; period_end: Date }>(
+      "select due_at, period_end from invoices where gateway_payment_id = $1",
+      [renewYear.id],
+    );
+    expect(periodIs(yearInv!.due_at, yearInv!.period_end, 12)).toBe(true);
+
+    // Mensal: o valor (R$ 70,80) seria lido como anual, mas a assinatura é mensal.
+    const monthly = await proAccount("monthly");
+    const renewMonth = {
+      id: `pay_rm_${monthly.short}`,
+      customer: monthly.customer,
+      subscription: monthly.subscription,
+      value: 70.8,
+      dueDate: brDate(new Date()),
+    };
+    expect(await deliver("PAYMENT_CONFIRMED", { payment: renewMonth })).toBe("done");
+    const monthInv = await queryOne<{ due_at: Date; period_end: Date }>(
+      "select due_at, period_end from invoices where gateway_payment_id = $1",
+      [renewMonth.id],
+    );
+    expect(periodIs(monthInv!.due_at, monthInv!.period_end, 1)).toBe(true);
+    // Renovação não traz plano novo: o tier segue o da assinatura.
+    expect((await plan(monthly.id)).tier).toBe("pro");
+  });
+
+  it("o ciclo do checkout vence o da assinatura", async () => {
+    const acc = await proAccount("yearly");
+    const checkoutId = `chk_cy_${acc.short}`;
+    await query("insert into billing_checkouts (id, user_id, plan, cycle) values ($1, $2, 'pro', 'monthly')", [
+      checkoutId,
+      acc.id,
+    ]);
+    const payment = {
+      id: `pay_cy_${acc.short}`,
+      customer: acc.customer,
+      subscription: acc.subscription,
+      checkoutSession: checkoutId,
+      value: 70.8,
+      dueDate: brDate(new Date()),
+    };
+    expect(await deliver("PAYMENT_CONFIRMED", { payment })).toBe("done");
+    const inv = await queryOne<{ due_at: Date; period_end: Date }>(
+      "select due_at, period_end from invoices where gateway_payment_id = $1",
+      [payment.id],
+    );
+    expect(periodIs(inv!.due_at, inv!.period_end, 1)).toBe(true);
+  });
+});

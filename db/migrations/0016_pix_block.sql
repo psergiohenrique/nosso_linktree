@@ -4,19 +4,8 @@
 -- O spec reservava 0017 para lead_form e pix juntos. Esta fatia só precisa do Pix;
 -- o formulário de lead entra numa migração posterior.
 
-do $$
-declare
-  cname text;
-begin
-  select c.conname into cname
-    from pg_constraint c
-   where c.conrelid = 'links'::regclass
-     and c.contype = 'c'
-     and pg_get_constraintdef(c.oid) ilike '%kind%';
-  if cname is not null then
-    execute format('alter table links drop constraint %I', cname);
-  end if;
-end $$;
+-- Nome exato da constraint criada inline em 0001_init.sql (coluna kind): links_kind_check.
+alter table links drop constraint if exists links_kind_check;
 
 alter table links add constraint links_kind_check check (kind in ('link', 'whatsapp', 'pix'));
 

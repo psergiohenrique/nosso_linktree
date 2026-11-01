@@ -52,6 +52,39 @@ describe("BR Code estático", () => {
     expect(crc16("123456789")).toBe("29B1");
   });
 
+  describe("BR Code de referência do Manual do BACEN", () => {
+    // Exemplo estático do Manual de Padrões para Iniciação do Pix: chave aleatória, "Fulano de Tal",
+    // BRASILIA, txid "***", sem valor. O CRC oficial é 1D3D.
+    const officialBody =
+      "00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***6304";
+    const official = `${officialBody}1D3D`;
+    const input = { key: "123e4567-e12b-12d1-a456-426655440000", merchantName: "Fulano de Tal", merchantCity: "BRASILIA" };
+
+    it("o CRC16 do payload oficial (sem os 4 últimos dígitos) é 1D3D", () => {
+      expect(crc16(officialBody)).toBe("1D3D");
+      expect(isValidPixPayload(official)).toBe(true);
+      // Um dígito trocado quebra a validação.
+      expect(isValidPixPayload(official.replace("Fulano", "Fulana"))).toBe(false);
+    });
+
+    it("o gerador só difere do exemplo no que o nosso formato define: iniciação 11 e nome em maiúsculas", () => {
+      // O gerador não reproduz o exemplo byte a byte: marca o código como reutilizável (campo 01 = "11")
+      // e grava o nome em maiúsculas e sem acento. O resto (chave, GUI, MCC, moeda, país, cidade, txid) é igual.
+      const generated = pixPayload(input)!;
+      const sameLayout = officialBody.replace("000201", "000201010211").replace("Fulano de Tal", "FULANO DE TAL");
+      expect(generated).toBe(sameLayout + crc16(sameLayout));
+      expect(isValidPixPayload(generated)).toBe(true);
+
+      const { "01": init, "59": name, "63": crc, ...rest } = tlv(generated);
+      const { "01": noInit, "59": officialName, "63": officialCrc, ...officialRest } = tlv(official);
+      expect(init).toBe("11");
+      expect(noInit).toBeUndefined();
+      expect(name).toBe(officialName.toUpperCase());
+      expect(crc).not.toBe(officialCrc);
+      expect(rest).toEqual(officialRest);
+    });
+  });
+
   it("monta o EMV sem valor, com a chave e o CRC", () => {
     expect(code).toBeTruthy();
     expect(isValidPixPayload(code)).toBe(true);

@@ -15,7 +15,7 @@ import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
 import { FREE_LINK_LIMIT, hasTier } from "@/lib/billing";
 import { pixEnabled } from "@/lib/pix";
-import { isIndexable } from "@/lib/seo";
+import { countIndexableLinks, isIndexable } from "@/lib/seo";
 import { getUserName, requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
@@ -87,10 +87,12 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
   const links = await getLinksByProfile(profile.id);
   const plan = await getPlan(user.id);
   const preview = toPageViewProps(profile, links.filter((l) => l.is_active), plan);
-  const atLimit = !plan.pro && links.length >= FREE_LINK_LIMIT;
+  // O bloco Pix (só do Business) não gasta uma das vagas do Grátis, igual ao addLink.
+  const freeCount = links.filter((l) => l.kind !== "pix").length;
+  const atLimit = !plan.pro && freeCount >= FREE_LINK_LIMIT;
   const pixOn = pixEnabled();
   const canPix = pixOn && hasTier(plan, "business");
-  const indexed = isIndexable(profile, preview.links.length);
+  const indexed = isIndexable(profile, countIndexableLinks(preview.links));
 
   return (
     <div className="dash-grid">
@@ -105,9 +107,9 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
           <div className="upsell">
             <p>
               <strong>
-                Plano Grátis: {Math.min(links.length, FREE_LINK_LIMIT)} de {FREE_LINK_LIMIT} links.
+                Plano Grátis: {Math.min(freeCount, FREE_LINK_LIMIT)} de {FREE_LINK_LIMIT} links.
               </strong>{" "}
-              {links.length > FREE_LINK_LIMIT
+              {freeCount > FREE_LINK_LIMIT
                 ? `Só os ${FREE_LINK_LIMIT} primeiros ativos aparecem na sua página. `
                 : ""}
               No Pro: links ilimitados, Destaque e Bloco, e sem o selo.

@@ -5,6 +5,7 @@ import { linkAccess, toPageViewProps } from "@/components/to-page-view";
 import ViewTracker from "@/components/ViewTracker";
 import { applyPlanToLinks } from "@/lib/billing";
 import {
+  countIndexableLinks,
   isIndexable,
   jsonLdString,
   profileDescription,
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     description,
     alternates: { canonical: path },
     // Sem conteúdo mínimo (ou com a opção desligada): fora da busca, mas os links continuam rastreáveis.
-    ...(!isIndexable(profile, visible.length) && { robots: { index: false, follow: true } }),
+    ...(!isIndexable(profile, countIndexableLinks(visible)) && { robots: { index: false, follow: true } }),
     ...socialMetadata({ title, description, path, type: "profile" }),
   };
 }

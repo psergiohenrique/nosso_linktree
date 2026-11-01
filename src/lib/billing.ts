@@ -176,7 +176,7 @@ export function nextInvoiceStatus(current: InvoiceStatus, incoming: InvoiceStatu
 
 /**
  * Ciclo de uma cobrança antiga pelo valor. O pagamento do Asaas não diz o ciclo, e os
- * checkouts anteriores a 0014 não gravaram um. Só os preços do Pro de hoje passam por aqui
+ * checkouts anteriores a 0015 não gravaram um. Só os preços do Pro de hoje passam por aqui
  * (R$ 9,90 mensal, R$ 70,80 anual). Cobrança nova usa o ciclo do checkout: ver periodForCycle.
  */
 export function cycleForAmount(cents: number): Cycle {

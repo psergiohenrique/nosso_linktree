@@ -199,7 +199,11 @@ export async function addLink(formData: FormData) {
   const { user, profile } = await requireProfile();
   const plan = await getPlan(user.id);
   if (!plan.pro) {
-    const count = await queryOne<{ n: string }>("select count(*) as n from links where profile_id = $1", [user.id]);
+    // O bloco Pix (só do Business) não ocupa vaga: a página também não o mostra no Grátis.
+    const count = await queryOne<{ n: string }>(
+      "select count(*) as n from links where profile_id = $1 and kind <> 'pix'",
+      [user.id],
+    );
     if (Number(count?.n ?? 0) >= FREE_LINK_LIMIT) {
       fail(`No plano Grátis são até ${FREE_LINK_LIMIT} links. Assine o Pro para ter links ilimitados.`);
     }

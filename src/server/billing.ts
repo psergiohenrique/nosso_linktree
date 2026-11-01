@@ -243,11 +243,12 @@ async function applyEvent(env: AsaasEnvelope) {
     const old = current?.gateway_subscription_id;
     if (old && old !== env.subscription.id) await cancelGatewaySubscription(old);
     const cycle = env.subscription.cycle === "YEARLY" ? "yearly" : env.subscription.cycle === "MONTHLY" ? "monthly" : null;
-    const checkout = await checkoutOf(env.subscription.checkoutSession);
+    // O plano (tier) NÃO muda aqui: assinatura criada não é pagamento. Quem já é Pro e abre um
+    // checkout Business continua Pro até a cobrança ser confirmada (mirrorInvoice).
     await query(
-      `update subscriptions set gateway_subscription_id = $2, cycle = coalesce($3, cycle),
-              plan = coalesce($4, plan), canceled_at = null, updated_at = now() where user_id = $1`,
-      [userId, env.subscription.id, cycle, checkout?.plan ?? null],
+      `update subscriptions set gateway_subscription_id = $2, cycle = coalesce($3, cycle), canceled_at = null,
+              updated_at = now() where user_id = $1`,
+      [userId, env.subscription.id, cycle],
     );
     await refreshPublicPage(userId);
     return;
@@ -265,7 +266,7 @@ async function applyEvent(env: AsaasEnvelope) {
   }
 
   const invoiceStatus = INVOICE_STATUS_BY_EVENT[env.event];
-    if (invoiceStatus && env.payment) {
+  if (invoiceStatus && env.payment) {
     const result = await mirrorInvoice(userId, env.payment, invoiceStatus);
     if (result.becamePaid) await notifyPaid(userId, env.payment, result.periodEnd, result.product);
     if (result.graceStarted) await notifyFailed(userId, env.payment, result.graceStarted, result.product);
@@ -278,15 +279,6 @@ async function getSubscriptionRow(userId: string) {
   return queryOne<{ gateway_subscription_id: string | null; gateway_customer_id: string | null }>(
     "select gateway_subscription_id, gateway_customer_id from subscriptions where user_id = $1",
     [userId],
-  );
-}
-
-/** Checkout nosso, com o produto e o ciclo escolhidos na hora de abrir. Cycle null = checkout antigo. */
-async function checkoutOf(checkoutId: string | null | undefined) {
-  if (!checkoutId) return null;
-  return queryOne<{ plan: PaidPlan; cycle: Cycle | null }>(
-    "select plan, cycle from billing_checkouts where id = $1",
-    [checkoutId],
   );
 }
 
@@ -376,8 +368,9 @@ async function inTransaction<T>(fn: (client: PoolClient) => Promise<T>) {
 /**
  * Espelha a cobrança numa fatura e ajusta a assinatura: pagamento ativa/renova o plano;
  * recusa começa a carência (uma vez só). Sob bloqueio da linha da assinatura.
- * O período sai do ciclo gravado no checkout. Sem ciclo (checkout antigo), o valor
- * ainda distingue o mensal do anual do Pro.
+ * O período sai do ciclo do checkout ou, numa renovação sem checkout, do ciclo da assinatura.
+ * Só um checkout antigo, sem ciclo, ainda deduz o mensal ou o anual do Pro pelo valor.
+ * O plano (tier) também só muda aqui, quando o pagamento é confirmado.
  */
 async function mirrorInvoice(userId: string, payment: AsaasPayment, incoming: InvoiceStatus) {
   return inTransaction(async (db) => {
@@ -385,11 +378,12 @@ async function mirrorInvoice(userId: string, payment: AsaasPayment, incoming: In
       await db.query<{
         status: string;
         plan: PaidPlan;
+        cycle: Cycle;
         current_period_end: Date | null;
         gateway_subscription_id: string | null;
         grace_ends_at: Date | null;
       }>(
-        "select status, plan, current_period_end, gateway_subscription_id, grace_ends_at from subscriptions where user_id = $1 for update",
+        "select status, plan, cycle, current_period_end, gateway_subscription_id, grace_ends_at from subscriptions where user_id = $1 for update",
         [userId],
       )
     ).rows[0];
@@ -406,11 +400,19 @@ async function mirrorInvoice(userId: string, payment: AsaasPayment, incoming: In
 
     const cents = Math.round((payment.value ?? 0) * 100);
     const dueAt = dueDateOf(payment);
-    const periodEnd = addMonths(dueAt, periodForCycle(checkout?.cycle ?? null, cents).months);
-    // Só a cobrança da assinatura viva troca o produto. Checkout antigo não traz plano novo.
+    // Só a cobrança da assinatura viva troca o produto e usa o ciclo da assinatura.
+    // Checkout antigo (ou de outra assinatura) não traz plano novo.
     const live =
       !payment.subscription || !sub.gateway_subscription_id || payment.subscription === sub.gateway_subscription_id;
     const nextPlan = live ? (checkout?.plan ?? null) : null;
+    // Ciclo: o do checkout; sem checkout (renovação) da assinatura viva, o da assinatura, que o
+    // SUBSCRIPTION_CREATED grava (só quando a cobrança é dessa assinatura). A dedução pelo valor é o
+    // último recurso: checkout nosso sem ciclo (anterior à migração), cobrança de uma assinatura que
+    // não é a gravada ou ainda sem assinatura gravada. subscriptions.cycle é not null com default
+    // 'monthly', então só vale depois que o SUBSCRIPTION_CREATED o preencheu.
+    const ofSubscription = !!payment.subscription && payment.subscription === sub.gateway_subscription_id;
+    const cycle = checkout?.cycle ?? (ofSubscription && !payment.checkoutSession ? sub.cycle : null);
+    const periodEnd = addMonths(dueAt, periodForCycle(cycle, cents).months);
 
     const existing = (
       await db.query<{ status: InvoiceStatus }>("select status from invoices where gateway_payment_id = $1", [payment.id])
