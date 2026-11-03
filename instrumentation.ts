@@ -36,22 +36,5 @@ export const onRequestError: Instrumentation.onRequestError = async (error, _req
 export function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
-  if (!posthogKey) {
-    if (process.env.NODE_ENV === "development") {
-      throw new Error(
-        "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN is configured",
-      );
-    }
-    return;
-  }
-
-  if (!posthogHost) {
-    if (process.env.NODE_ENV === "development") {
-      throw new Error(
-        "NEXT_PUBLIC_POSTHOG_HOST variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once NEXT_PUBLIC_POSTHOG_HOST is configured",
-      );
-    }
-    return;
-  }
-
+  if (!posthogKey || !posthogHost) return;
 }
