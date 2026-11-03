@@ -5,7 +5,7 @@ Plataforma de link na bio para pequenos negócios e agências, produto da [CodeP
 **Estado:** `npm run lint`, `npm run build` e `npm test` passam. Publicado na Vercel (projeto `nosso_linktree`, push na `main` publica) com banco no Neon. Localmente roda com PostgreSQL em Docker.
 
 ## Stack
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com variáveis) · PostgreSQL 16 (`pg`, SQL puro) · Vercel Analytics. Backend dentro do repositório (`src/server/`). Mesmo padrão dos sites `site-moraex` e `site_leticia_moraes`; detalhes em `CLAUDE.md`.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com variáveis) · PostgreSQL 16 (`pg`, SQL puro) · Vercel Analytics. Backend dentro do repositório (`src/server/`). Mesmo padrão dos sites `site-moraex` e `site_leticia_moraes`; detalhes em `AGENTS.md`.
 
 ## Rodar localmente
 1. Node.js 20.9+ e Docker.
