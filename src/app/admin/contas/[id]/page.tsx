@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { formatBRL, formatDateBR } from "@/lib/billing";
 import { getAccountDetail, requireAdmin } from "@/server/admin";
 import { billingEnabled } from "@/server/billing";
-import { removeCourtesy, setCourtesy } from "../../actions";
+import { formKey, listForms } from "@/server/forms";
+import { SITE_URL } from "@/lib/site";
+import { adminCreateForm, adminDeleteForm, adminRotateFormKey, removeCourtesy, setCourtesy } from "../../actions";
 import { InvoiceTag, PlanTag, dateOrDash, formatDateTimeBR } from "../../format";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +15,9 @@ export const metadata: Metadata = { title: "Admin · Conta" };
 const OK_COPY: Record<string, string> = {
   cortesia: "Cortesia salva.",
   "sem-cortesia": "Cortesia removida.",
+  formulario: "Formulário criado. A aba Formulários já aparece no painel da conta.",
+  chave: "Chave trocada. A anterior deixou de valer: atualize o site.",
+  "sem-formulario": "Formulário apagado, com todas as respostas.",
 };
 
 /** Data no formato do <input type="date">, no horário de Brasília. */
@@ -49,6 +54,7 @@ export default async function AdminAccountPage({
   const [{ id }, { ok, error }] = await Promise.all([params, searchParams]);
   const detail = await getAccountDetail(id);
   if (!detail) notFound();
+  const forms = await listForms(detail.user.id);
 
   const { user, profile, links, sub, plan, invoices, stats, sessions, checkouts } = detail;
   const name = [user.first_name, user.last_name].filter(Boolean).join(" ");
@@ -265,6 +271,78 @@ export default async function AdminAccountPage({
             </table>
           </div>
         )}
+      </section>
+
+      <section className="card stat-card">
+        <h2 className="card-title">Formulários</h2>
+        <p className="hint">
+          Respostas de formulários do site do cliente, inclusive de quem parou no meio. O site envia cada etapa, do
+          servidor dele, para <code>{SITE_URL}/api/forms/respostas</code> com <code>Authorization: Bearer &lt;chave&gt;</code>.
+          Criar o primeiro formulário libera a aba Formulários no painel da conta.
+        </p>
+        {forms.length > 0 && (
+          <div className="admin-scroll">
+            <table className="rank">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Chave da API</th>
+                  <th className="num">Respostas</th>
+                  <th className="num">Incompletas</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {forms.map((f) => (
+                  <tr key={f.id}>
+                    <td>
+                      {f.name}
+                      <div className="hint">criado em {formatDateBR(f.created_at)}</div>
+                    </td>
+                    <td>
+                      <code className="form-key">{formKey(f)}</code>
+                    </td>
+                    <td className="num">{f.total}</td>
+                    <td className="num">{f.partial}</td>
+                    <td className="num">
+                      <form action={adminRotateFormKey}>
+                        <input type="hidden" name="user_id" value={user.id} />
+                        <input type="hidden" name="form_id" value={f.id} />
+                        <button className="btn btn-outline btn-sm">Trocar chave</button>
+                      </form>
+                      <details className="admin-confirm">
+                        <summary className="btn btn-outline btn-sm btn-danger">Apagar</summary>
+                        <form action={adminDeleteForm}>
+                          <input type="hidden" name="user_id" value={user.id} />
+                          <input type="hidden" name="form_id" value={f.id} />
+                          <p className="hint">Apaga o formulário e as {f.total} respostas. Não tem volta.</p>
+                          <button className="btn btn-outline btn-sm btn-danger">Sim, apagar</button>
+                        </form>
+                      </details>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <form action={adminCreateForm} className="card-form">
+          <input type="hidden" name="user_id" value={user.id} />
+          <label className="field-label" htmlFor="form-name">
+            Novo formulário
+          </label>
+          <input
+            id="form-name"
+            className="field"
+            name="name"
+            required
+            maxLength={80}
+            placeholder="Ex.: Solicitação de projeto (site)"
+          />
+          <div className="card-actions">
+            <button className="btn btn-primary btn-sm">Criar formulário</button>
+          </div>
+        </form>
       </section>
 
       <section className="card stat-card">

@@ -12,9 +12,11 @@ const TABS = [
 ];
 
 const PLAN_TAB = { href: "/dashboard/plano", label: "Plano" };
+const FORMS_TAB = { href: "/dashboard/formularios", label: "Formulários" };
 
 type DashTabsProps = {
   showPlan?: boolean;
+  showForms?: boolean;
   showTabs?: boolean;
   userId: string;
   email: string;
@@ -24,7 +26,7 @@ function isPostHogConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST);
 }
 
-export default function DashTabs({ showPlan = false, showTabs = true, userId, email }: DashTabsProps) {
+export default function DashTabs({ showPlan = false, showForms = false, showTabs = true, userId, email }: DashTabsProps) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -59,14 +61,18 @@ export default function DashTabs({ showPlan = false, showTabs = true, userId, em
 
   if (!showTabs) return null;
 
+  const tabs = [...TABS, ...(showForms ? [FORMS_TAB] : []), ...(showPlan ? [PLAN_TAB] : [])];
+  // Formulários tem página de detalhe (/dashboard/formularios/<id>): a aba continua marcada nela.
+  const isActive = (href: string) => pathname === href || (href === FORMS_TAB.href && pathname.startsWith(`${href}/`));
+
   return (
     <nav className="dash-tabs" aria-label="Seções do painel">
-      {(showPlan ? [...TABS, PLAN_TAB] : TABS).map((tab) => (
+      {tabs.map((tab) => (
         <Link
           key={tab.href}
           href={tab.href}
-          className={pathname === tab.href ? "active" : ""}
-          aria-current={pathname === tab.href ? "page" : undefined}
+          className={isActive(tab.href) ? "active" : ""}
+          aria-current={isActive(tab.href) ? "page" : undefined}
         >
           {tab.label}
         </Link>

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/server/admin";
 import { query, queryOne } from "@/server/db";
+import { createForm, deleteForm, rotateFormKey } from "@/server/forms";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -53,4 +54,48 @@ export async function removeCourtesy(formData: FormData) {
   console.info(`[admin] ${admin.email} removeu a cortesia de ${userId}`);
   await refreshPublicPage(userId);
   back(userId, { ok: "sem-cortesia" });
+}
+
+/** Formulários: liberar para uma conta é criar o primeiro formulário dela (a aba aparece no painel). */
+export async function adminCreateForm(formData: FormData) {
+  const admin = await requireAdmin();
+  const userId = String(formData.get("user_id") ?? "");
+  if (!UUID.test(userId)) redirect("/admin/contas");
+
+  const name = String(formData.get("name") ?? "").trim().slice(0, 80);
+  if (!name) back(userId, { error: "Dê um nome ao formulário." });
+
+  const user = await queryOne<{ id: string }>("select id from users where id = $1", [userId]);
+  if (!user) redirect("/admin/contas");
+
+  const form = await createForm(userId, name);
+  console.info(`[admin] ${admin.email} criou o formulário ${form?.id} para ${userId}`);
+  revalidatePath("/dashboard", "layout");
+  back(userId, { ok: "formulario" });
+}
+
+async function ownedForm(formData: FormData) {
+  const userId = String(formData.get("user_id") ?? "");
+  const formId = String(formData.get("form_id") ?? "");
+  if (!UUID.test(userId) || !UUID.test(formId)) redirect("/admin/contas");
+  const form = await queryOne<{ id: string }>("select id from forms where id = $1 and owner_id = $2", [formId, userId]);
+  if (!form) back(userId, { error: "Formulário não encontrado." });
+  return { userId, formId };
+}
+
+export async function adminRotateFormKey(formData: FormData) {
+  const admin = await requireAdmin();
+  const { userId, formId } = await ownedForm(formData);
+  await rotateFormKey(formId);
+  console.info(`[admin] ${admin.email} trocou a chave do formulário ${formId}`);
+  back(userId, { ok: "chave" });
+}
+
+export async function adminDeleteForm(formData: FormData) {
+  const admin = await requireAdmin();
+  const { userId, formId } = await ownedForm(formData);
+  await deleteForm(formId);
+  console.info(`[admin] ${admin.email} apagou o formulário ${formId} de ${userId}`);
+  revalidatePath("/dashboard", "layout");
+  back(userId, { ok: "sem-formulario" });
 }

@@ -5,6 +5,7 @@ import Logo from "@/components/Logo";
 import { PaywallDialog } from "@/components/Paywall";
 import { requireUser } from "@/server/auth";
 import { billingEnabled, getPlan } from "@/server/billing";
+import { hasForms } from "@/server/forms";
 import { getProfileByUser } from "@/server/profiles";
 import { signOut } from "../login/actions";
 
@@ -28,13 +29,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   // Aviso de recurso Pro: só para quem está no Grátis (com a cobrança desligada todos têm o Pro).
-  const plan = await getPlan(user.id);
+  const [plan, showForms] = await Promise.all([getPlan(user.id), hasForms(user.id)]);
 
   return (
     <div className="dash">
       <header className="dash-top">
         <Logo />
-        <DashTabs showPlan={billingEnabled()} userId={user.id} email={user.email} />
+        <DashTabs showPlan={billingEnabled()} showForms={showForms} userId={user.id} email={user.email} />
         <div className="dash-top-actions">
           <Link href={`/${profile.slug}`} target="_blank" className="btn btn-outline btn-sm">
             /{profile.slug} ↗

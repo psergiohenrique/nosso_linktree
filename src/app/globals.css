@@ -2683,6 +2683,86 @@ html.no-scroll {
   justify-content: space-between;
   gap: 12px;
 }
+.admin .form-key {
+  user-select: all;
+  color: var(--ink);
+}
+.admin-confirm {
+  display: inline-block;
+  margin-top: 6px;
+}
+.admin-confirm summary {
+  list-style: none;
+  cursor: pointer;
+}
+.admin-confirm summary::-webkit-details-marker {
+  display: none;
+}
+.admin-confirm[open] form {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+/* ───────── Formulários (painel) ───────── */
+
+.btn-whats {
+  background: var(--whats);
+  color: #fff;
+  border-color: var(--whats);
+}
+.btn-whats:hover {
+  background: var(--whats-dark);
+  border-color: var(--whats-dark);
+}
+.form-picker {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+.form-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.form-tag-ok {
+  background: color-mix(in srgb, var(--whats) 14%, transparent);
+  color: var(--whats-dark);
+}
+.form-tag-warn {
+  background: color-mix(in srgb, var(--lime) 45%, transparent);
+  color: var(--ink);
+}
+.form-responses a:not(.btn) {
+  color: var(--ink);
+  font-weight: 700;
+}
+.form-answers {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.form-answers > div {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--sand);
+}
+.form-answers > div:last-child {
+  border-bottom: 0;
+}
+.form-answers dt {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.form-answers dd {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 @media (max-width: 900px) {
   .hero-grid {

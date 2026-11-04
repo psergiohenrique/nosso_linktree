@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth";
 import { BillingError, cancelPlan, getPlan, startCheckout } from "@/server/billing";
 import { pool, query, queryOne } from "@/server/db";
+import { deleteResponse } from "@/server/forms";
 import { deleteMedia, saveImage } from "@/server/media";
 import { getProfileByUser } from "@/server/profiles";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
@@ -281,4 +282,12 @@ export async function toggleSearchIndexing(formData: FormData) {
   const { user, profile } = await requireProfile();
   await query("update profiles set search_indexing = $2 where id = $1", [user.id, formData.get("on") === "1"]);
   await refreshPublicPage(profile);
+}
+
+/** Apaga uma resposta de formulário (só do próprio dono; ex.: pedido de exclusão pela LGPD). */
+export async function deleteFormResponse(formData: FormData) {
+  const user = await requireUser();
+  await deleteResponse(user.id, String(formData.get("id") ?? ""));
+  revalidatePath("/dashboard/formularios");
+  redirect("/dashboard/formularios?excluida=1");
 }

@@ -17,11 +17,15 @@ export default function DeleteLinkButton({
   title,
   action,
   onConfirm,
+  heading = "Excluir link?",
+  posthogEvent = "link_deleted",
 }: {
   id: string;
   title: string;
   action?: (formData: FormData) => Promise<void>;
   onConfirm?: () => void;
+  heading?: string;
+  posthogEvent?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -34,11 +38,11 @@ export default function DeleteLinkButton({
       </button>
       <dialog ref={dialog} className="paywall confirm-dialog" aria-labelledby={titleId} aria-describedby={descriptionId}>
         <div className="paywall-content">
-          <h2 id={titleId} className="paywall-title">Excluir link?</h2>
+          <h2 id={titleId} className="paywall-title">{heading}</h2>
           <p id={descriptionId} className="paywall-text">Tem certeza de que deseja excluir “{title}”? Esta ação não pode ser desfeita.</p>
           <form
             action={action}
-            data-posthog-event={action ? "link_deleted" : undefined}
+            data-posthog-event={action ? posthogEvent : undefined}
             className="confirm-actions"
             onSubmit={onConfirm ? (event) => { event.preventDefault(); dialog.current?.close(); onConfirm(); } : undefined}
           >
