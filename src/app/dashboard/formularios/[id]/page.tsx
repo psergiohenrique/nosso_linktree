@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import DeleteLinkButton from "@/components/DeleteLinkButton";
 import { deleteFormResponse } from "@/app/dashboard/actions";
 import { requireUser } from "@/server/auth";
-import { getResponse } from "@/server/forms";
+import { formsEnabled, getResponse } from "@/server/forms";
 import { followUpMessage, formatDateTimeBR, progressLabel } from "@/lib/forms";
 import { whatsappUrl } from "@/lib/validation";
 
@@ -13,6 +13,7 @@ export const metadata: Metadata = { title: "Resposta" };
 
 export default async function FormResponsePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
+  if (!(await formsEnabled(user.id))) notFound();
   const { id } = await params;
   const r = await getResponse(user.id, id);
   if (!r) notFound();

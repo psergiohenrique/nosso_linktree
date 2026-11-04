@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { formatBRL, formatDateBR } from "@/lib/billing";
 import { getAccountDetail, requireAdmin } from "@/server/admin";
 import { billingEnabled } from "@/server/billing";
-import { formKey, listForms } from "@/server/forms";
+import { formKey, formsEnabled, listForms } from "@/server/forms";
 import { SITE_URL } from "@/lib/site";
-import { adminCreateForm, adminDeleteForm, adminRotateFormKey, removeCourtesy, setCourtesy } from "../../actions";
+import { adminCreateForm, adminDeleteForm, adminRotateFormKey, adminSetFormsEnabled, removeCourtesy, setCourtesy } from "../../actions";
 import { InvoiceTag, PlanTag, dateOrDash, formatDateTimeBR } from "../../format";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,9 @@ export const metadata: Metadata = { title: "Admin · Conta" };
 const OK_COPY: Record<string, string> = {
   cortesia: "Cortesia salva.",
   "sem-cortesia": "Cortesia removida.",
-  formulario: "Formulário criado. A aba Formulários já aparece no painel da conta.",
+  formulario: "Formulário externo criado. O acesso da conta não foi alterado.",
+  "forms-liberado": "Acesso a Formulários liberado.",
+  "forms-revogado": "Acesso a Formulários revogado; formulários e respostas foram preservados.",
   chave: "Chave trocada. A anterior deixou de valer: atualize o site.",
   "sem-formulario": "Formulário apagado, com todas as respostas.",
 };
@@ -54,7 +56,7 @@ export default async function AdminAccountPage({
   const [{ id }, { ok, error }] = await Promise.all([params, searchParams]);
   const detail = await getAccountDetail(id);
   if (!detail) notFound();
-  const forms = await listForms(detail.user.id);
+  const [forms, enabled] = await Promise.all([listForms(detail.user.id), formsEnabled(detail.user.id)]);
 
   const { user, profile, links, sub, plan, invoices, stats, sessions, checkouts } = detail;
   const name = [user.first_name, user.last_name].filter(Boolean).join(" ");
@@ -276,9 +278,17 @@ export default async function AdminAccountPage({
       <section className="card stat-card">
         <h2 className="card-title">Formulários</h2>
         <p className="hint">
-          Respostas de formulários do site do cliente, inclusive de quem parou no meio. O site envia cada etapa, do
-          servidor dele, para <code>{SITE_URL}/api/forms/respostas</code> com <code>Authorization: Bearer &lt;chave&gt;</code>.
-          Criar o primeiro formulário libera a aba Formulários no painel da conta.
+          O acesso é controlado separadamente da criação de formulários. Ao revogar, o painel, os formulários públicos
+          e a API externa deixam de receber acesso; formulários, respostas e chaves são preservados.
+        </p>
+        <p className="hint">Acesso: <strong>{enabled ? "Liberado" : "Revogado"}</strong></p>
+        <form action={adminSetFormsEnabled}>
+          <input type="hidden" name="user_id" value={user.id} />
+          <input type="hidden" name="enabled" value={enabled ? "0" : "1"} />
+          <button className="btn btn-outline btn-sm">{enabled ? "Revogar acesso" : "Liberar acesso"}</button>
+        </form>
+        <p className="hint">
+          Formulários externos recebem respostas enviadas pelo servidor do site para <code>{SITE_URL}/api/forms/respostas</code> com <code>Authorization: Bearer &lt;chave&gt;</code>.
         </p>
         {forms.length > 0 && (
           <div className="admin-scroll">

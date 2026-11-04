@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/server/auth";
-import { listForms, listResponses, responseCounts, RESPONSES_PAGE_SIZE } from "@/server/forms";
+import { formsEnabled, listForms, listResponses, responseCounts, RESPONSES_PAGE_SIZE } from "@/server/forms";
+import { addFormLink, createForm, removeForm } from "./actions";
+import { getProfileByUser } from "@/server/profiles";
 import { followUpMessage, formatDateTimeBR, progressLabel, type FormResponseStatus } from "@/lib/forms";
 import { pct } from "@/lib/metrics";
 import { whatsappUrl } from "@/lib/validation";
@@ -21,12 +23,12 @@ const UUID = /^[0-9a-f-]{36}$/i;
 export default async function FormulariosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filtro?: string; form?: string; pagina?: string; excluida?: string }>;
+  searchParams: Promise<{ filtro?: string; form?: string; pagina?: string; excluida?: string; error?: string; formExcluido?: string; linkAdicionado?: string }>;
 }) {
   const user = await requireUser();
-  const { filtro, form: rawForm, pagina, excluida } = await searchParams;
-  const forms = await listForms(user.id);
-  if (forms.length === 0) notFound();
+  const { filtro, form: rawForm, pagina, excluida, error, formExcluido, linkAdicionado } = await searchParams;
+  if (!(await formsEnabled(user.id))) notFound();
+  const [forms, profile] = await Promise.all([listForms(user.id), getProfileByUser(user.id)]);
 
   const filter = FILTERS.find((f) => f.key === filtro) ?? FILTERS[0];
   const formId = rawForm && UUID.test(rawForm) && forms.some((f) => f.id === rawForm) ? rawForm : undefined;
@@ -68,6 +70,25 @@ export default async function FormulariosPage({
         </nav>
       </div>
 
+      <section className="card stat-card">
+        <div className="dash-head dash-head-row">
+          <h2 className="card-title">Seus formulários</h2>
+          <form action={createForm}><button className="btn btn-primary btn-sm">Criar formulário</button></form>
+        </div>
+        {forms.length === 0 ? <p className="dash-empty">Você ainda não tem formulários.</p> : (
+          <div className="admin-scroll"><table className="rank"><thead><tr><th>Nome</th><th>Situação</th><th>Gerenciar</th></tr></thead><tbody>
+            {forms.map((f) => <tr key={f.id}>
+              <td>{f.name}</td>
+              <td>{f.fields === null ? "Externo" : f.is_published ? "Publicado" : "Rascunho"}</td>
+              <td>{f.fields !== null && <><Link href={`/dashboard/formularios/editar/${f.id}`}>Editar</Link>{f.is_published && f.slug && profile && <> · <Link href={`/${profile.slug}/f/${f.slug}`} target="_blank">Abrir ↗</Link><form action={addFormLink}><input type="hidden" name="id" value={f.id} /><button className="btn btn-outline btn-sm">Adicionar à página de links</button></form></>}<details><summary>Excluir formulário</summary><form action={removeForm}><input type="hidden" name="id" value={f.id} /><p>Esta ação é irreversível e exclui todas as respostas, completas e incompletas. Links já adicionados à página precisam ser removidos manualmente.</p><label><input type="checkbox" name="confirm" required /> Confirmo a exclusão do formulário e de todas as respostas.</label><p><button className="btn btn-outline btn-sm">Excluir definitivamente</button></p></form></details></>}</td>
+            </tr>)}
+          </tbody></table></div>
+        )}
+      </section>
+
+      {error && <p className="notice" role="alert">{error}</p>}
+      {formExcluido && <p className="notice notice-ok">Formulário e respostas excluídos.</p>}
+      {linkAdicionado && <p className="notice notice-ok">Formulário adicionado à página de links. Você pode editar ou remover o link na aba Links.</p>}
       {excluida && <p className="notice notice-ok">Resposta excluída.</p>}
 
       {forms.length > 1 && (

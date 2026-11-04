@@ -12,6 +12,7 @@ import {
   listResponses,
   rotateFormKey,
   saveResponse,
+  setFormsEnabled,
 } from "@/server/forms";
 
 const payload = (clientId: string, status: "partial" | "complete", values: string[]) =>
@@ -35,6 +36,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: formulários", () => {
     );
     [ownerId, otherId] = users.map((u) => u.id);
     formId = (await createForm(ownerId, "Contato do site"))!.id;
+    await setFormsEnabled(ownerId, true);
   });
 
   afterAll(async () => {
@@ -53,10 +55,23 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: formulários", () => {
     expect((await findFormByKey(formKey(rotated!)))?.id).toBe(formId);
   });
 
+  it("revogar bloqueia a chave sem apagar respostas, e liberar a restaura", async () => {
+    const form = (await queryOne<{ id: string; key_version: number }>("select * from forms where id = $1", [formId]))!;
+    const key = formKey(form);
+    const saved = await saveResponse(formId, payload(randomUUID(), "partial", ["Teste acesso"]));
+    expect(await setFormsEnabled(ownerId, false)).toBe(true);
+    expect(await findFormByKey(key)).toBeNull();
+    expect(await getResponse(ownerId, saved.id!)).not.toBeNull();
+    expect(await setFormsEnabled(ownerId, true)).toBe(true);
+    expect((await findFormByKey(key))?.id).toBe(formId);
+    expect(await getResponse(ownerId, saved.id!)).not.toBeNull();
+    expect(await setFormsEnabled(randomUUID(), true)).toBe(false);
+  });
+
   it("parcial atualiza a mesma linha, vira completa e não volta a parcial", async () => {
     const clientId = randomUUID();
-    expect(await saveResponse(formId, payload(clientId, "partial", ["Ana"]))).toBe("saved");
-    expect(await saveResponse(formId, payload(clientId, "partial", ["Ana", "44999991234"]))).toBe("saved");
+    expect((await saveResponse(formId, payload(clientId, "partial", ["Ana"]))).result).toBe("saved");
+    expect((await saveResponse(formId, payload(clientId, "partial", ["Ana", "44999991234"]))).result).toBe("saved");
 
     let { rows } = await listResponses(ownerId, { formId, status: "partial" });
     const partial = rows.find((r) => r.contact_name === "Ana")!;
@@ -64,9 +79,9 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: formulários", () => {
     expect(partial.contact_phone).toBe("44999991234");
     expect(partial.completed_at).toBeNull();
 
-    expect(await saveResponse(formId, payload(clientId, "complete", ["Ana", "44999991234", "Oi"]))).toBe("saved");
+    expect((await saveResponse(formId, payload(clientId, "complete", ["Ana", "44999991234", "Oi"]))).result).toBe("saved");
     // Envio parcial atrasado depois do final: ignorado.
-    expect(await saveResponse(formId, payload(clientId, "partial", ["Ana"]))).toBe("ignored");
+    expect((await saveResponse(formId, payload(clientId, "partial", ["Ana"]))).result).toBe("ignored");
 
     const done = (await getResponse(ownerId, partial.id))!;
     expect(done.status).toBe("complete");

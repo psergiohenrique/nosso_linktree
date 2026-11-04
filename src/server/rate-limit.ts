@@ -8,7 +8,7 @@ import { query } from "./db";
  * Cada tentativa vira uma linha em `auth_attempts`, com a chave em hash (segredo + e-mail ou IP).
  */
 
-export type AuthAction = "signin" | "signup" | "reset" | "verify";
+export type AuthAction = "signin" | "signup" | "reset" | "verify" | "form";
 type KeyKind = "email" | "ip";
 export type AttemptKeys = Partial<Record<KeyKind, string>>;
 
@@ -19,6 +19,8 @@ export const RATE_RULES: Record<AuthAction, Partial<Record<KeyKind, { max: numbe
   reset: { email: { max: 3, minutes: 60 }, ip: { max: 10, minutes: 60 } },
   // Reenvio do código de confirmação do cadastro.
   verify: { email: { max: 5, minutes: 60 } },
+  // Respostas novas em formulários públicos (cada pessoa que começa a responder).
+  form: { ip: { max: 20, minutes: 60 } },
 };
 
 export const RATE_LIMIT_MESSAGE = "Muitas tentativas. Aguarde alguns minutos e tente de novo.";

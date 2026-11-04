@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/server/admin";
 import { query, queryOne } from "@/server/db";
-import { createForm, deleteForm, rotateFormKey } from "@/server/forms";
+import { createForm, deleteForm, rotateFormKey, setFormsEnabled } from "@/server/forms";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -56,7 +56,22 @@ export async function removeCourtesy(formData: FormData) {
   back(userId, { ok: "sem-cortesia" });
 }
 
-/** Formulários: liberar para uma conta é criar o primeiro formulário dela (a aba aparece no painel). */
+/** Liberação independente da criação de formulários; revogar não apaga dados ou chaves. */
+export async function adminSetFormsEnabled(formData: FormData) {
+  const admin = await requireAdmin();
+  const userId = String(formData.get("user_id") ?? "");
+  const value = formData.get("enabled");
+  if (!UUID.test(userId)) redirect("/admin/contas");
+  if (value !== "1" && value !== "0") back(userId, { error: "Estado de acesso inválido." });
+  const enabled = value === "1";
+  if (!(await setFormsEnabled(userId, enabled))) redirect("/admin/contas");
+  console.info(`[admin] ${admin.email} ${enabled ? "liberou" : "revogou"} Formulários para ${userId}`);
+  revalidatePath("/dashboard", "layout");
+  revalidatePath(`/admin/contas/${userId}`);
+  back(userId, { ok: enabled ? "forms-liberado" : "forms-revogado" });
+}
+
+/** Cria um formulário externo, sem alterar a liberação da conta. */
 export async function adminCreateForm(formData: FormData) {
   const admin = await requireAdmin();
   const userId = String(formData.get("user_id") ?? "");

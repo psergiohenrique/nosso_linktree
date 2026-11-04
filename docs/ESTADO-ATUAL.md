@@ -1,6 +1,6 @@
 # Linkbio by CodePath — O que já está feito
 
-Retrato do projeto em 2026-10-16. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
+Retrato do projeto em 2026-10-16. Para o estado técnico mais recente de Formulários, veja [FORMULARIOS.md](FORMULARIOS.md); este retrato histórico não comprova implantação em produção. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
 
 **Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. Endereço atual: **https://linkbio.dev.br**. Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas, recuperação de senha e cobrança. Plano Grátis + Pro com cobrança pelo Asaas **ligada em produção** (2026-10-21).
 
@@ -105,6 +105,7 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 
 ## 10. Documentação
 
+- [FORMULARIOS.md](FORMULARIOS.md) — construtor, acesso, integração externa, migrações, limpeza e decisões de lançamento.
 - [PRD.md](PRD.md) — produto, MVP, requisitos e monetização.
 - [BRIEFING-PARCEIRO.md](BRIEFING-PARCEIRO.md) — análise de mercado e pontos para revisão técnica.
 - [PERSONALIZACAO-POR-CLIENTE.md](PERSONALIZACAO-POR-CLIENTE.md) e [exemplos/](exemplos/) (barbearia, arquiteta) — personalização por cliente e módulos opcionais.

@@ -24,6 +24,9 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS global com
 - `npm test` — testes de unidade (Vitest), sem banco.
 - `npm run test:db` — inclui os testes de limite de tentativas, recuperação de senha e cobrança (webhook do Asaas simulado) no Postgres local do Docker (precisa de `db:up` e `db:migrate` com o `DATABASE_URL` do Docker).
 
+## Formulários
+Construtor de formulários públicos e integração de sites externos, liberados por conta pelo administrador. Veja [docs/FORMULARIOS.md](docs/FORMULARIOS.md) para gestão, API, migrações, privacidade, limitações e decisões pendentes. A limpeza autenticada de respostas parciais precisa de agendamento explícito antes do lançamento.
+
 ## PostHog
 A integração usa `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` e `NEXT_PUBLIC_POSTHOG_HOST` no `.env.local` e nas variáveis de ambiente da Vercel. Configure-os com a chave pública e o host de ingestão do projeto PostHog desejado; não coloque credenciais no repositório. Alterações nas variáveis públicas exigem uma nova build/publicação para valer no navegador.
 
@@ -49,7 +52,7 @@ Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 9,90/mês ou R$ 70,
 Qualquer PostgreSQL 14+ serve (Neon, Supabase, RDS…): aponte `DATABASE_URL` para ele e rode `npm run db:migrate`. Produção (Neon): a URL fica só na Vercel e em `.env.neon` (fora do git, só com `DATABASE_URL=...`); migre com `npm run db:migrate:prod` **antes** de publicar código que dependa da migração nova. O `.env.local` aponta sempre para o Postgres do Docker. As imagens ficam na tabela `media`; se o volume crescer, dá para mover para um storage de objetos mudando só `src/server/media.ts` e a rota `/media/[id]`.
 
 ## Privacidade
-Não guarda IP nem cookies de rastreio. Cada visitante vira um hash diário (IP + navegador + perfil + dia + segredo), usado só para contar únicos e descartar repetições. Guarda origem (Instagram, Google…) e tipo de dispositivo.
+Nos analytics da página, não guarda IP nem cookies de rastreio. Cada visitante vira um hash diário (IP + navegador + perfil + dia + segredo), usado só para contar únicos e descartar repetições. Guarda origem (Instagram, Google…) e tipo de dispositivo. Formulários podem guardar respostas pessoais e progresso no navegador; veja [privacidade de formulários](docs/FORMULARIOS.md#privacidade-e-decisões-de-lançamento).
 
 ## Próximos passos
 Ver a primeira renovação da cobrança (20/11); ícones de redes sociais, arrastar para reordenar, QR code; depois leads → robô de leads, Pix, domínio próprio, painel de agência.

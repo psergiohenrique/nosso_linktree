@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   const payload = parseResponsePayload(body);
   if (!payload) return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
 
-  const result = await saveResponse(form.id, payload);
+  const { result } = await saveResponse(form.id, payload);
   if (result === "rate_limited") {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }

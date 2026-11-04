@@ -1,14 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/server/auth";
 import { BillingError, cancelPlan, getPlan, startCheckout } from "@/server/billing";
 import { pool, query, queryOne } from "@/server/db";
-import { deleteResponse } from "@/server/forms";
+import { deleteResponse, formsEnabled } from "@/server/forms";
 import { deleteMedia, saveImage } from "@/server/media";
 import { getProfileByUser } from "@/server/profiles";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
+import { SITE_URL } from "@/lib/site";
 import {
   BUTTON_STYLES,
   FONTS,
@@ -61,6 +62,16 @@ export async function updateSlug(formData: FormData) {
   const back = "/dashboard/aparencia";
   const slug = validateSlug(String(formData.get("slug") ?? ""));
   if (!slug) fail("Endereço inválido: use 3 a 30 letras minúsculas, números ou hífen.", back);
+
+  if (slug !== profile.slug) {
+    const linkedForm = await queryOne<{ id: string }>(
+      `select l.id from links l join forms f on f.owner_id = l.profile_id
+       where l.profile_id = $1 and f.fields is not null and f.slug is not null
+         and l.url = $2 || '/' || $3 || '/f/' || f.slug limit 1`,
+      [user.id, SITE_URL, profile.slug],
+    );
+    if (linkedForm) fail("Remova primeiro os links de formulários na aba Links para mudar o endereço da página.", back);
+  }
 
   try {
     await query("update profiles set slug = $2, updated_at = now() where id = $1", [user.id, slug]);
@@ -287,6 +298,7 @@ export async function toggleSearchIndexing(formData: FormData) {
 /** Apaga uma resposta de formulário (só do próprio dono; ex.: pedido de exclusão pela LGPD). */
 export async function deleteFormResponse(formData: FormData) {
   const user = await requireUser();
+  if (!(await formsEnabled(user.id))) notFound();
   await deleteResponse(user.id, String(formData.get("id") ?? ""));
   revalidatePath("/dashboard/formularios");
   redirect("/dashboard/formularios?excluida=1");
