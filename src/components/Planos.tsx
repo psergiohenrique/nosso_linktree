@@ -12,6 +12,7 @@ const PRO_HIGHLIGHTS = [
   "Formatos Destaque e Bloco",
   "Resultados de 30 e 90 dias",
   "Métricas avançadas: horários, cidades, campanhas e CSV",
+  "Formulários com acompanhamento de respostas",
   "Sem o selo “Feito com Linkbio”",
 ];
 
@@ -70,6 +71,7 @@ const COMPARE: { label: string; free: string | boolean; pro: string | boolean }[
   { label: "De onde vem quem clica em cada link", free: false, pro: true },
   { label: "Horários de pico e cidades das visitas", free: false, pro: true },
   { label: "Campanhas (UTM) e exportação em planilha (CSV)", free: false, pro: true },
+  { label: "Formulários e acompanhamento de respostas", free: false, pro: true },
   { label: "Selo “Feito com Linkbio” na página", free: "Aparece", pro: "Não aparece" },
   { label: "Comissão sobre suas vendas", free: "0%", pro: "0%" },
 ];
@@ -81,7 +83,7 @@ const FAQ = [
   },
   {
     q: "O que muda quando eu assino o Pro?",
-    a: `Você passa a ter links ilimitados, os formatos Destaque e Bloco, resultados de 30 e 90 dias, métricas avançadas (origem de quem clica em cada link, horários de pico, cidades, campanhas e exportação em CSV) e sua página deixa de mostrar o selo “Feito com Linkbio”. Tudo é liberado assim que o pagamento é confirmado.`,
+    a: `Você passa a ter links ilimitados, os formatos Destaque e Bloco, resultados de 30 e 90 dias, métricas avançadas (origem de quem clica em cada link, horários de pico, cidades, campanhas e exportação em CSV), formulários com acompanhamento de respostas e sua página deixa de mostrar o selo “Feito com Linkbio”. Tudo é liberado assim que o pagamento é confirmado.`,
   },
   {
     q: "Posso cancelar quando quiser? Tem multa ou fidelidade?",

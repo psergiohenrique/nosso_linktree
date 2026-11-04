@@ -19,8 +19,10 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: construtor de formulári
   let ownerId = "";
   let otherId = "";
   let slug = "";
+  const billing = process.env.BILLING_ENABLED;
 
   beforeAll(async () => {
+    process.env.BILLING_ENABLED = "true";
     const users = await query<{ id: string }>(
       "insert into users (email, password_hash) values ($1, 'x'), ($2, 'x') returning id",
       [`fb-${randomUUID()}@linkbio.test`, `fb-${randomUUID()}@linkbio.test`],
@@ -31,6 +33,8 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: construtor de formulári
   });
 
   afterAll(async () => {
+    if (billing === undefined) delete process.env.BILLING_ENABLED;
+    else process.env.BILLING_ENABLED = billing;
     await query("delete from users where id = any($1::uuid[])", [[ownerId, otherId]]);
     await pool?.end();
   });

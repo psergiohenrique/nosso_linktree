@@ -7,6 +7,7 @@ export const RESERVED_SLUGS = new Set([
   'media',
   'cadastro',
   'demo',
+  'formularios',
   'admin',
   'app',
   'www',

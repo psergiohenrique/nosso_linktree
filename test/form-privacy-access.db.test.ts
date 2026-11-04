@@ -21,8 +21,10 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: retenção e isolamento 
   let form = "";
   let slug = "";
   const secret = process.env.CRON_SECRET;
+  const billing = process.env.BILLING_ENABLED;
 
   beforeAll(async () => {
+    process.env.BILLING_ENABLED = "true";
     pool = new Pool({ connectionString: process.env.TEST_DATABASE_URL });
     db.client = await pool.connect();
     await db.client.query("begin");
@@ -37,6 +39,8 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("banco: retenção e isolamento 
   });
 
   afterAll(async () => {
+    if (billing === undefined) delete process.env.BILLING_ENABLED;
+    else process.env.BILLING_ENABLED = billing;
     if (secret === undefined) delete process.env.CRON_SECRET;
     else process.env.CRON_SECRET = secret;
     if (db.client) {

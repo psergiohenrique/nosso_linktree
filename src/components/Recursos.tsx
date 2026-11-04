@@ -1,3 +1,4 @@
+import Link from "next/link";
 import RevealWrapper from "./RevealWrapper";
 
 const ICON_PROPS = {
@@ -68,7 +69,8 @@ export default function Recursos() {
           </RevealWrapper>
           <RevealWrapper as="p" className="recursos-intro d1">
             O dono do negócio quer gerar contato, não só &ldquo;ter links&rdquo;. O Linkbio foi
-            pensado para isso desde o primeiro botão.
+            pensado para isso desde o primeiro botão. Com o Pro, você também pode criar formulários e acompanhar as respostas.{" "}
+            <Link href="/formularios">Conheça Formulários →</Link>
           </RevealWrapper>
         </div>
 

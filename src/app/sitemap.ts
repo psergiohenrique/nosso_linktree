@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 const MAX_URLS = 50_000;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages = await listIndexablePages(MAX_URLS - 2);
+  const pages = await listIndexablePages(MAX_URLS - 3);
   return [
     {
       url: SITE_URL,
@@ -27,6 +27,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date("2026-10-15"),
       changeFrequency: "yearly",
       priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/formularios`,
+      lastModified: new Date("2026-11-04"),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     ...pages.map((p) => ({
       url: absoluteUrl(`/${p.slug}`),

@@ -56,7 +56,7 @@ export async function removeCourtesy(formData: FormData) {
   back(userId, { ok: "sem-cortesia" });
 }
 
-/** Liberação independente da criação de formulários; revogar não apaga dados ou chaves. */
+/** Concessão manual independente do Pro; removê-la não apaga dados ou chaves. */
 export async function adminSetFormsEnabled(formData: FormData) {
   const admin = await requireAdmin();
   const userId = String(formData.get("user_id") ?? "");
@@ -65,7 +65,7 @@ export async function adminSetFormsEnabled(formData: FormData) {
   if (value !== "1" && value !== "0") back(userId, { error: "Estado de acesso inválido." });
   const enabled = value === "1";
   if (!(await setFormsEnabled(userId, enabled))) redirect("/admin/contas");
-  console.info(`[admin] ${admin.email} ${enabled ? "liberou" : "revogou"} Formulários para ${userId}`);
+  console.info(`[admin] ${admin.email} ${enabled ? "ativou" : "removeu"} a concessão manual de Formulários para ${userId}`);
   revalidatePath("/dashboard", "layout");
   revalidatePath(`/admin/contas/${userId}`);
   back(userId, { ok: enabled ? "forms-liberado" : "forms-revogado" });

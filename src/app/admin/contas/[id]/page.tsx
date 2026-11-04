@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatBRL, formatDateBR } from "@/lib/billing";
 import { getAccountDetail, requireAdmin } from "@/server/admin";
-import { billingEnabled } from "@/server/billing";
-import { formKey, formsEnabled, listForms } from "@/server/forms";
+import { billingEnabled, getPlan } from "@/server/billing";
+import { formKey, formsGranted, listForms } from "@/server/forms";
 import { SITE_URL } from "@/lib/site";
 import { adminCreateForm, adminDeleteForm, adminRotateFormKey, adminSetFormsEnabled, removeCourtesy, setCourtesy } from "../../actions";
 import { InvoiceTag, PlanTag, dateOrDash, formatDateTimeBR } from "../../format";
@@ -16,8 +16,8 @@ const OK_COPY: Record<string, string> = {
   cortesia: "Cortesia salva.",
   "sem-cortesia": "Cortesia removida.",
   formulario: "Formulário externo criado. O acesso da conta não foi alterado.",
-  "forms-liberado": "Acesso a Formulários liberado.",
-  "forms-revogado": "Acesso a Formulários revogado; formulários e respostas foram preservados.",
+  "forms-liberado": "Concessão manual de Formulários ativada.",
+  "forms-revogado": "Concessão manual de Formulários removida; formulários, respostas e chaves foram preservados. Contas Pro mantêm o acesso.",
   chave: "Chave trocada. A anterior deixou de valer: atualize o site.",
   "sem-formulario": "Formulário apagado, com todas as respostas.",
 };
@@ -56,7 +56,9 @@ export default async function AdminAccountPage({
   const [{ id }, { ok, error }] = await Promise.all([params, searchParams]);
   const detail = await getAccountDetail(id);
   if (!detail) notFound();
-  const [forms, enabled] = await Promise.all([listForms(detail.user.id), formsEnabled(detail.user.id)]);
+  const [forms, granted, effectivePlan] = await Promise.all([
+    listForms(detail.user.id), formsGranted(detail.user.id), getPlan(detail.user.id),
+  ]);
 
   const { user, profile, links, sub, plan, invoices, stats, sessions, checkouts } = detail;
   const name = [user.first_name, user.last_name].filter(Boolean).join(" ");
@@ -278,14 +280,16 @@ export default async function AdminAccountPage({
       <section className="card stat-card">
         <h2 className="card-title">Formulários</h2>
         <p className="hint">
-          O acesso é controlado separadamente da criação de formulários. Ao revogar, o painel, os formulários públicos
-          e a API externa deixam de receber acesso; formulários, respostas e chaves são preservados.
+          Contas Pro têm acesso automático. A concessão manual é independente do plano e da criação de formulários.
+          Ao removê-la, contas sem Pro perdem acesso ao painel, aos formulários públicos e à API externa;
+          formulários, respostas e chaves são preservados.
         </p>
-        <p className="hint">Acesso: <strong>{enabled ? "Liberado" : "Revogado"}</strong></p>
+        <p className="hint">Acesso efetivo: <strong>{effectivePlan.pro || granted ? "Liberado" : "Não liberado"}</strong></p>
+        <p className="hint">Pro efetivo: <strong>{effectivePlan.pro ? "Sim" : "Não"}</strong> · Concessão manual: <strong>{granted ? "Ativa" : "Inativa"}</strong></p>
         <form action={adminSetFormsEnabled}>
           <input type="hidden" name="user_id" value={user.id} />
-          <input type="hidden" name="enabled" value={enabled ? "0" : "1"} />
-          <button className="btn btn-outline btn-sm">{enabled ? "Revogar acesso" : "Liberar acesso"}</button>
+          <input type="hidden" name="enabled" value={granted ? "0" : "1"} />
+          <button className="btn btn-outline btn-sm">{granted ? "Remover concessão manual" : "Conceder acesso manual"}</button>
         </form>
         <p className="hint">
           Formulários externos recebem respostas enviadas pelo servidor do site para <code>{SITE_URL}/api/forms/respostas</code> com <code>Authorization: Bearer &lt;chave&gt;</code>.

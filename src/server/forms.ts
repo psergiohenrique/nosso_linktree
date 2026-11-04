@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { checkAnswers, defaultFields, storedFields, validateFormSlug, type FormField } from "@/lib/form-fields";
 import type { FormAnswer, FormResponsePayload, FormResponseStatus } from "@/lib/forms";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { getPlan } from "./billing";
 import { query, queryOne } from "./db";
 import { sendMail } from "./mail";
 import { isRateLimited, recordAttempt } from "./rate-limit";
@@ -81,13 +82,14 @@ export async function findFormByKey(key: string) {
   const parsed = parseFormKey(key);
   if (!parsed) return null;
   const form = await queryOne<FormRow>(
-    "select f.* from forms f join users u on u.id = f.owner_id where f.id = $1 and u.forms_enabled",
+    "select f.* from forms f where f.id = $1",
     [parsed.id],
   );
   if (!form) return null;
   const expected = Buffer.from(keySignature(form.id, form.key_version));
   const given = Buffer.from(parsed.signature);
-  return expected.length === given.length && timingSafeEqual(expected, given) ? form : null;
+  if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
+  return (await formsEnabled(form.owner_id)) ? form : null;
 }
 
 export type SaveResult = "saved" | "ignored" | "rate_limited";
@@ -191,10 +193,16 @@ export async function hasForms(ownerId: string) {
   return Boolean(row?.ok);
 }
 
-/** Formulários liberados para a conta (pelo admin). */
-export async function formsEnabled(userId: string) {
+/** Concessão administrativa, independente do plano. */
+export async function formsGranted(userId: string) {
   const row = await queryOne<{ forms_enabled: boolean }>("select forms_enabled from users where id = $1", [userId]);
   return Boolean(row?.forms_enabled);
+}
+
+/** O Pro efetivo ou a concessão administrativa liberam Formulários. */
+export async function formsEnabled(userId: string) {
+  const [plan, granted] = await Promise.all([getPlan(userId), formsGranted(userId)]);
+  return plan.pro || granted;
 }
 
 export async function setFormsEnabled(userId: string, on: boolean) {
@@ -282,10 +290,10 @@ export async function getPublicForm(where: { profileSlug: string; formSlug: stri
        join users u on u.id = f.owner_id
        join profiles p on p.id = f.owner_id
       where ${byId ? "f.id = $1" : "p.slug = $1 and f.slug = $2"}
-        and f.is_published and f.fields is not null and u.forms_enabled`,
+        and f.is_published and f.fields is not null`,
     byId ? [where.id] : [where.profileSlug.toLowerCase(), where.formSlug.toLowerCase()],
   );
-  if (!row) return null;
+  if (!row || !(await formsEnabled(row.owner_id))) return null;
   const fields = storedFields(row.fields) ?? [];
   return fields.length ? ({ ...row, fields } as PublicForm) : null;
 }

@@ -7,6 +7,7 @@ const LINKS = [
   { href: "#como-funciona", label: "Como funciona" },
   { href: "#planos", label: "Planos" },
   { href: "/demo", label: "Exemplo" },
+  { href: "/formularios", label: "Formulários" },
 ];
 
 export default function Footer() {
