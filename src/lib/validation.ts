@@ -1,3 +1,5 @@
+import type { SocialNetwork } from './types';
+
 export const RESERVED_SLUGS = new Set([
   'login',
   'dashboard',
@@ -42,6 +44,25 @@ export function safeUrl(raw: string): string | null {
   } catch {
     return null;
   }
+}
+
+const SOCIAL_HOSTS: Record<SocialNetwork, readonly string[]> = {
+  instagram: ['instagram.com'],
+  facebook: ['facebook.com', 'fb.com'],
+  tiktok: ['tiktok.com'],
+  youtube: ['youtube.com', 'youtu.be'],
+  linkedin: ['linkedin.com'],
+  x: ['x.com', 'twitter.com'],
+};
+
+/** URL da rede indicada: HTTP(S), sem credenciais e em domínio genuíno. */
+export function socialUrl(raw: string, network: SocialNetwork): string | null {
+  const href = safeUrl(raw);
+  if (!href) return null;
+  const url = new URL(href);
+  const host = url.hostname.replace(/^(www|m)\./, '');
+  return (url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password &&
+    SOCIAL_HOSTS[network].includes(host) ? href : null;
 }
 
 /** Monta o link wa.me a partir de um telefone (com ou sem DDI) e mensagem. */

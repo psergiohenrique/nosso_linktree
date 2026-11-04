@@ -12,6 +12,7 @@ import {
   socialMetadata,
 } from "@/lib/seo";
 import { mediaUrl } from "@/lib/types";
+import { visibleSocialLinks } from "@/lib/social";
 import { getPlan } from "@/server/billing";
 import { getPublicPage } from "@/server/profiles";
 
@@ -63,7 +64,10 @@ export default async function PublicPage({ params }: Params) {
 
   const jsonLd = profileJsonLd(profile, {
     avatarUrl: profile.avatar_id ? mediaUrl(profile.avatar_id) : null,
-    linkUrls: visible.filter((l) => l.kind === "link").map((l) => l.url),
+    linkUrls: [
+      ...visible.filter((l) => l.kind === "link").map((l) => l.url),
+      ...visibleSocialLinks(profile.social_links).map((social) => social.url),
+    ],
   });
 
   return (

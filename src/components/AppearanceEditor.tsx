@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { SOCIAL_NETWORKS, type SocialLinks, type SocialNetwork, type SocialPosition } from "@/lib/types";
 import AppearanceFields from "./AppearanceFields";
 import { openPaywall } from "./Paywall";
 import type { PageViewLink, PageViewProfile } from "./PageView";
@@ -15,6 +16,18 @@ type Props = {
   pro?: boolean;
   action: (formData: FormData) => Promise<void>;
   slugAction: (formData: FormData) => Promise<void>;
+  socialAction: (formData: FormData) => Promise<void>;
+  socialPosition: SocialPosition;
+  socialLinks: SocialLinks;
+};
+
+const SOCIAL_LABELS: Record<SocialNetwork, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+  linkedin: "LinkedIn",
+  x: "X",
 };
 
 function SaveButton() {
@@ -26,8 +39,10 @@ function SaveButton() {
   );
 }
 
-export default function AppearanceEditor({ profile, links, branding = true, pro = true, action, slugAction }: Props) {
+export default function AppearanceEditor({ profile, links, branding = true, pro = true, action, slugAction, socialAction, socialPosition, socialLinks }: Props) {
   const [state, setState] = useState<PageViewProfile>(profile);
+  const [position, setPosition] = useState(socialPosition);
+  const [socials, setSocials] = useState(socialLinks);
   const [previewBranding, setPreviewBranding] = useState(branding);
   const [localAvatar, setLocalAvatar] = useState<string | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
@@ -48,6 +63,7 @@ export default function AppearanceEditor({ profile, links, branding = true, pro 
 
   const avatarUrl = localAvatar ?? (removeAvatar ? null : profile.avatar_url);
   const coverImageUrl = localCoverImage ?? (removeCoverImage ? null : profile.cover_image_url);
+  const previewProfile = { ...state, avatar_url: avatarUrl, cover_image_url: coverImageUrl, social_position: position, social_links: socials };
 
   return (
     <div className="dash-grid">
@@ -62,6 +78,45 @@ export default function AppearanceEditor({ profile, links, branding = true, pro 
           <input id="slug" name="slug" className="field" defaultValue={profile.slug} minLength={3} maxLength={30} required />
           <p className="hint">Use letras, números ou hífen. Ao alterar, o endereço antigo deixa de funcionar.</p>
           <div><button className="btn btn-outline btn-sm" type="submit">Salvar endereço</button></div>
+        </form>
+        <form action={socialAction} className="card">
+          <h2 className="card-title">Redes sociais</h2>
+          <p className="hint">Adicione os endereços e ative as redes que deseja mostrar. URLs sem protocolo são aceitas.</p>
+          <div>
+            <label className="field-label" htmlFor="social-position">Posição das redes sociais</label>
+            <select id="social-position" name="social_position" className="field" value={position} onChange={(e) => setPosition(e.target.value as SocialPosition)}>
+              <option value="below_name">Abaixo do nome e da bio</option>
+              <option value="after_links">Depois dos links</option>
+            </select>
+          </div>
+          {SOCIAL_NETWORKS.map((network) => (
+            <div key={network}>
+              <label className="field-label" htmlFor={`social-${network}`}>{SOCIAL_LABELS[network]}</label>
+              <input
+                id={`social-${network}`}
+                name={`${network}_url`}
+                className="field"
+                value={socials[network]?.url ?? ""}
+                onChange={(e) => setSocials((current) => ({ ...current, [network]: { ...current[network], url: e.target.value } }))}
+                placeholder="https://…"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              <label className="check">
+                <input
+                  type="checkbox"
+                  name={`${network}_is_active`}
+                  value="1"
+                  checked={socials[network]?.is_active ?? false}
+                  onChange={(e) => setSocials((current) => ({ ...current, [network]: { ...current[network], is_active: e.target.checked } }))}
+                />
+                Mostrar {SOCIAL_LABELS[network]}
+              </label>
+            </div>
+          ))}
+          <div><button className="btn btn-primary btn-sm">Salvar redes sociais</button></div>
         </form>
         <form action={action} className="dash-main" data-posthog-event="appearance_saved">
 
@@ -121,7 +176,7 @@ export default function AppearanceEditor({ profile, links, branding = true, pro 
       </div>
 
       <PhonePreview
-        profile={{ ...state, avatar_url: avatarUrl, cover_image_url: coverImageUrl }}
+        profile={previewProfile}
         links={links}
         branding={previewBranding}
       />

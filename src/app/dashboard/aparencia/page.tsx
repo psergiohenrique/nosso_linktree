@@ -5,7 +5,7 @@ import { toPageViewProps } from "@/components/PageView";
 import { requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
-import { updateAppearance, updateSlug } from "../actions";
+import { updateAppearance, updateSlug, updateSocialLinks } from "../actions";
 
 export const metadata: Metadata = { title: "Aparência" };
 
@@ -30,17 +30,18 @@ export default async function AparenciaPage({
   return (
     <>
       {error && <p className="notice notice-error dash-notice">{error}</p>}
-      {ok && <p className="notice notice-ok dash-notice">Aparência salva.</p>}
+      {ok && <p className="notice notice-ok dash-notice">Alterações salvas.</p>}
       {endereco && <p className="notice notice-ok dash-notice">Endereço atualizado.</p>}
-      {/* key: remonta o editor com os dados salvos depois de cada envio */}
       <AppearanceEditor
-        key={JSON.stringify(viewProfile)}
         profile={viewProfile}
         links={viewLinks}
         branding={branding}
         pro={plan.pro}
         action={updateAppearance}
         slugAction={updateSlug}
+        socialAction={updateSocialLinks}
+        socialPosition={profile.social_position}
+        socialLinks={profile.social_links}
       />
     </>
   );

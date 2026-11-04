@@ -15,11 +15,12 @@ import {
   FONTS,
   LINK_LAYOUTS,
   LINK_SIZES,
+  SOCIAL_NETWORKS,
   THEME_PRESETS,
   WHATSAPP_DEFAULT,
   WHATSAPP_STYLES,
 } from "@/lib/types";
-import { MAX_URL_LENGTH, oneOf, safeUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
+import { MAX_URL_LENGTH, oneOf, safeUrl, socialUrl, validColor, validateSlug, whatsappUrl } from "@/lib/validation";
 import { emitPostHogLog } from "@/server/posthog-logs";
 import { setWeeklyReport } from "@/server/weekly-report";
 
@@ -145,6 +146,32 @@ export async function updateAppearance(formData: FormData) {
   if (avatarId !== profile.avatar_id) await deleteMedia(user.id, profile.avatar_id);
   if (coverImageId !== profile.cover_image_id) await deleteMedia(user.id, profile.cover_image_id);
 
+  await refreshPublicPage(profile);
+  redirect(`${back}?ok=1`);
+}
+
+/** Salva todas as redes de uma vez; campos vazios removem a URL correspondente. */
+export async function updateSocialLinks(formData: FormData) {
+  const { user, profile } = await requireProfile();
+  const back = "/dashboard/aparencia";
+  const position = formData.get("social_position");
+  if (position !== "below_name" && position !== "after_links") fail("Posição das redes sociais inválida.", back);
+
+  const links: Record<string, { url: string; is_active: boolean }> = {};
+  for (const network of SOCIAL_NETWORKS) {
+    const raw = formData.get(`${network}_url`);
+    if (raw !== null && typeof raw !== "string") fail("URL de rede social inválida.", back);
+    const value = (raw ?? "").trim();
+    const url = value ? socialUrl(value, network) : "";
+    if (url === null) fail("URL de rede social inválida.", back);
+    const active = formData.get(`${network}_is_active`) === "1";
+    if (active && !url) fail("Informe a URL da rede social ativa.", back);
+    links[network] = { url, is_active: active };
+  }
+
+  await query("update profiles set social_position = $2, social_links = $3 where id = $1", [
+    user.id, position, JSON.stringify(links),
+  ]);
   await refreshPublicPage(profile);
   redirect(`${back}?ok=1`);
 }
