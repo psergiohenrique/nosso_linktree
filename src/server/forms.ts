@@ -35,8 +35,9 @@ export const RESPONSES_PAGE_SIZE = 50;
 
 const KEY_PREFIX = "lbf_";
 
+/** Segredo das chaves de formulário: FORMS_KEY_SECRET (independente do APP_SECRET), ou o APP_SECRET se não houver. */
 function keySignature(id: string, version: number) {
-  return createHmac("sha256", process.env.APP_SECRET ?? "")
+  return createHmac("sha256", process.env.FORMS_KEY_SECRET || process.env.APP_SECRET || "")
     .update(`form|${id}|${version}`)
     .digest("base64url")
     .slice(0, 32);
