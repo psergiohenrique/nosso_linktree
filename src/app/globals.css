@@ -973,7 +973,7 @@ textarea.field {
   box-shadow: 0 1px 3px rgba(23, 24, 26, 0.08);
   transition: transform 0.35s cubic-bezier(0.3, 0.9, 0.3, 1), width 0.35s cubic-bezier(0.3, 0.9, 0.3, 1);
 }
-.dash-nav.has-ind a.active {
+.dash-nav.has-ind :is(a, button).active {
   background: transparent;
 }
 .dash-grid {
@@ -2967,11 +2967,11 @@ html.no-scroll {
     box-shadow: 0 10px 30px rgba(23, 24, 26, 0.28);
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s, bottom 0.25s, background 0.2s;
   }
-  .preview-fab.above-bar {
+  .dash:has(.dash-nav) .preview-fab {
     bottom: calc(80px + env(safe-area-inset-bottom));
   }
   /* Com a barra "Não salvo" aberta, o botão sobe para não ficar por cima do Salvar */
-  .dash:has(.save-bar-dock) .preview-fab.above-bar {
+  .dash:has(.dash-nav):has(.save-bar-dock) .preview-fab {
     bottom: calc(156px + env(safe-area-inset-bottom));
   }
   .preview-fab.is-hidden {
@@ -3668,7 +3668,7 @@ html.no-scroll {
   .dash-nav .dash-tab-icon {
     display: block;
   }
-  .dash-nav a {
+  .dash-nav :is(a, button) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3681,16 +3681,16 @@ html.no-scroll {
     letter-spacing: 0;
     -webkit-tap-highlight-color: transparent;
   }
-  .dash-nav a.active,
-  .dash-nav.has-ind a.active {
+  .dash-nav :is(a, button).active,
+  .dash-nav.has-ind :is(a, button).active {
     background: var(--white);
     color: var(--ink);
     box-shadow: 0 1px 3px rgba(23, 24, 26, 0.1);
   }
-  .dash-nav a:active {
+  .dash-nav :is(a, button):active {
     transform: scale(0.94);
   }
-  .dash-nav a {
+  .dash-nav :is(a, button) {
     transition: color 0.2s, background 0.2s, transform 0.15s;
   }
   .save-bar-dock {

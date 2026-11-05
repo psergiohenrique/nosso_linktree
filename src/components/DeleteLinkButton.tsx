@@ -42,7 +42,7 @@ export default function DeleteLinkButton({
           <p id={descriptionId} className="paywall-text">Tem certeza de que deseja excluir “{title}”? Esta ação não pode ser desfeita.</p>
           <form
             action={action}
-            data-posthog-event={action ? posthogEvent : undefined}
+            data-posthog-event={action && posthogEvent ? posthogEvent : undefined}
             className="confirm-actions"
             onSubmit={onConfirm ? (event) => { event.preventDefault(); dialog.current?.close(); onConfirm(); } : undefined}
           >
