@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AdminTabs from "@/components/AdminTabs";
 import Logo from "@/components/Logo";
+import { SITE_NAME } from "@/lib/site";
 import { requireAdmin } from "@/server/admin";
 import { signOut } from "../login/actions";
 
 export const metadata: Metadata = {
-  title: "Admin",
+  title: { default: `Admin · ${SITE_NAME}`, template: `%s · ${SITE_NAME}` },
   robots: { index: false, follow: false },
 };
 

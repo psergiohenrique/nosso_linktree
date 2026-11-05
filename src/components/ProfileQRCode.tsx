@@ -7,15 +7,14 @@ export default async function ProfileQRCode({ slug }: { slug: string }) {
 
   return (
     <section className="card qr-card" aria-labelledby="qr-title">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={image} alt={`QR code para ${url}`} width={128} height={128} className="qr-image" />
       <div className="qr-copy">
         <h2 id="qr-title" className="card-title">QR code da sua página</h2>
-        <p className="hint">Compartilhe sua página em cartazes, cartões ou nas redes sociais.</p>
-        <a href={url} target="_blank" rel="noreferrer" className="qr-url">{url}</a>
-        <p className="hint">Se você mudar seu endereço, baixe um novo QR code: os materiais impressos não mudam sozinhos.</p>
+        <a href={url} target="_blank" rel="noreferrer" className="qr-url">{url.replace(/^https?:\/\//, "")}</a>
+        <p className="hint">Para cartazes, cartões e redes sociais. Se mudar seu endereço, baixe um novo: o impresso não muda sozinho.</p>
         <a href={image} download={`qrcode-${slug}.png`} className="btn btn-outline btn-sm">Baixar QR code</a>
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={image} alt={`QR code para ${url}`} width={160} height={160} className="qr-image" />
     </section>
   );
 }

@@ -1,14 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import AddLinkButton from "@/components/AddLinkButton";
 import DeleteLinkButton from "@/components/DeleteLinkButton";
-import ImageInput from "@/components/ImageInput";
+import ImageField from "@/components/ImageField";
 import LinkOptions from "@/components/LinkOptions";
+import NewLinkSheet from "@/components/NewLinkSheet";
 import Logo from "@/components/Logo";
-import { toPageViewProps } from "@/components/PageView";
-import { PaywallButton } from "@/components/Paywall";
+import { toPageViewProps, WhatsappIcon } from "@/components/PageView";
 import PhonePreview from "@/components/PhonePreview";
 import ProfileQRCode from "@/components/ProfileQRCode";
+import { Chevron } from "@/components/Section";
+import SortableLinks from "@/components/SortableLinks";
 import SignupSteps from "@/components/SignupSteps";
+import SubmitButton from "@/components/SubmitButton";
+import Toast from "@/components/Toast";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
@@ -16,9 +20,10 @@ import { isIndexable } from "@/lib/seo";
 import { getUserName, requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
-import { addLink, createProfile, deleteLink, moveLink, toggleSearchIndexing, updateLink } from "./actions";
+import { addLink, createProfile, deleteLink, reorderLinks, toggleSearchIndexing, updateLink } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Links" };
 
 function splitWhatsapp(url: string) {
   try {
@@ -81,181 +86,181 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
     );
   }
 
-  const links = await getLinksByProfile(profile.id);
-  const plan = await getPlan(user.id);
+  const [links, plan] = await Promise.all([getLinksByProfile(profile.id), getPlan(user.id)]);
   const preview = toPageViewProps(profile, links.filter((l) => l.is_active), plan.pro);
   const atLimit = !plan.pro && links.length >= FREE_LINK_LIMIT;
   const indexed = isIndexable(profile, preview.links.length);
 
   return (
     <div className="dash-grid">
-      <main className="dash-main">
-        <div className="dash-head">
-          <p className="eyebrow">Links</p>
-          <h1 className="h2 dash-h1">Seus links</h1>
+      <main className="dash-main enter">
+        {errorMessage && (
+          <Toast key={errorMessage} kind="error">
+            {errorMessage}
+          </Toast>
+        )}
+        <div className="dash-head dash-head-row">
+          <div>
+            <p className="eyebrow">Links</p>
+            <h1 className="h2 dash-h1">Seus links</h1>
+          </div>
+          <button type="button" className="btn btn-primary" data-new-link>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Novo link
+          </button>
         </div>
-        {error}
 
         {!plan.pro && (
           <div className="upsell">
-            <p>
-              <strong>
-                Plano Grátis: {Math.min(links.length, FREE_LINK_LIMIT)} de {FREE_LINK_LIMIT} links.
-              </strong>{" "}
-              {links.length > FREE_LINK_LIMIT
-                ? `Só os ${FREE_LINK_LIMIT} primeiros ativos aparecem na sua página. `
-                : ""}
-              No Pro: links ilimitados, Destaque e Bloco, e sem o selo.
-            </p>
-            <Link href="/dashboard/plano" className="btn btn-primary btn-sm">
-              Conhecer o Pro
+            <div className="upsell-main">
+              <p className="upsell-title">
+                <span className="pro-tag">Pro</span>
+                <span>
+                  <strong>
+                    {Math.min(links.length, FREE_LINK_LIMIT)} de {FREE_LINK_LIMIT} links
+                  </strong>{" "}
+                  no plano Grátis
+                </span>
+              </p>
+              <div
+                className="upsell-meter"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={FREE_LINK_LIMIT}
+                aria-valuenow={Math.min(links.length, FREE_LINK_LIMIT)}
+                aria-label="Links usados no plano Grátis"
+              >
+                <span style={{ width: `${(Math.min(links.length, FREE_LINK_LIMIT) / FREE_LINK_LIMIT) * 100}%` }} />
+              </div>
+              <p className="upsell-text">
+                {links.length > FREE_LINK_LIMIT ? `Só os ${FREE_LINK_LIMIT} primeiros ativos aparecem na sua página. ` : ""}
+                No Pro: links ilimitados, Destaque e Bloco, e sem o selo.
+              </p>
+            </div>
+            <Link href="/dashboard/plano" className="btn btn-outline btn-sm upsell-cta">
+              Conhecer o Pro <span aria-hidden="true">→</span>
             </Link>
           </div>
         )}
 
-        <form action={addLink} className="card card-new" data-posthog-event="link_created">
-          <h2 className="card-title">Novo link</h2>
-          <fieldset className="card-fieldset">
-            <div>
-              <label className="field-label" htmlFor="new-kind">
-                Tipo
-              </label>
-              <select id="new-kind" name="kind" className="field" defaultValue="link">
-                <option value="link">Link comum</option>
-                <option value="whatsapp">WhatsApp</option>
-              </select>
-            </div>
-            <div>
-              <label className="field-label" htmlFor="new-title">
-                Título
-              </label>
-              <input id="new-title" name="title" required placeholder="Ex.: Agendar horário" className="field" />
-            </div>
-            <div>
-              <label className="field-label" htmlFor="new-url">
-                Link ou WhatsApp com DDD
-              </label>
-              <input
-                id="new-url"
-                name="url"
-                required
-                placeholder="https://… ou 11 99999-9999"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                className="field"
-              />
-            </div>
-            <div>
-              <label className="field-label" htmlFor="new-message">
-                Mensagem inicial <span className="field-optional">(só WhatsApp, opcional)</span>
-              </label>
-              <input id="new-message" name="message" placeholder="Ex.: Quero agendar" className="field" />
-            </div>
-            <LinkOptions proLayouts={plan.pro} />
-            <label className="file-field">
-              <span className="field-label">
-                Imagem <span className="field-optional">(opcional; boa para Destaque e Bloco)</span>
-              </span>
-              <ImageInput name="thumbnail" />
-            </label>
-            {/* No limite do Grátis o formulário continua aberto; o botão mostra o aviso do Pro. */}
-            {atLimit ? (
-              <PaywallButton feature="links" className="btn btn-primary">
-                Adicionar
-              </PaywallButton>
-            ) : (
-              <AddLinkButton />
-            )}
-          </fieldset>
-          {atLimit && (
-            <p className="hint">
-              Você chegou aos {FREE_LINK_LIMIT} links do plano Grátis. Com o Pro, são ilimitados.
-            </p>
-          )}
-        </form>
+        <NewLinkSheet action={addLink} proLayouts={plan.pro} atLimit={atLimit} limit={FREE_LINK_LIMIT} />
 
-        {links.length === 0 && <p className="dash-empty">Nenhum link ainda. Adicione o primeiro acima.</p>}
+        {links.length === 0 && (
+          <div className="link-empty">
+            <strong>Nenhum link ainda</strong>
+            <span>Adicione seu WhatsApp, Instagram, cardápio ou qualquer endereço. Ele aparece na prévia na hora.</span>
+            <button type="button" className="btn btn-primary" data-new-link>
+              Adicionar o primeiro link
+            </button>
+          </div>
+        )}
 
-        {links.map((link, i) => {
-          const wa = link.kind === "whatsapp" ? splitWhatsapp(link.url) : null;
-          return (
-            <div key={link.id} className={`card ${link.is_active ? "" : "card-off"}`}>
-              <form action={updateLink} className="card-form" data-posthog-event="link_updated">
-                <input type="hidden" name="id" value={link.id} />
-                <input type="hidden" name="kind" value={link.kind} />
-                <div className="link-head">
-                  {link.thumbnail_id ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={mediaUrl(link.thumbnail_id)} alt="" width={48} height={48} className="link-thumb" />
-                  ) : (
-                    <div className="link-thumb link-thumb-empty" aria-hidden="true">
-                      {wa ? "💬" : "🔗"}
+        <SortableLinks
+          onReorder={reorderLinks}
+          items={links.map((link) => {
+            const wa = link.kind === "whatsapp" ? splitWhatsapp(link.url) : null;
+            return {
+              id: link.id,
+              label: link.title,
+              node: (
+                <details key={link.id} className={`link-card ${link.is_active ? "" : "card-off"}`}>
+                  <summary className="link-sum">
+                    {link.thumbnail_id ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={mediaUrl(link.thumbnail_id)} alt="" width={40} height={40} className="link-thumb" loading="lazy" />
+                    ) : (
+                      <div className={`link-thumb link-thumb-empty ${wa ? "link-thumb-whats" : ""}`} aria-hidden="true">
+                        {wa ? (
+                          <WhatsappIcon className="link-thumb-icon" />
+                        ) : (
+                          <svg className="link-thumb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" />
+                            <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+                          </svg>
+                        )}
+                      </div>
+                    )}
+                    <span className="link-sum-text">
+                      <span className="link-sum-title">{link.title}</span>
+                      <span className="link-sum-url">{wa ? `WhatsApp ${wa.phone}` : link.url.replace(/^https?:\/\//, "")}</span>
+                    </span>
+                    {!link.is_active && <span className="link-tag">Inativo</span>}
+                    <Chevron />
+                  </summary>
+                  <div className="link-body">
+                    <form action={updateLink} className="link-form" data-posthog-event="link_updated">
+                      <input type="hidden" name="id" value={link.id} />
+                      <input type="hidden" name="kind" value={link.kind} />
+                      <div>
+                        <label className="field-label" htmlFor={`title-${link.id}`}>
+                          Título
+                        </label>
+                        <input id={`title-${link.id}`} name="title" defaultValue={link.title} required maxLength={80} className="field" />
+                      </div>
+                      <div>
+                        <label className="field-label" htmlFor={`url-${link.id}`}>
+                          {wa ? "WhatsApp com DDD" : "Link"}
+                        </label>
+                        <input
+                          id={`url-${link.id}`}
+                          name="url"
+                          defaultValue={wa ? wa.phone : link.url}
+                          placeholder={wa ? "11 99999-9999" : "https://…"}
+                          required
+                          inputMode={wa ? "tel" : "url"}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="field"
+                        />
+                      </div>
+                      {wa && (
+                        <div className="lf-full">
+                          <label className="field-label" htmlFor={`message-${link.id}`}>
+                            Mensagem inicial <span className="field-optional">(opcional)</span>
+                          </label>
+                          <input id={`message-${link.id}`} name="message" defaultValue={wa.message} placeholder="Ex.: Quero agendar" className="field" />
+                        </div>
+                      )}
+                      <div className="lf-full">
+                        <LinkOptions layout={link.layout} size={link.size} proLayouts={plan.pro} />
+                      </div>
+                      <div className="lf-full lf-row">
+                        <span className="lf-image">
+                          <ImageField name="thumbnail" hasImage={!!link.thumbnail_id} />
+                          {link.thumbnail_id && (
+                            <label className="check">
+                              <input type="checkbox" name="remove_thumbnail" /> Remover imagem
+                            </label>
+                          )}
+                        </span>
+                        <label className="card-switch">
+                          <span className="switch">
+                            <input type="checkbox" name="is_active" defaultChecked={link.is_active} />
+                            <span className="switch-track" />
+                          </span>
+                          Ativo na página
+                        </label>
+                      </div>
+                      <SubmitButton className="btn btn-primary btn-sm lf-save" pendingLabel="Salvando…">
+                        Salvar
+                      </SubmitButton>
+                    </form>
+                    <div className="lf-delete">
+                      <DeleteLinkButton id={link.id} title={link.title} action={deleteLink} />
                     </div>
-                  )}
-                  <input name="title" defaultValue={link.title} required aria-label="Título" className="field" />
-                </div>
-                <input
-                  name="url"
-                  defaultValue={wa ? wa.phone : link.url}
-                  placeholder={wa ? "WhatsApp com DDD" : "https://..."}
-                  required
-                  aria-label={wa ? "WhatsApp" : "URL"}
-                  className="field"
-                />
-                {wa && (
-                  <input
-                    name="message"
-                    defaultValue={wa.message}
-                    placeholder="Mensagem inicial"
-                    aria-label="Mensagem inicial"
-                    className="field"
-                  />
-                )}
-                <LinkOptions layout={link.layout} size={link.size} proLayouts={plan.pro} />
-                <div className="card-row">
-                  <label className="file-field file-field-inline">
-                    <span>{link.thumbnail_id ? "Trocar imagem" : "Adicionar imagem"}</span>
-                    <ImageInput name="thumbnail" />
-                  </label>
-                  {link.thumbnail_id && (
-                    <label className="check">
-                      <input type="checkbox" name="remove_thumbnail" /> Remover imagem
-                    </label>
-                  )}
-                </div>
-                <div className="card-row">
-                  <label className="check">
-                    <input type="checkbox" name="is_active" defaultChecked={link.is_active} /> Ativo
-                  </label>
-                  <span className={`link-kind ${wa ? "link-kind-whats" : ""}`}>{wa ? "WhatsApp" : "Link"}</span>
-                  <button className="btn btn-primary btn-sm">Salvar</button>
-                </div>
-              </form>
-              <div className="card-actions">
-                <form action={moveLink} data-posthog-event="link_reordered">
-                  <input type="hidden" name="id" value={link.id} />
-                  <input type="hidden" name="dir" value="up" />
-                  <button className="btn btn-outline btn-sm" aria-label="Subir" disabled={i === 0}>
-                    ↑
-                  </button>
-                </form>
-                <form action={moveLink} data-posthog-event="link_reordered">
-                  <input type="hidden" name="id" value={link.id} />
-                  <input type="hidden" name="dir" value="down" />
-                  <button className="btn btn-outline btn-sm" aria-label="Descer" disabled={i === links.length - 1}>
-                    ↓
-                  </button>
-                </form>
-                <DeleteLinkButton id={link.id} title={link.title} action={deleteLink} />
-              </div>
-            </div>
-          );
-        })}
+                  </div>
+                </details>
+              ),
+            };
+          })}
+        />
 
         <ProfileQRCode slug={profile.slug} />
 
-        <section className="card weekly-card">
+        <section className="card setting-card">
           <div>
             <h2 className="card-title">Aparecer no Google</h2>
             <p className="hint">
@@ -275,7 +280,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
         </section>
       </main>
 
-      <PhonePreview {...preview} />
+      <PhonePreview {...preview} aboveTabBar />
     </div>
   );
 }
