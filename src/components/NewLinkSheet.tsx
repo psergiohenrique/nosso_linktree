@@ -44,12 +44,16 @@ export default function NewLinkSheet({ action, proLayouts, atLimit, limit, track
       </div>
       <form action={action} className="sheet-form" data-posthog-event={trackEvents ? "link_created" : undefined}>
         <CloseWhenDone onDone={close} />
-        <div>
-          <label className="field-label" htmlFor="new-kind">Tipo</label>
-          <select id="new-kind" name="kind" className="field field-select" value={kind} onChange={(e) => setKind(e.target.value as EditorLink["kind"])}><option value="link">Link comum</option><option value="whatsapp">WhatsApp</option></select>
+        <div className="sheet-body">
+          <div>
+            <label className="field-label" htmlFor="new-kind">Tipo</label>
+            <select id="new-kind" name="kind" className="field field-select" value={kind} onChange={(e) => setKind(e.target.value as EditorLink["kind"])}><option value="link">Link comum</option><option value="whatsapp">WhatsApp</option></select>
+          </div>
+          <LinkFields kind={kind} proLayouts={proLayouts} />
         </div>
-        <LinkFields kind={kind} proLayouts={proLayouts} />
-        {atLimit ? <><PaywallButton feature="links" className="btn btn-primary">Adicionar link</PaywallButton><p className="hint">Você chegou aos {limit} links do plano Grátis. Com o Pro, são ilimitados.</p></> : <SubmitButton pendingLabel="Adicionando…">Adicionar link</SubmitButton>}
+        <div className="sheet-footer">
+          {atLimit ? <><PaywallButton feature="links" className="btn btn-primary">Adicionar link</PaywallButton><p className="hint">Você chegou aos {limit} links do plano Grátis. Com o Pro, são ilimitados.</p></> : <SubmitButton pendingLabel="Adicionando…">Adicionar link</SubmitButton>}
+        </div>
       </form>
     </dialog>
   );

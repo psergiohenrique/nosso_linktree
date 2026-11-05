@@ -92,6 +92,18 @@ describe("interações dos adaptadores reais", () => {
     expect(container.querySelector("[data-posthog-event]")).toBeNull();
   });
 
+  it("mantém a ação de criação no rodapé, fora dos campos roláveis e sem mudar a habilitação", async () => {
+    await act(async () => root.render(<Playground />));
+    await click("[data-new-link]");
+    const button = element<HTMLButtonElement>(".sheet-footer button");
+    expect(button.textContent).toBe("Adicionar link");
+    expect(button.form).toBe(element(".sheet-form"));
+    expect(button.disabled).toBe(false);
+    expect(element("#new-title").closest(".sheet-body")).not.toBeNull();
+    expect(container.querySelector(".sheet-body .sheet-footer")).toBeNull();
+    expect(container.querySelector(".sheet-footer input")).toBeNull();
+  });
+
   it("criar e excluir links usa o mesmo diálogo e mantém tudo em memória", async () => {
     await act(async () => root.render(<Playground />));
     await click("[data-new-link]");
