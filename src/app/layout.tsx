@@ -1,36 +1,39 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, DM_Serif_Display, Manrope, Space_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { COMPANY_NAME, COMPANY_URL, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
-  weight: ["500", "700", "800"],
-  subsets: ["latin"],
+const bricolage = localFont({
+  src: "./fonts/BricolageGrotesque.ttf",
+  weight: "500 800",
   variable: "--font-bricolage",
   display: "swap",
 });
 
-const manrope = Manrope({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
+const manrope = localFont({
+  src: "./fonts/Manrope.ttf",
+  weight: "400 700",
   variable: "--font-manrope",
   display: "swap",
 });
 
 // Fontes extras só usadas nas páginas públicas que escolherem esse estilo: sem preload.
-const dmSerif = DM_Serif_Display({
-  weight: ["400"],
-  subsets: ["latin"],
+const dmSerif = localFont({
+  src: "./fonts/DMSerifDisplay-Regular.ttf",
+  weight: "400",
+  adjustFontFallback: "Times New Roman",
   variable: "--font-dm-serif",
   display: "swap",
   preload: false,
 });
 
-const spaceMono = Space_Mono({
-  weight: ["400", "700"],
-  subsets: ["latin"],
+const spaceMono = localFont({
+  src: [
+    { path: "./fonts/SpaceMono-Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/SpaceMono-Bold.ttf", weight: "700", style: "normal" },
+  ],
   variable: "--font-space-mono",
   display: "swap",
   preload: false,
