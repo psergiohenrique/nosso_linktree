@@ -4,7 +4,7 @@ import { useState } from "react";
 import ImageInput from "./ImageInput";
 
 /** Botão "Adicionar/Trocar imagem" (no lugar do campo de arquivo nativo) que mostra o nome do arquivo escolhido. */
-export default function ImageField({ name, hasImage = false }: { name: string; hasImage?: boolean }) {
+export default function ImageField({ name, hasImage = false, onFile }: { name: string; hasImage?: boolean; onFile?: (file: File | null) => void }) {
   const [fileName, setFileName] = useState<string | null>(null);
 
   return (
@@ -16,7 +16,7 @@ export default function ImageField({ name, hasImage = false }: { name: string; h
           <path d="m21 16-5-5-8 8" />
         </svg>
         {hasImage || fileName ? "Trocar imagem" : "Adicionar imagem"}
-        <ImageInput name={name} onFile={(file) => setFileName(file?.name ?? null)} />
+        <ImageInput name={name} onFile={(file) => { setFileName(file?.name ?? null); onFile?.(file); }} />
       </label>
       {fileName && <span className="image-name">{fileName}</span>}
     </span>

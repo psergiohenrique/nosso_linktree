@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
  * Coluna da prévia. No computador fica fixa ao lado do editor; no celular (≤ 900px) sai do fluxo,
  * para o editor vir primeiro, e abre em tela cheia por um botão flutuante só com o ícone.
  * O botão some ao rolar para baixo e volta ao rolar para cima, para não cobrir o que se está lendo.
- * `aboveTabBar`: no painel o botão sobe para ficar acima da barra inferior de abas.
+ * O CSS posiciona o botão acima da barra inferior quando há navegação no editor.
  */
-export default function PreviewPanel({ children, aboveTabBar = false }: { children: React.ReactNode; aboveTabBar?: boolean }) {
+export default function PreviewPanel({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
 
@@ -62,7 +62,7 @@ export default function PreviewPanel({ children, aboveTabBar = false }: { childr
       </div>
       <button
         type="button"
-        className={`btn btn-primary preview-fab${aboveTabBar ? " above-bar" : ""}${hidden ? " is-hidden" : ""}`}
+        className={`btn btn-primary preview-fab${hidden ? " is-hidden" : ""}`}
         onClick={() => setOpen(true)}
         aria-label="Abrir prévia da página"
       >

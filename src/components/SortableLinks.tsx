@@ -31,9 +31,11 @@ const EDGE = 70; // px da borda da tela em que a página começa a rolar sozinha
 export default function SortableLinks({
   items,
   onReorder,
+  trackEvents = false,
 }: {
   items: Item[];
   onReorder: (ids: string[]) => Promise<void>;
+  trackEvents?: boolean;
 }) {
   const [local, setLocal] = useState<string[] | null>(null);
   const [drag, setDrag] = useState<View | null>(null);
@@ -52,7 +54,7 @@ export default function SortableLinks({
     setLocal(next);
     setError(false);
     setAnnounce(`${moved.label} movido para a posição ${next.indexOf(moved.id) + 1} de ${next.length}`);
-    if (process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST) {
+    if (trackEvents && process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST) {
       posthog.capture("link_reordered");
     }
     startTransition(async () => {

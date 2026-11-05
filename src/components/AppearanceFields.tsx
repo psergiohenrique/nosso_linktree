@@ -20,9 +20,7 @@ type Props = {
   coverImageUrl: string | null;
   onCoverImageFile: (file: File | null) => void;
   onRemoveCoverImage: () => void;
-  /** Seções recolhíveis (editor do painel); sem isso, cartões fixos (playground). */
-  collapsible?: boolean;
-  /** Bloco extra logo depois do Perfil (o editor do painel põe as redes sociais aqui). */
+  /** Bloco de redes sociais inserido pela composição compartilhada AppearanceSections. */
   afterProfile?: React.ReactNode;
 };
 
@@ -36,7 +34,6 @@ export default function AppearanceFields({
   coverImageUrl,
   onCoverImageFile,
   onRemoveCoverImage,
-  collapsible = false,
   afterProfile,
 }: Props) {
   const set = <K extends keyof PageViewProfile>(key: K, value: PageViewProfile[K]) =>
@@ -45,7 +42,7 @@ export default function AppearanceFields({
 
   return (
     <>
-    <Section id="perfil" title="Perfil" collapsible={collapsible} defaultOpen>
+    <Section id="perfil" title="Perfil" collapsible defaultOpen>
       <div className="profile-head">
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -192,7 +189,7 @@ export default function AppearanceFields({
 
     {afterProfile}
 
-    <Section id="tema" title="Tema e cores" collapsible={collapsible} desktopOpen>
+    <Section id="tema" title="Tema e cores" collapsible desktopOpen>
       <div className="presets">
         {THEME_PRESETS.map((preset) => (
           <button
@@ -240,7 +237,7 @@ export default function AppearanceFields({
       </div>
     </Section>
 
-    <Section id="botoes" title="Botões" collapsible={collapsible} desktopOpen>
+    <Section id="botoes" title="Botões" collapsible desktopOpen>
       <div className="style-grid" role="radiogroup" aria-label="Estilo do botão">
         {BUTTON_STYLES.map((b) => (
           <label key={b.value} className={`style-option${state.button_style === b.value ? " active" : ""}`}>
@@ -332,7 +329,7 @@ export default function AppearanceFields({
       )}
     </Section>
 
-    <Section id="fonte" title="Fonte" collapsible={collapsible} desktopOpen>
+    <Section id="fonte" title="Fonte" collapsible desktopOpen>
       <div className="font-grid" role="radiogroup" aria-label="Fonte">
         {FONTS.map((f) => (
           <label key={f.value} className={`font-option bio-font-${f.value} ${state.font === f.value ? "active" : ""}`}>

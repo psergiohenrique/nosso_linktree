@@ -6,16 +6,13 @@ export default function PhonePreview({
   profile,
   links,
   branding = true,
-  aboveTabBar = false,
 }: {
   profile: PageViewProfile;
   links: PageViewLink[];
   branding?: boolean;
-  /** Painel: o botão flutuante da prévia sobe para ficar acima da barra inferior de abas. */
-  aboveTabBar?: boolean;
 }) {
   return (
-    <PreviewPanel aboveTabBar={aboveTabBar}>
+    <PreviewPanel>
       <div className="phone phone-live">
         <div className="phone-live-screen">
           <PageView profile={profile} links={links} tracked={false} preview branding={branding} />
