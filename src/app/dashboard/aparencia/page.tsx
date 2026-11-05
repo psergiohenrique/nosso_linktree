@@ -5,7 +5,7 @@ import { toPageViewProps } from "@/components/PageView";
 import { requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
-import { updateAppearance, updateSlug, updateSocialLinks } from "../actions";
+import { updateAppearance, updateSlug } from "../actions";
 
 export const metadata: Metadata = { title: "Aparência" };
 
@@ -19,30 +19,33 @@ export default async function AparenciaPage({
   const profile = await getProfileByUser(user.id);
   if (!profile) redirect("/dashboard");
 
-  const links = await getLinksByProfile(profile.id);
-  const plan = await getPlan(user.id);
+  const [links, plan] = await Promise.all([getLinksByProfile(profile.id), getPlan(user.id)]);
   const {
     profile: viewProfile,
     links: viewLinks,
     branding,
   } = toPageViewProps(profile, links.filter((l) => l.is_active), plan.pro);
 
+  const message = error
+    ? ({ kind: "error", text: error } as const)
+    : endereco
+      ? ({ kind: "ok", text: "Endereço atualizado." } as const)
+      : ok
+        ? ({ kind: "ok", text: "Alterações salvas." } as const)
+        : undefined;
+
   return (
-    <>
-      {error && <p className="notice notice-error dash-notice">{error}</p>}
-      {ok && <p className="notice notice-ok dash-notice">Alterações salvas.</p>}
-      {endereco && <p className="notice notice-ok dash-notice">Endereço atualizado.</p>}
-      <AppearanceEditor
-        profile={viewProfile}
-        links={viewLinks}
-        branding={branding}
-        pro={plan.pro}
-        action={updateAppearance}
-        slugAction={updateSlug}
-        socialAction={updateSocialLinks}
-        socialPosition={profile.social_position}
-        socialLinks={profile.social_links}
-      />
-    </>
+    <AppearanceEditor
+      profile={viewProfile}
+      links={viewLinks}
+      branding={branding}
+      pro={plan.pro}
+      action={updateAppearance}
+      slugAction={updateSlug}
+      version={new Date(profile.updated_at).toISOString()}
+      message={message}
+      socialPosition={profile.social_position}
+      socialLinks={profile.social_links}
+    />
   );
 }

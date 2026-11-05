@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AutoRefresh from "@/components/AutoRefresh";
+import PlanCarousel from "@/components/PlanCarousel";
 import {
   canCancel,
   FREE_FEATURES,
@@ -127,15 +128,19 @@ export default async function PlanoPage({
       )}
       {error && <p className="notice notice-error">{error}</p>}
 
-      <section className={`card plan-status plan-status-${status.tone}`}>
-        <h2 className="card-title">{status.title}</h2>
-        <p>{status.text}</p>
-        {sub?.card_last4 && (plan.kind === "active" || plan.kind === "past_due") && (
-          <p className="hint">
-            Cartão {sub.card_brand ?? ""} •••• {sub.card_last4}
-          </p>
-        )}
-      </section>
+      {/* No Grátis puro o card "Grátis" (com a etiqueta "Plano atual") já diz tudo; nos demais estados este aviso traz
+          informação que os cards não têm: próxima cobrança, cancelamento pedido, pagamento pendente, cartão. */}
+      {plan.kind !== "free" && (
+        <section className={`card plan-status plan-status-${status.tone}`}>
+          <h2 className="card-title">{status.title}</h2>
+          <p>{status.text}</p>
+          {sub?.card_last4 && (plan.kind === "active" || plan.kind === "past_due") && (
+            <p className="hint">
+              Cartão {sub.card_brand ?? ""} •••• {sub.card_last4}
+            </p>
+          )}
+        </section>
+      )}
 
       {confirmar === "cancelar" && canCancel(plan, sub) && (
         <section className="card plan-confirm">
@@ -156,42 +161,49 @@ export default async function PlanoPage({
         </section>
       )}
 
-      <div className="plan-grid">
+      <PlanCarousel labels={["Grátis", "Pro mensal", "Pro anual"]}>
         <section className={`plan-card ${plan.pro ? "" : "plan-card-current"}`}>
-          <p className="plan-name">Grátis</p>
+          <p className="plan-name">
+            Grátis
+            {!plan.pro && <span className="plan-badge">Plano atual</span>}
+          </p>
           <p className="plan-price">
             R$ 0<span>/sempre</span>
           </p>
+          <p className="plan-total">Para começar, sem prazo.</p>
           <ul className="plan-feats">
             {FREE_FEATURES.map((f) => (
               <li key={f}>{f}</li>
             ))}
           </ul>
-          {!plan.pro && <p className="plan-current-tag">Seu plano atual</p>}
         </section>
 
         {(["monthly", "yearly"] as const).map((cycle) => {
           const price = PRO_PRICES[cycle];
           const cta = ctaFor(plan, cycle);
+          // Ao abrir no celular: o ciclo de quem assina (ativo, cancelando ou com pagamento pendente) e, para os demais
+          // (Grátis, cortesia, assinatura encerrada), a melhor oferta: o anual.
+          const initial = plan.pro && plan.cycle ? plan.cycle === cycle : cycle === "yearly";
           return (
-            <section key={cycle} className={`plan-card plan-card-pro ${cta.current ? "plan-card-current" : ""}`}>
+            <section key={cycle} className={`plan-card plan-card-pro ${cta.current ? "plan-card-current" : ""}`} data-initial={initial ? "" : undefined}>
               <p className="plan-name">
                 Pro {CYCLE_LABEL[cycle]}
-                {cycle === "yearly" && <span className="plan-save">economize {formatBRL(YEARLY_SAVING)}</span>}
+                {/* Quem já está no anual não precisa do convite de economia (e a etiqueta "Plano atual" ocupa o lugar). */}
+                {cycle === "yearly" && !cta.current && <span className="plan-save">economize {formatBRL(YEARLY_SAVING)}</span>}
+                {cta.current && <span className="plan-badge">Plano atual</span>}
               </p>
+              {/* O anual mostra o equivalente mensal em destaque (como a landing), mas o total cobrado fica logo abaixo, legível. */}
               <p className="plan-price">
-                {price.price}
-                <span>{price.per}</span>
+                {cycle === "yearly" ? formatBRL(price.cents / 12) : price.price}
+                <span>{cycle === "yearly" ? "/mês" : price.per}</span>
               </p>
-              {cycle === "yearly" && <p className="hint">Equivale a {formatBRL(price.cents / 12)} por mês.</p>}
+              <p className="plan-total">{cycle === "yearly" ? `Cobrado ${price.price} anualmente.` : "Cobrado todo mês."}</p>
               <ul className="plan-feats">
                 {PRO_FEATURES.map((f) => (
                   <li key={f}>{f}</li>
                 ))}
               </ul>
-              {cta.current ? (
-                <p className="plan-current-tag">Seu plano atual</p>
-              ) : (
+              {!cta.current && (
                 <form action={subscribePro} data-posthog-event="pro_checkout_started" data-posthog-cycle={cycle}>
                   <input type="hidden" name="cycle" value={cycle} />
                   <button className={`btn ${cycle === "yearly" ? "btn-lime" : "btn-primary"}`}>{cta.label}</button>
@@ -200,7 +212,7 @@ export default async function PlanoPage({
             </section>
           );
         })}
-      </div>
+      </PlanCarousel>
 
       <p className="hint plan-note">
         Pagamento seguro pelo Asaas, com cartão de crédito e renovação automática. Cancele quando quiser: o Pro vale até o

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/server/auth";
 import { BillingError, cancelPlan, getPlan, startCheckout } from "@/server/billing";
-import { pool, query, queryOne } from "@/server/db";
+import { query, queryOne } from "@/server/db";
 import { deleteResponse, formsEnabled } from "@/server/forms";
 import { deleteMedia, saveImage } from "@/server/media";
 import { getProfileByUser } from "@/server/profiles";
@@ -89,11 +89,14 @@ export async function updateSlug(formData: FormData) {
   redirect(`${back}?endereco=1`);
 }
 
-/** Perfil (nome, bio, foto) e aparência, salvos juntos pelo editor de aparência. */
+/** Perfil (nome, bio, foto), aparência e redes sociais, salvos juntos pelo editor de aparência. */
 export async function updateAppearance(formData: FormData) {
   const { user, profile } = await requireProfile();
   const back = "/dashboard/aparencia";
   const d = THEME_PRESETS[0].appearance;
+
+  // As redes sociais vão no mesmo formulário (um só "Salvar"); valida antes de gravar qualquer coisa.
+  const social = readSocialLinks(formData, back);
 
   let avatarId = profile.avatar_id;
   const upload = await saveImage(user.id, formData.get("avatar"));
@@ -143,6 +146,9 @@ export async function updateAppearance(formData: FormData) {
       formData.get("show_avatar") === "1",
     ],
   );
+  await query("update profiles set social_position = $2, social_links = $3 where id = $1", [
+    user.id, social.position, JSON.stringify(social.links),
+  ]);
   if (avatarId !== profile.avatar_id) await deleteMedia(user.id, profile.avatar_id);
   if (coverImageId !== profile.cover_image_id) await deleteMedia(user.id, profile.cover_image_id);
 
@@ -150,10 +156,8 @@ export async function updateAppearance(formData: FormData) {
   redirect(`${back}?ok=1`);
 }
 
-/** Salva todas as redes de uma vez; campos vazios removem a URL correspondente. */
-export async function updateSocialLinks(formData: FormData) {
-  const { user, profile } = await requireProfile();
-  const back = "/dashboard/aparencia";
+/** Lê e valida as redes sociais do formulário (campos vazios removem a URL correspondente). */
+function readSocialLinks(formData: FormData, back: string) {
   const position = formData.get("social_position");
   if (position !== "below_name" && position !== "after_links") fail("Posição das redes sociais inválida.", back);
 
@@ -168,9 +172,17 @@ export async function updateSocialLinks(formData: FormData) {
     if (active && !url) fail("Informe a URL da rede social ativa.", back);
     links[network] = { url, is_active: active };
   }
+  return { position, links };
+}
+
+/** Salva só as redes sociais (o editor de aparência já as grava junto com o resto, em updateAppearance). */
+export async function updateSocialLinks(formData: FormData) {
+  const { user, profile } = await requireProfile();
+  const back = "/dashboard/aparencia";
+  const social = readSocialLinks(formData, back);
 
   await query("update profiles set social_position = $2, social_links = $3 where id = $1", [
-    user.id, position, JSON.stringify(links),
+    user.id, social.position, JSON.stringify(social.links),
   ]);
   await refreshPublicPage(profile);
   redirect(`${back}?ok=1`);
@@ -253,30 +265,26 @@ export async function deleteLink(formData: FormData) {
   await refreshPublicPage(profile);
 }
 
-export async function moveLink(formData: FormData) {
+/**
+ * Grava a nova ordem dos links (arrastar na lista). Recebe os ids na ordem desejada; ids que não são do
+ * dono são ignorados e links que ficaram de fora (criados em outra aba, por exemplo) vão para o fim.
+ */
+export async function reorderLinks(ids: string[]) {
   const { user, profile } = await requireProfile();
-  const id = String(formData.get("id"));
-  const dir = formData.get("dir") === "up" ? -1 : 1;
+  if (!Array.isArray(ids)) return;
 
-  const links = await query<{ id: string }>("select id from links where profile_id = $1 order by position", [user.id]);
-  const index = links.findIndex((l) => l.id === id);
-  if (index < 0 || !links[index + dir]) return;
+  const current = await query<{ id: string }>("select id from links where profile_id = $1 order by position", [user.id]);
+  const owned = new Set(current.map((l) => l.id));
+  const wanted = [...new Set(ids.filter((id): id is string => typeof id === "string" && owned.has(id)))];
+  const ordered = [...wanted, ...current.map((l) => l.id).filter((id) => !wanted.includes(id))];
 
-  // Renumera toda a lista numa transação para evitar posições duplicadas.
-  [links[index], links[index + dir]] = [links[index + dir], links[index]];
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    for (const [i, l] of links.entries()) {
-      await client.query("update links set position = $1 where id = $2 and profile_id = $3", [i, l.id, user.id]);
-    }
-    await client.query("commit");
-  } catch (err) {
-    await client.query("rollback");
-    throw err;
-  } finally {
-    client.release();
-  }
+  // Uma instrução só: renumera tudo de uma vez, sem posições duplicadas no meio do caminho.
+  await query(
+    `update links l set position = v.pos - 1
+       from unnest($2::uuid[]) with ordinality as v(id, pos)
+      where l.id = v.id and l.profile_id = $1`,
+    [user.id, ordered],
+  );
   await refreshPublicPage(profile);
 }
 
