@@ -2807,6 +2807,265 @@ html.no-scroll {
 
 /* ───────── Formulários (painel) ───────── */
 
+.forms-dashboard {
+  min-width: 0;
+}
+.forms-dashboard .dash-head > .hint,
+.forms-dashboard .dash-head > div > .hint,
+.forms-dashboard .dash-head > p:last-child:not(.eyebrow) {
+  margin-top: 8px;
+}
+.forms-dashboard .hint {
+  line-height: 1.65;
+  max-width: 70ch;
+}
+.form-builder,
+.form-builder-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.form-builder-questions {
+  padding-top: 8px;
+}
+.form-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.form-builder .field + .hint {
+  margin-top: 6px;
+}
+.form-builder .check,
+.form-delete .check {
+  align-items: flex-start;
+}
+.form-builder .check input,
+.form-delete .check input {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.form-manage-actions,
+.form-delete-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.form-delete summary {
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 13px;
+  padding-block: 4px;
+}
+.form-delete-confirm {
+  max-width: 48ch;
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  font-size: 14px;
+}
+.form-preview {
+  --bio-text: var(--ink);
+  --btn-bg: var(--paper);
+  --btn-text: var(--ink);
+  --btn-radius: 10px;
+  gap: 24px;
+}
+
+/* Formulário público e prévia: mesmos controles, cores da página de links. */
+.bf-page {
+  align-items: stretch;
+  max-width: 600px;
+  gap: 32px;
+  padding-block: 16px;
+}
+.bf-owner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.bf-owner-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 18px;
+}
+.bf,
+.bf-done {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  color: var(--bio-text, var(--ink));
+}
+.bf-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bf-title,
+.bf-done-title {
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.bf-intro,
+.bf-desc,
+.bf-done-text {
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.bf-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  overflow: hidden;
+}
+.bf-progress span {
+  display: block;
+  height: 100%;
+  background: currentColor;
+}
+.bf-count {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-top: -12px;
+}
+.bf-step {
+  border: 0;
+  min-width: 0;
+}
+.bf-label {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.45;
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+}
+.bf-req {
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+.bf-desc {
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+.bf-input {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+}
+.bf-input::placeholder {
+  color: inherit;
+  opacity: 0.6;
+}
+textarea.bf-input {
+  resize: vertical;
+  min-height: 120px;
+}
+.bf-input:focus-visible,
+.bf-back:focus-visible,
+.bf-owner:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.bf-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bf-option {
+  justify-content: flex-start;
+  gap: 12px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.bf-option.is-on {
+  outline: 2px solid var(--bio-text);
+  outline-offset: 3px;
+}
+.bf-key {
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.bf-option-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.bf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.bf-next {
+  width: auto;
+  min-width: 120px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.bf-back {
+  min-height: 44px;
+  padding: 8px 12px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.bf button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+  transform: none;
+}
+.bf-error {
+  padding: 12px 16px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.bf-privacy {
+  font-size: 12px;
+  line-height: 1.7;
+  opacity: 0.75;
+}
+.bf-page .bio-foot {
+  align-self: center;
+}
+
 .btn-whats {
   background: var(--whats);
   color: #fff;
@@ -3090,6 +3349,14 @@ html.no-scroll {
   }
   .font-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  .form-builder .card,
+  .form-preview {
+    padding: 16px;
+  }
+  .bf-page {
+    gap: 24px;
+    padding-block: 8px;
   }
   /* Resultados: tabelas e barras cabem na tela */
   .stat-card {

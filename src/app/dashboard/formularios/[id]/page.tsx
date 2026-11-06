@@ -22,7 +22,7 @@ export default async function FormResponsePage({ params }: { params: Promise<{ i
   const complete = r.status === "complete";
 
   return (
-    <main className="dash-wide">
+    <main className="dash-wide forms-dashboard">
       <div className="dash-head dash-head-row">
         <div>
           <p className="eyebrow">

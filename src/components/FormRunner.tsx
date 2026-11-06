@@ -263,6 +263,8 @@ export default function FormRunner({ formId, title, intro, thankYou, fields, pre
       inputRef.current = el;
     },
     "aria-label": field.label,
+    "aria-required": field.required,
+    "aria-describedby": field.description ? `${field.id}-hint` : undefined,
     className: "bf-input",
   };
 
@@ -277,7 +279,7 @@ export default function FormRunner({ formId, title, intro, thankYou, fields, pre
     >
       {index === 0 && (title || intro) && (
         <header className="bf-head">
-          {title && <h1 className="bf-title">{title}</h1>}
+          {title && (preview ? <h3 className="bf-title">{title}</h3> : <h1 className="bf-title">{title}</h1>)}
           {intro && <p className="bf-intro">{intro}</p>}
         </header>
       )}
@@ -286,15 +288,15 @@ export default function FormRunner({ formId, title, intro, thankYou, fields, pre
         <span style={{ width: `${((index + 1) / total) * 100}%` }} />
       </div>
       <p className="bf-count">
-        {index + 1} / {total}
+        Pergunta {index + 1} de {total}
       </p>
 
       <fieldset className="bf-step" key={field.id}>
         <legend className="bf-label">
           {field.label}
-          {field.required && <span className="bf-req"> *</span>}
+          {field.required && <span className="bf-req"> (obrigatória)</span>}
         </legend>
-        {field.description && <p className="bf-desc">{field.description}</p>}
+        {field.description && <p className="bf-desc" id={`${field.id}-hint`}>{field.description}</p>}
 
         {field.type === "radio" || field.type === "checkbox" ? (
           <div className="bf-options">
@@ -389,7 +391,7 @@ export default function FormRunner({ formId, title, intro, thankYou, fields, pre
           </button>
         )}
         <button type="submit" className="bio-link bf-next" disabled={status === "sending"}>
-          {status === "sending" ? "Enviando…" : isLast ? "Enviar" : "OK"}
+          {status === "sending" ? "Enviando…" : isLast ? "Enviar respostas" : "Continuar"}
         </button>
       </div>
 

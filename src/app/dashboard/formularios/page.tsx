@@ -52,27 +52,20 @@ export default async function FormulariosPage({
   };
 
   return (
-    <main className="dash-wide">
+    <main className="dash-wide forms-dashboard">
       <div className="dash-head dash-head-row">
         <div>
           <p className="eyebrow">Formulários</p>
-          <h1 className="h2 dash-h1">Quem respondeu</h1>
+          <h1 className="h2 dash-h1">Seus formulários</h1>
           <p className="hint">
-            As respostas chegam a cada etapa: quem parou no meio aparece como incompleta, com o que já respondeu.
+            Crie formulários, publique na sua página e acompanhe as respostas.
           </p>
         </div>
-        <nav className="range" aria-label="Filtrar respostas">
-          {FILTERS.map((f) => (
-            <Link key={f.key} href={href({ filtro: f.key, pagina: 1 })} className={f.key === filter.key ? "active" : ""}>
-              {f.label}
-            </Link>
-          ))}
-        </nav>
       </div>
 
       <section className="card stat-card">
-        <div className="dash-head dash-head-row">
-          <h2 className="card-title">Seus formulários</h2>
+        <div className="form-card-head">
+          <h2 className="card-title">Gerenciar formulários</h2>
           <form action={createForm}><button className="btn btn-primary btn-sm">Criar formulário</button></form>
         </div>
         {forms.length === 0 ? <p className="dash-empty">Você ainda não tem formulários.</p> : (
@@ -80,7 +73,26 @@ export default async function FormulariosPage({
             {forms.map((f) => <tr key={f.id}>
               <td>{f.name}</td>
               <td>{f.fields === null ? "Externo" : f.is_published ? "Publicado" : "Rascunho"}</td>
-              <td>{f.fields !== null && <><Link href={`/dashboard/formularios/editar/${f.id}`}>Editar</Link>{f.is_published && f.slug && profile && <> · <Link href={`/${profile.slug}/f/${f.slug}`} target="_blank">Abrir ↗</Link><form action={addFormLink}><input type="hidden" name="id" value={f.id} /><button className="btn btn-outline btn-sm">Adicionar à página de links</button></form></>}<details><summary>Excluir formulário</summary><form action={removeForm}><input type="hidden" name="id" value={f.id} /><p>Esta ação é irreversível e exclui todas as respostas, completas e incompletas. Links já adicionados à página precisam ser removidos manualmente.</p><label><input type="checkbox" name="confirm" required /> Confirmo a exclusão do formulário e de todas as respostas.</label><p><button className="btn btn-outline btn-sm">Excluir definitivamente</button></p></form></details></>}</td>
+              <td>{f.fields !== null && (
+                <div className="form-manage-actions">
+                  <div className="dash-head-actions">
+                    <Link className="btn btn-outline btn-sm" href={`/dashboard/formularios/editar/${f.id}`}>Editar</Link>
+                    {f.is_published && f.slug && profile && <Link className="btn btn-outline btn-sm" href={`/${profile.slug}/f/${f.slug}`} target="_blank" rel="noopener noreferrer">Abrir ↗</Link>}
+                  </div>
+                  {f.is_published && f.slug && profile && (
+                    <form action={addFormLink}><input type="hidden" name="id" value={f.id} /><button className="btn btn-outline btn-sm">Adicionar à página de links</button></form>
+                  )}
+                  <details className="form-delete">
+                    <summary>Excluir formulário</summary>
+                    <form action={removeForm} className="form-delete-confirm">
+                      <input type="hidden" name="id" value={f.id} />
+                      <p>Esta ação é irreversível e exclui todas as respostas. Links na sua página precisam ser removidos manualmente.</p>
+                      <label className="check"><input type="checkbox" name="confirm" required /> Confirmo a exclusão do formulário e de todas as respostas.</label>
+                      <div className="dash-head-actions"><button className="btn btn-outline btn-sm">Excluir definitivamente</button></div>
+                    </form>
+                  </details>
+                </div>
+              )}</td>
             </tr>)}
           </tbody></table></div>
         )}
@@ -90,6 +102,20 @@ export default async function FormulariosPage({
       {formExcluido && <p className="notice notice-ok">Formulário e respostas excluídos.</p>}
       {linkAdicionado && <p className="notice notice-ok">Formulário adicionado à página de links. Você pode editar ou remover o link na aba Links.</p>}
       {excluida && <p className="notice notice-ok">Resposta excluída.</p>}
+
+      <header className="form-section-head">
+        <div className="form-card-head">
+          <h2 className="card-title">Respostas</h2>
+          <nav className="range" aria-label="Filtrar respostas">
+            {FILTERS.map((f) => (
+              <Link key={f.key} href={href({ filtro: f.key, pagina: 1 })} className={f.key === filter.key ? "active" : ""}>
+                {f.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        <p className="hint">As respostas são salvas a cada etapa. Quem não terminou aparece como incompleta, com o que já respondeu.</p>
+      </header>
 
       {forms.length > 1 && (
         <nav className="range form-picker" aria-label="Formulário">

@@ -17,11 +17,12 @@ export default async function EditFormPage({ params }: { params: Promise<{ id: s
   if (!form || form.fields === null) notFound();
   const fields = storedFields(form.fields) ?? [];
   return (
-    <main className="dash-wide">
+    <main className="dash-wide forms-dashboard">
       <div className="dash-head">
         <p className="eyebrow"><Link href="/dashboard/formularios">← Formulários</Link></p>
         <h1 className="h2 dash-h1">Editar formulário</h1>
-        {profile && form.slug && form.is_published && <p><Link href={`/${profile.slug}/f/${form.slug}`} target="_blank">Abrir formulário publicado ↗</Link></p>}
+        <p className="hint">Edite as informações e perguntas. Salve para aplicar as alterações ao formulário publicado.</p>
+        {profile && form.slug && form.is_published && <p><Link href={`/${profile.slug}/f/${form.slug}`} target="_blank" rel="noopener noreferrer">Abrir formulário publicado ↗</Link></p>}
       </div>
       <FormBuilder id={form.id} name={form.name} title={form.title} slug={form.slug ?? ""} intro={form.intro} thankYou={form.thank_you} isPublished={form.is_published} notifyEmail={form.notify_email} fields={fields} />
     </main>
