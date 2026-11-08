@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LinksEditor from "@/components/LinksEditor";
+import BioGuide from "@/components/BioGuide";
 import { EditorGrid } from "@/components/EditorShell";
 import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
@@ -9,7 +10,7 @@ import ProfileQRCode from "@/components/ProfileQRCode";
 import SignupSteps from "@/components/SignupSteps";
 import Toast from "@/components/Toast";
 import { mediaUrl } from "@/lib/types";
-import { SITE_HOST } from "@/lib/site";
+import { SITE_HOST, SITE_URL } from "@/lib/site";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
 import { isIndexable } from "@/lib/seo";
 import { getUserName, requireUser } from "@/server/auth";
@@ -124,6 +125,8 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
           </div>
         )}
       />
+
+      {preview.links.length > 0 && <BioGuide url={`${SITE_URL}/${profile.slug}`} />}
 
       <ProfileQRCode slug={profile.slug} />
 
