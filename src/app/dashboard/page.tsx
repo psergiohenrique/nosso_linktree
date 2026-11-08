@@ -5,12 +5,14 @@ import { EditorGrid } from "@/components/EditorShell";
 import Logo from "@/components/Logo";
 import { toPageViewProps } from "@/components/PageView";
 import PhonePreview from "@/components/PhonePreview";
+import ProfileChecklist from "@/components/ProfileChecklist";
 import ProfileQRCode from "@/components/ProfileQRCode";
 import SignupSteps from "@/components/SignupSteps";
 import Toast from "@/components/Toast";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST } from "@/lib/site";
 import { FREE_LINK_LIMIT } from "@/lib/billing";
+import { profileChecklist } from "@/lib/profile-checklist";
 import { isIndexable } from "@/lib/seo";
 import { getUserName, requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
@@ -84,6 +86,8 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
           {errorMessage}
         </Toast>
       )}
+      <ProfileChecklist items={profileChecklist(profile, links)} />
+
       <LinksEditor
         links={links.map(({ id, kind, title, url, layout, size, is_active, thumbnail_id }) => ({
           id, kind, title, url, layout, size, is_active, thumbnail_url: thumbnail_id ? mediaUrl(thumbnail_id) : null,
