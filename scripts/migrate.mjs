@@ -1,35 +1,84 @@
-// Aplica, em ordem, os arquivos de db/migrations que ainda não rodaram.
-import { readdir, readFile } from "node:fs/promises";
+// Aplica db/migrations pendentes, ou marca como aplicadas as que o esquema já tem (--baseline).
+// No build da Vercel só roda com VERCEL_ENV=production. Preview não abre conexão.
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
+import {
+  acquireMigrationLock,
+  loadMigrationFiles,
+  migrationAction,
+  parseMigrateArgs,
+  redactSecrets,
+  releaseMigrationLock,
+  resolveMigrationUrl,
+  runMigrations,
+} from "./migrations.mjs";
 
-const dir = path.join(import.meta.dirname, "..", "db", "migrations");
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+function errorText(err) {
+  if (!(err instanceof Error)) return redactSecrets(err);
+  const code = "code" in err && typeof err.code === "string" && /^[0-9A-Z]{5}$/.test(err.code) ? ` (${err.code})` : "";
+  return redactSecrets(`${err.message}${code}`);
+}
 
-await client.connect();
-try {
-  await client.query(
-    "create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())",
-  );
-  const { rows } = await client.query("select name from schema_migrations");
-  const applied = new Set(rows.map((r) => r.name));
-  const files = (await readdir(dir)).filter((f) => f.endsWith(".sql")).sort();
+async function main() {
+  const args = parseMigrateArgs(process.argv.slice(2));
+  const action = migrationAction(process.env, { baseline: args.baseline });
+  if (action.action === "skip") {
+    console.log(`migrações: ignoradas (${action.reason}). Este ambiente não conecta no banco.`);
+    return;
+  }
+  if (action.action === "refuse") {
+    throw new Error(`migrações recusadas (${action.reason})`);
+  }
 
-  for (const file of files) {
-    if (applied.has(file)) continue;
-    const sql = await readFile(path.join(dir, file), "utf8");
-    await client.query("begin");
+  const { url, source } = resolveMigrationUrl(process.env);
+  console.log(`migrações: usando ${source}`);
+  const client = new pg.Client({
+    connectionString: url,
+    connectionTimeoutMillis: 15_000,
+    statement_timeout: 300_000,
+    query_timeout: 300_000,
+    application_name: "linkbio-migrate",
+  });
+  client.on("error", (err) => {
+    console.error(`migrações: erro de conexão (${errorText(err)})`);
+  });
+
+  let locked = false;
+  const query = (sql, params) => (params === undefined ? client.query(sql) : client.query(sql, params));
+  try {
+    await client.connect();
+    await query("select set_config('lock_timeout', '30s', false)");
+    await query("select set_config('idle_in_transaction_session_timeout', '120s', false)");
+    await acquireMigrationLock(query);
+    locked = true;
+    const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "db", "migrations");
+    const files = await loadMigrationFiles(dir);
+    await runMigrations({
+      query,
+      files,
+      mode: action.action === "baseline" ? "baseline" : "apply",
+      through: args.through,
+      log: (line) => console.log(line),
+    });
+  } finally {
+    if (locked) {
+      try {
+        const released = await releaseMigrationLock(query);
+        if (!released) console.error("migrações: o lock não estava preso nesta sessão");
+      } catch (err) {
+        console.error(`migrações: falha ao soltar o lock (${errorText(err)})`);
+      }
+    }
     try {
-      await client.query(sql);
-      await client.query("insert into schema_migrations (name) values ($1)", [file]);
-      await client.query("commit");
-      console.log(`aplicada: ${file}`);
+      await client.end();
     } catch (err) {
-      await client.query("rollback");
-      throw new Error(`falha em ${file}: ${err.message}`);
+      console.error(`migrações: falha ao fechar a conexão (${errorText(err)})`);
     }
   }
-  console.log("banco atualizado");
-} finally {
-  await client.end();
 }
+
+main().catch((err) => {
+  console.error(errorText(err));
+  process.exitCode = 1;
+});

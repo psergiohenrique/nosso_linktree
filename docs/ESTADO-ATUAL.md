@@ -21,7 +21,7 @@ Retrato do projeto em 2026-10-16. Para o estado técnico mais recente de Formul�
 - Next.js 16 (App Router) · React 19 · TypeScript · CSS global com variáveis (Tailwind v4 instalado, mas não usado para estilo).
 - PostgreSQL 16 via `pg` com SQL puro; backend dentro do repositório (`src/server/`).
 - Postgres local em Docker (`docker-compose.yml`, porta 5435).
-- Scripts: `db:up`, `db:migrate` (aplica `db/migrations/*.sql` em ordem, controlado por `schema_migrations`), `db:seed` (conta de teste com página e 30 dias de acessos), `test` (testes de unidade) e `test:db` (inclui os testes com o Postgres local).
+- Scripts: `db:up`, `db:migrate` (aplica `db/migrations/*.sql` em ordem, controlado por `schema_migrations`), `db:seed` (conta de teste com página e 30 dias de acessos), `test` (testes de unidade) e `test:db` (inclui os testes com o Postgres local). O deploy de produção passou a migrar sozinho; o procedimento atual, posterior a este retrato, está em [MIGRATIONS.md](MIGRATIONS.md).
 - Variáveis de ambiente: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL` e, para enviar e-mail, `RESEND_API_KEY` e `MAIL_FROM` (`.env.example`).
 - Vercel Analytics e Speed Insights já integrados; cabeçalhos de segurança centralizados em `next.config.ts`.
 

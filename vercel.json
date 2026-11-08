@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node scripts/migrate.mjs && next build",
   "crons": [
     { "path": "/api/cron/billing", "schedule": "0 9 * * *" },
     { "path": "/api/cron/weekly-report", "schedule": "0 12 * * 1" }

@@ -46,10 +46,12 @@ Grátis (até 5 links, selo, 7 dias de resultados) e Pro (R$ 9,90/mês ou R$ 70,
 - `src/app/admin` — admin (só e-mails em `ADMIN_EMAILS`; os demais recebem 404): resumo com cadastros, planos, MRR e receita; lista de contas com busca; detalhe da conta (cadastro, página, links, assinatura, cobranças) e Pro de cortesia
 - `src/app/api/asaas/webhook` e `src/app/api/cron/billing` — webhook do Asaas e cron diário da cobrança
 - `src/server/` — banco, autenticação, upload, analytics, cobrança (Asaas)
-- `db/migrations` — SQL aplicado por `scripts/migrate.mjs`
+- `db/migrations` — SQL aplicado por `scripts/migrate.mjs` (ver [docs/MIGRATIONS.md](docs/MIGRATIONS.md))
 
 ## Trocar para um banco real
-Qualquer PostgreSQL 14+ serve (Neon, Supabase, RDS…): aponte `DATABASE_URL` para ele e rode `npm run db:migrate`. Produção (Neon): a URL fica só na Vercel e em `.env.neon` (fora do git, só com `DATABASE_URL=...`); migre com `npm run db:migrate:prod` **antes** de publicar código que dependa da migração nova. O `.env.local` aponta sempre para o Postgres do Docker. As imagens ficam na tabela `media`; se o volume crescer, dá para mover para um storage de objetos mudando só `src/server/media.ts` e a rota `/media/[id]`.
+Qualquer PostgreSQL 14+ serve (Neon, Supabase, RDS…): aponte `DATABASE_URL` para ele e rode `npm run db:migrate`. O `.env.local` aponta sempre para o Postgres do Docker. As imagens ficam na tabela `media`; se o volume crescer, dá para mover para um storage de objetos mudando só `src/server/media.ts` e a rota `/media/[id]`.
+
+Produção (Neon): o build de Production na Vercel aplica as migrações pendentes antes do `next build`. Preview não conecta no banco. A URL de migração é `DATABASE_URL_MIGRATIONS` (conexão direta, sem `-pooler`); o passo único para o banco que já existe está em [docs/MIGRATIONS.md](docs/MIGRATIONS.md). `.env.neon` (fora do git) continua servindo para `npm run db:migrate:prod` e `npm run db:migrate:prod:baseline`.
 
 ## Privacidade
 Nos analytics da página, não guarda IP nem cookies de rastreio. Cada visitante vira um hash diário (IP + navegador + perfil + dia + segredo), usado só para contar únicos e descartar repetições. Guarda origem (Instagram, Google…) e tipo de dispositivo. Formulários podem guardar respostas pessoais e progresso no navegador; veja [privacidade de formulários](docs/FORMULARIOS.md#privacidade-e-decisões-de-lançamento).
