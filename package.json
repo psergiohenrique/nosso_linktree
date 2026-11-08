@@ -10,6 +10,8 @@
     "db:up": "docker compose up -d --wait db",
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
     "db:migrate:prod": "node --env-file=.env.neon scripts/migrate.mjs",
+    "db:migrate:baseline": "node --env-file=.env.local scripts/migrate.mjs --baseline",
+    "db:migrate:prod:baseline": "node --env-file=.env.neon scripts/migrate.mjs --baseline",
     "db:seed": "node --env-file=.env.local scripts/seed.mjs",
     "test": "vitest run",
     "test:db": "TEST_DATABASE_URL=postgresql://linkbio:linkbio@localhost:5435/linkbio vitest run"
