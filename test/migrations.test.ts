@@ -324,7 +324,7 @@ describe("runMigrations", () => {
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 
-function runCli(extra: NodeJS.ProcessEnv, args: string[] = []) {
+function runCli(extra: Record<string, string>, args: string[] = []) {
   const env = { ...process.env, ...extra };
   return spawnSync(process.execPath, [path.join(repoRoot, "scripts/migrate.mjs"), ...args], {
     cwd: repoRoot,
