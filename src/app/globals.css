@@ -4525,6 +4525,78 @@ html.dragging-link * {
   }
 }
 
+/* Checklist de perfil (aba Links) */
+.checklist-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.checklist-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.checklist-meter {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--rule-soft);
+  overflow: hidden;
+}
+.checklist-meter span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: 999px;
+}
+.checklist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.checklist-mark {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--rule-soft);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+}
+.checklist-item.is-done .checklist-mark {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: var(--ink);
+}
+.checklist-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+.checklist-item.is-done .checklist-text {
+  color: var(--muted);
+}
+.checklist-item .btn {
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .checklist-item {
+    align-items: flex-start;
+  }
+}
+
 /* Guia "Coloque na sua bio" (aba Links) */
 .bio-guide-link {
   display: flex;
