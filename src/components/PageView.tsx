@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { applyPlanToLinks } from "@/lib/billing";
+import { mediaSrcSet, mediaVariant } from "@/lib/media-variants";
 import { mediaUrl, type Appearance, type LinkItem, type Profile, type SocialNetwork, type WhatsappAppearance } from "@/lib/types";
 import { visibleSocialLinks } from "@/lib/social";
 
@@ -105,7 +106,15 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
       <a {...common} className={`bio-link bio-featured bio-size-${link.size} ${tone}`}>
         {img && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt="" loading="lazy" decoding="async" className="bio-featured-img" />
+          <img
+            src={mediaVariant(img, 640)}
+            srcSet={mediaSrcSet(img, [480, 640, 960, 1280])}
+            sizes="(max-width: 680px) 100vw, 680px"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="bio-featured-img"
+          />
         )}
         <span className="bio-featured-title">
           {title}
@@ -120,7 +129,15 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
       <a {...common} className={`bio-link bio-tile bio-size-${link.size} ${tone} ${img ? "has-img" : ""}`}>
         {img && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt="" loading="lazy" decoding="async" className="bio-tile-img" />
+          <img
+            src={mediaVariant(img, 480)}
+            srcSet={mediaSrcSet(img, [320, 480, 640, 960])}
+            sizes="(max-width: 680px) 50vw, 340px"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="bio-tile-img"
+          />
         )}
         <span className="bio-tile-title">{title}</span>
         {icon}
@@ -132,7 +149,17 @@ function BioLink({ link, tracked }: { link: PageViewLink; tracked: boolean }) {
     <a {...common} className={`bio-link bio-size-${link.size} ${tone} ${img ? "has-thumb" : ""}`}>
       {img && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={img} alt="" width={44} height={44} loading="lazy" decoding="async" className="bio-thumb" />
+        <img
+          src={mediaVariant(img, 96)}
+          srcSet={mediaSrcSet(img, [96, 192])}
+          sizes="44px"
+          alt=""
+          width={44}
+          height={44}
+          loading="lazy"
+          decoding="async"
+          className="bio-thumb"
+        />
       )}
       <span className="bio-link-title">{title}</span>
       {icon}
@@ -153,7 +180,13 @@ export default function PageView({ profile, links, tracked = true, preview = fal
       {profile.cover_image_url && (
         <div className="bio-cover">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={profile.cover_image_url} alt="" fetchPriority="high" />
+          <img
+            src={mediaVariant(profile.cover_image_url, 960)}
+            srcSet={mediaSrcSet(profile.cover_image_url, [640, 960, 1280])}
+            sizes="(max-width: 720px) 100vw, 720px"
+            alt=""
+            fetchPriority="high"
+          />
         </div>
       )}
       <div className={`bio-inner ${profile.cover_image_url ? "has-cover" : ""}`}>
@@ -161,7 +194,9 @@ export default function PageView({ profile, links, tracked = true, preview = fal
           {profile.show_avatar && (profile.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={profile.avatar_url}
+              src={mediaVariant(profile.avatar_url, 192)}
+              srcSet={mediaSrcSet(profile.avatar_url, [96, 192, 320])}
+              sizes="96px"
               alt={`Foto de ${name || `@${profile.slug}`}`}
               width={96}
               height={96}

@@ -248,6 +248,11 @@ function assertFiles(files) {
   return seen;
 }
 
+/**
+ * `through` só vale no baseline. O retorno tem `applied` no modo apply e `baselined`/`pending` no baseline.
+ * @param {{ query: Function; files: { name: string; sql: string; checksum: string }[]; mode: string; through?: string; log?: (line: string) => void }} options
+ * @returns {Promise<{ applied?: string[]; baselined?: string[]; pending?: string[] }>}
+ */
 export async function runMigrations({ query, files, mode, through, log = () => {} }) {
   if (mode !== "apply" && mode !== "baseline") throw new Error("modo de migração inválido");
   const ordered = sortFiles(files);
