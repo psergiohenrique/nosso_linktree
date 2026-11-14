@@ -202,6 +202,36 @@ export const THEME_PRESETS: { name: string; appearance: Appearance }[] = [
       initial_text_color: null,
     },
   },
+  {
+    name: "Clínica",
+    appearance: {
+      bg_type: "solid",
+      bg_color: "#eef3ee",
+      bg_color2: "#eef3ee",
+      text_color: "#22362b",
+      button_color: "#3f6b53",
+      button_text_color: "#ffffff",
+      button_style: "rounded",
+      font: "manrope",
+      initial_bg_color: null,
+      initial_text_color: null,
+    },
+  },
+  {
+    name: "Escritório",
+    appearance: {
+      bg_type: "solid",
+      bg_color: "#e9e1d3",
+      bg_color2: "#e9e1d3",
+      text_color: "#26282c",
+      button_color: "#2f3237",
+      button_text_color: "#f3ede2",
+      button_style: "square",
+      font: "bricolage",
+      initial_bg_color: null,
+      initial_text_color: null,
+    },
+  },
 ];
 
 export const mediaUrl = (id: string) => `/media/${id}`;

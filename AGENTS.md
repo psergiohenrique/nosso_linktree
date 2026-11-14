@@ -25,11 +25,12 @@ Follows the same conventions as the sibling site projects (`../site-moraex`, `..
 - Production Vercel builds run `node scripts/migrate.mjs` before `next build` only when `VERCEL_ENV=production` (`vercel.json` `buildCommand`). Preview and development exit without connecting. A migration failure fails the deploy, so the previous production deployment stays live. Local `npm run build` does not migrate.
 - `npm run db:seed` — dev-only demo account + page + 30 days of events (credentials at the top of `scripts/seed.mjs`)
 - `npm test` — Vitest unit tests (`test/*.test.ts`); DB tests are skipped
+- `npm run test:e2e` — Playwright (Chromium) em `e2e/`: sobe `next dev` na porta 3100 contra o Postgres local (`npm run db:up`), aplica as migrações e recria a conta do seed. Recusa bancos que não sejam locais; e-mail, PostHog e cobrança ficam desligados. Primeira vez: `npx playwright install chromium`. Cobre cadastro (até a confirmação), login, edição no painel refletida na página pública e clique rastreado. Não cobre o checkout do Asaas nem o código de confirmação por e-mail.
 - `npm run test:db` — also runs `test/*.db.test.ts` against the local Docker Postgres (via `TEST_DATABASE_URL`, never `.env.local`)
 
 Env vars live in `.env.local` (see `.env.example`): `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, optional `RESEND_API_KEY` + `MAIL_FROM` (signup confirmation code and password-reset e-mail; without them, in dev the e-mail is printed to the server terminal), and billing: `BILLING_ENABLED`, `ASAAS_API_URL`, `ASAAS_API_KEY` (starts with `$`: single-quote it in `.env` files), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`; optional `ADMIN_EMAILS` (comma-separated, who can open `/admin`), `FORMS_KEY_SECRET` (signs Formulários API keys; falls back to `APP_SECRET`) and `GOOGLE_SITE_VERIFICATION` (Search Console meta tag). `.env.local` uses the local Docker DB; the production `DATABASE_URL` lives only in `.env.neon` (used by `db:migrate:prod`) and in Vercel. Production migrations prefer `DATABASE_URL_MIGRATIONS` (direct Neon URL, Production build only — never Preview). Never put the Neon URL back in `.env.local`: `db:seed`, `next dev` and `next start` read it.
 
-Tests live in `test/`; `vitest.config.mts` aliases `@` to `src` and stubs `server-only`.
+Unit tests live in `test/` (e2e in `e2e/`); `vitest.config.mts` aliases `@` to `src` and stubs `server-only`.
 
 ## Architecture
 
