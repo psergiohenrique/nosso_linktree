@@ -52,9 +52,14 @@ export default async function Login({
           </form>
         )}
         {!signup && (
-          <p className="auth-switch">
-            <Link href="/login/recuperar">Esqueci minha senha</Link>
-          </p>
+          <>
+            <p className="auth-switch">
+              <Link href="/login/link">Entrar sem senha</Link>
+            </p>
+            <p className="auth-switch">
+              <Link href="/login/recuperar">Esqueci minha senha</Link>
+            </p>
+          </>
         )}
         <p className="auth-switch">
           {signup ? "Já tem conta? " : "Ainda não tem conta? "}

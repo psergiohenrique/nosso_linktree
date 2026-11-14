@@ -1,0 +1,269 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "Linkbio by CodePath — início" [ref=e4] [cursor=pointer]:
+        - /url: "#hero"
+        - generic [ref=e9]: Linkbio
+        - generic [ref=e10]: by CodePath
+      - generic [ref=e11]:
+        - link "Recursos" [ref=e12] [cursor=pointer]:
+          - /url: "#recursos"
+        - link "Como funciona" [ref=e13] [cursor=pointer]:
+          - /url: "#como-funciona"
+        - link "Planos" [ref=e14] [cursor=pointer]:
+          - /url: "#planos"
+        - link "Começar" [ref=e15] [cursor=pointer]:
+          - /url: "#comecar"
+      - generic [ref=e16]:
+        - link "Entrar" [ref=e17] [cursor=pointer]:
+          - /url: /login
+        - link "Criar página" [ref=e18] [cursor=pointer]:
+          - /url: /login?modo=cadastro
+  - main [ref=e19]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - paragraph [ref=e23]: Sem comissão sobre vendas
+        - heading "Seu link na bio, feito para vender no WhatsApp" [level=1] [ref=e25]
+        - paragraph [ref=e26]: Crie sua página em minutos, com botão de WhatsApp em destaque e métricas de cliques para saber o que gera conversa de verdade.
+        - generic [ref=e27]:
+          - link "Criar minha página" [ref=e28] [cursor=pointer]:
+            - /url: /login?modo=cadastro
+          - link "Ver exemplo →" [ref=e29] [cursor=pointer]:
+            - /url: /demo
+        - paragraph [ref=e30]: Grátis para começar · Sem cartão de crédito
+      - generic [ref=e33]:
+        - generic [ref=e34]: B
+        - paragraph [ref=e35]: Barbearia do Zé
+        - paragraph [ref=e36]: Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.
+        - generic [ref=e37]: 💬 Agendar pelo WhatsApp
+        - generic [ref=e38]: Ver tabela de preços
+        - generic [ref=e39]: Como chegar
+        - generic [ref=e40]: Instagram
+        - paragraph [ref=e41]: Feito com Linkbio
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: < 5 min
+        - generic [ref=e46]: Para publicar
+      - generic [ref=e47]:
+        - generic [ref=e48]: 0%
+        - generic [ref=e49]: Comissão sobre vendas
+      - generic [ref=e50]:
+        - generic [ref=e51]: 1 toque
+        - generic [ref=e52]: Até o WhatsApp
+      - generic [ref=e53]:
+        - generic [ref=e54]: LGPD
+        - generic [ref=e55]: Sem IP nem cookies
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - paragraph [ref=e60]: Recursos
+          - 'heading "Mais que links: conversas" [level=2] [ref=e61]'
+        - paragraph [ref=e62]: O dono do negócio quer gerar contato, não só “ter links”. O Linkbio foi pensado para isso desde o primeiro botão.
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - heading "Botão de WhatsApp" [level=3] [ref=e68]
+          - paragraph [ref=e69]: Um toque abre a conversa com a mensagem já escrita. O cliente não precisa salvar seu número.
+        - generic [ref=e70]:
+          - heading "Métricas que importam" [level=3] [ref=e74]
+          - paragraph [ref=e75]: Conversas no WhatsApp, cliques por link e de onde vem cada visita, comparados à semana anterior. Resumo toda segunda no seu e-mail.
+        - generic [ref=e76]:
+          - heading "Pronta em minutos" [level=3] [ref=e80]
+          - paragraph [ref=e81]: Escolha seu endereço, adicione os links e publique. Sem código, sem designer.
+        - generic [ref=e82]:
+          - heading "Rápida no celular" [level=3] [ref=e86]
+          - paragraph [ref=e87]: Página leve, renderizada no servidor e em cache. Abre na hora para quem vem do Instagram.
+        - generic [ref=e88]:
+          - heading "Sua cara, sua cor" [level=3] [ref=e93]
+          - paragraph [ref=e94]: Temas claro, escuro e pôr do sol, com a cor de destaque da sua marca.
+        - generic [ref=e95]:
+          - heading "Privacidade de verdade" [level=3] [ref=e99]
+          - paragraph [ref=e100]: Não guardamos IP nem cookies de rastreio. Só origem da visita e tipo de dispositivo.
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - paragraph [ref=e104]: Como funciona
+        - heading "Três passos e pronto" [level=2] [ref=e105]
+      - list [ref=e106]:
+        - listitem [ref=e107]:
+          - generic [ref=e108]: "01"
+          - heading "Crie sua conta" [level=3] [ref=e109]
+          - paragraph [ref=e110]: Cadastro rápido com e-mail e senha. Sem cartão de crédito.
+        - listitem [ref=e111]:
+          - generic [ref=e112]: "02"
+          - heading "Escolha seu endereço" [level=3] [ref=e113]
+          - paragraph [ref=e114]: Algo como bio.codepath.dev.br/barbearia-do-ze. Curto, fácil de lembrar e de colocar na bio.
+        - listitem [ref=e115]:
+          - generic [ref=e116]: "03"
+          - heading "Adicione links e publique" [level=3] [ref=e117]
+          - paragraph [ref=e118]: WhatsApp, cardápio, localização, Instagram. Reordene quando quiser e acompanhe os cliques.
+    - generic [ref=e120]:
+      - generic [ref=e121]:
+        - paragraph [ref=e122]: Planos
+        - heading "Comece grátis. Cresça no Pro." [level=2] [ref=e123]
+        - paragraph [ref=e124]: Preço em reais, sem comissão sobre vendas e sem fidelidade. No anual você economiza 40%.
+      - paragraph [ref=e125]:
+        - strong [ref=e126]: "Lançamento:"
+        - text: por enquanto, todos os recursos do Pro estão liberados sem custo para quem criar a página.
+      - generic [ref=e127]:
+        - generic [ref=e128]:
+          - paragraph [ref=e129]: Grátis
+          - paragraph [ref=e130]: R$ 0/sempre
+          - paragraph [ref=e131]: Sem cartão de crédito.
+          - paragraph [ref=e132]: Para colocar a página no ar hoje.
+          - list [ref=e133]:
+            - listitem [ref=e134]: ✓Até 5 links
+            - listitem [ref=e135]: ✓Botão de WhatsApp com mensagem pronta
+            - listitem [ref=e136]: ✓Todos os temas, cores e fontes
+            - listitem [ref=e137]: ✓Resultados dos últimos 7 dias
+            - listitem [ref=e138]: ✓Resumo semanal por e-mail
+            - listitem [ref=e139]: ✓Selo “Feito com Linkbio”
+          - link "Criar minha página" [ref=e140] [cursor=pointer]:
+            - /url: /login?modo=cadastro
+        - generic [ref=e141]:
+          - paragraph [ref=e142]: Pro mensal
+          - paragraph [ref=e143]: R$ 9,90/mês
+          - paragraph [ref=e144]: Cancele quando quiser.
+          - paragraph [ref=e145]: "Tudo do Grátis, mais:"
+          - list [ref=e146]:
+            - listitem [ref=e147]: ✓Links ilimitados
+            - listitem [ref=e148]: ✓Formatos Destaque e Bloco
+            - listitem [ref=e149]: ✓Resultados de 30 e 90 dias
+            - listitem [ref=e150]: "✓Métricas avançadas: horários, cidades, campanhas e CSV"
+            - listitem [ref=e151]: ✓Sem o selo “Feito com Linkbio”
+          - link "Criar minha página" [ref=e152] [cursor=pointer]:
+            - /url: /login?modo=cadastro
+        - generic [ref=e153]:
+          - paragraph [ref=e154]:
+            - text: Pro anual
+            - generic [ref=e155]: Mais vantajoso
+          - paragraph [ref=e156]: R$ 5,90/mês
+          - paragraph [ref=e157]: R$ 70,80 por ano, à vista no cartão.
+          - paragraph [ref=e158]: "Tudo do Pro mensal, pagando menos:"
+          - list [ref=e159]:
+            - listitem [ref=e160]: ✓Links ilimitados
+            - listitem [ref=e161]: ✓Formatos Destaque e Bloco
+            - listitem [ref=e162]: ✓Resultados de 30 e 90 dias
+            - listitem [ref=e163]: "✓Métricas avançadas: horários, cidades, campanhas e CSV"
+            - listitem [ref=e164]: ✓Sem o selo “Feito com Linkbio”
+            - listitem [ref=e165]: ✓Economia de R$ 48,00 por ano
+          - link "Criar minha página" [ref=e166] [cursor=pointer]:
+            - /url: /login?modo=cadastro
+      - generic [ref=e167]:
+        - heading "Compare os planos" [level=3] [ref=e168]
+        - table [ref=e170]:
+          - rowgroup [ref=e171]:
+            - row [ref=e172]:
+              - columnheader "Recurso" [ref=e173]
+              - columnheader "Grátis" [ref=e174]
+              - columnheader "Pro" [ref=e175]
+          - rowgroup [ref=e176]:
+            - row [ref=e177]:
+              - rowheader "Página no ar com endereço próprio" [ref=e178]
+              - cell "Incluído" [ref=e179]: ✓
+              - cell "Incluído" [ref=e180]: ✓
+            - row [ref=e181]:
+              - rowheader "Links" [ref=e182]
+              - cell "Até 5" [ref=e183]
+              - cell "Ilimitados" [ref=e184]
+            - row [ref=e185]:
+              - rowheader "Botão de WhatsApp com mensagem pronta" [ref=e186]
+              - cell "Incluído" [ref=e187]: ✓
+              - cell "Incluído" [ref=e188]: ✓
+            - row [ref=e189]:
+              - rowheader "Temas, cores, estilos de botão e fontes" [ref=e190]
+              - cell "Incluído" [ref=e191]: ✓
+              - cell "Incluído" [ref=e192]: ✓
+            - row [ref=e193]:
+              - rowheader "Imagem em cada link" [ref=e194]
+              - cell "Incluído" [ref=e195]: ✓
+              - cell "Incluído" [ref=e196]: ✓
+            - row [ref=e197]:
+              - rowheader "Formatos Destaque (imagem grande) e Bloco (grade)" [ref=e198]
+              - cell "Não incluído" [ref=e199]: —
+              - cell "Incluído" [ref=e200]: ✓
+            - row [ref=e201]:
+              - rowheader "Visualizações, cliques e taxa de clique" [ref=e202]
+              - cell "7 dias" [ref=e203]
+              - cell "7, 30 e 90 dias" [ref=e204]
+            - row [ref=e205]:
+              - rowheader "Origem das visitas e dispositivo" [ref=e206]
+              - cell "7 dias" [ref=e207]
+              - cell "7, 30 e 90 dias" [ref=e208]
+            - row [ref=e209]:
+              - rowheader "Conversas no WhatsApp e comparação com o período anterior" [ref=e210]
+              - cell "Incluído" [ref=e211]: ✓
+              - cell "Incluído" [ref=e212]: ✓
+            - row [ref=e213]:
+              - rowheader "Resumo semanal por e-mail" [ref=e214]
+              - cell "Incluído" [ref=e215]: ✓
+              - cell "Incluído" [ref=e216]: ✓
+            - row [ref=e217]:
+              - rowheader "De onde vem quem clica em cada link" [ref=e218]
+              - cell "Não incluído" [ref=e219]: —
+              - cell "Incluído" [ref=e220]: ✓
+            - row [ref=e221]:
+              - rowheader "Horários de pico e cidades das visitas" [ref=e222]
+              - cell "Não incluído" [ref=e223]: —
+              - cell "Incluído" [ref=e224]: ✓
+            - row [ref=e225]:
+              - rowheader "Campanhas (UTM) e exportação em planilha (CSV)" [ref=e226]
+              - cell "Não incluído" [ref=e227]: —
+              - cell "Incluído" [ref=e228]: ✓
+            - row [ref=e229]:
+              - rowheader "Selo “Feito com Linkbio” na página" [ref=e230]
+              - cell "Aparece" [ref=e231]
+              - cell "Não aparece" [ref=e232]
+            - row [ref=e233]:
+              - rowheader "Comissão sobre suas vendas" [ref=e234]
+              - cell "0%" [ref=e235]
+              - cell "0%" [ref=e236]
+      - generic [ref=e237]:
+        - heading "Perguntas frequentes" [level=3] [ref=e238]
+        - group [ref=e239]:
+          - generic "Posso usar o Linkbio de graça para sempre? +" [ref=e240] [cursor=pointer]
+        - group [ref=e241]:
+          - generic "O que muda quando eu assino o Pro? +" [ref=e242] [cursor=pointer]
+        - group [ref=e243]:
+          - generic "Posso cancelar quando quiser? Tem multa ou fidelidade? +" [ref=e244] [cursor=pointer]
+        - group [ref=e245]:
+          - generic "Se eu cancelar, perco meus links? +" [ref=e246] [cursor=pointer]
+        - group [ref=e247]:
+          - generic "Quais formas de pagamento vocês aceitam? +" [ref=e248] [cursor=pointer]
+        - group [ref=e249]:
+          - generic "Vocês cobram comissão sobre minhas vendas? +" [ref=e250] [cursor=pointer]
+        - group [ref=e251]:
+          - generic "Posso trocar do mensal para o anual depois? +" [ref=e252] [cursor=pointer]
+    - generic [ref=e255]:
+      - generic [ref=e256]:
+        - heading "Sua próxima venda começa na bio" [level=2] [ref=e257]
+        - paragraph [ref=e258]: Crie sua página agora. É grátis para começar e você publica em menos de 5 minutos.
+      - generic [ref=e259]:
+        - link "Criar minha página" [ref=e260] [cursor=pointer]:
+          - /url: /login?modo=cadastro
+        - link "Ver exemplo" [ref=e261] [cursor=pointer]:
+          - /url: /demo
+  - contentinfo [ref=e262]:
+    - generic [ref=e263]:
+      - generic [ref=e264]:
+        - link "Linkbio by CodePath — início" [ref=e265] [cursor=pointer]:
+          - /url: "#hero"
+          - generic [ref=e270]: Linkbio
+          - generic [ref=e271]: by CodePath
+        - generic [ref=e272]:
+          - link "Recursos" [ref=e273] [cursor=pointer]:
+            - /url: "#recursos"
+          - link "Como funciona" [ref=e274] [cursor=pointer]:
+            - /url: "#como-funciona"
+          - link "Planos" [ref=e275] [cursor=pointer]:
+            - /url: "#planos"
+          - link "Exemplo" [ref=e276] [cursor=pointer]:
+            - /url: /demo
+          - link "Entrar" [ref=e277] [cursor=pointer]:
+            - /url: /login
+      - generic [ref=e278]:
+        - generic [ref=e279]: © 2026 CodePath. Todos os direitos reservados.
+        - generic [ref=e280]:
+          - text: Linkbio é um produto
+          - link "CodePath" [ref=e281] [cursor=pointer]:
+            - /url: https://codepath.dev.br
+  - button "Open Next.js Dev Tools" [ref=e287] [cursor=pointer]
+  - alert [ref=e291]

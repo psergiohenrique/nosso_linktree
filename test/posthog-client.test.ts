@@ -40,4 +40,19 @@ describe("PostHog no navegador", () => {
     expect(before_send(own)).toBe(own);
     expect(before_send(client)).toBeNull();
   });
+
+  it("tira o token do link mágico da URL antes de enviar", async () => {
+    await initialize("/login");
+    const { before_send } = init.mock.calls[0][1];
+    const event = {
+      properties: {
+        $current_url: "https://linkbio.dev.br/login/entrar?token=segredo-do-link",
+        $referrer: "https://linkbio.dev.br/login/entrar?token=segredo-do-link",
+      },
+    };
+    expect(before_send(event)).toBe(event);
+    expect(event.properties.$current_url).toBe("https://linkbio.dev.br/login/entrar");
+    expect(event.properties.$referrer).toBe("https://linkbio.dev.br/login/entrar");
+    expect(JSON.stringify(event)).not.toContain("segredo-do-link");
+  });
 });

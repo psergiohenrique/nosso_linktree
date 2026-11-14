@@ -1,18 +1,19 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { headers } from "next/headers";
+import { purgeExpiredLoginLinks } from "./auth";
 import { query } from "./db";
 
 /**
- * Limite de tentativas contra força bruta em login, cadastro e recuperação de senha.
+ * Limite de tentativas contra força bruta em login, cadastro, recuperação de senha e link mágico.
  * Cada tentativa vira uma linha em `auth_attempts`, com a chave em hash (segredo + e-mail ou IP).
  */
 
-export type AuthAction = "signin" | "signup" | "reset" | "verify" | "form";
+export type AuthAction = "signin" | "signup" | "reset" | "verify" | "form" | "magic";
 type KeyKind = "email" | "ip";
 export type AttemptKeys = Partial<Record<KeyKind, string>>;
 
-// No login só as falhas contam (e o sucesso zera as do e-mail); no cadastro, na recuperação e no reenvio, todo pedido conta.
+// No login só as falhas contam (e o sucesso zera as do e-mail); no cadastro, na recuperação, no reenvio e no link mágico, todo pedido conta.
 export const RATE_RULES: Record<AuthAction, Partial<Record<KeyKind, { max: number; minutes: number }>>> = {
   signin: { email: { max: 5, minutes: 15 }, ip: { max: 30, minutes: 15 } },
   signup: { ip: { max: 5, minutes: 60 } },
@@ -21,6 +22,8 @@ export const RATE_RULES: Record<AuthAction, Partial<Record<KeyKind, { max: numbe
   verify: { email: { max: 5, minutes: 60 } },
   // Respostas novas em formulários públicos (cada pessoa que começa a responder).
   form: { ip: { max: 20, minutes: 60 } },
+  // Pedido de link mágico. Mesmo teto da recuperação de senha.
+  magic: { email: { max: 3, minutes: 60 }, ip: { max: 10, minutes: 60 } },
 };
 
 export const RATE_LIMIT_MESSAGE = "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
@@ -63,7 +66,10 @@ export async function recordAttempt(action: AuthAction, keys: AttemptKeys) {
   if (hashes.length === 0) return;
   await query("insert into auth_attempts (action, key_hash) select $1, unnest($2::text[])", [action, hashes]);
   // Limpeza ocasional: nenhuma regra olha mais de 1 hora para trás.
-  if (Math.random() < 0.02) await query("delete from auth_attempts where created_at < now() - interval '1 day'");
+  if (Math.random() < 0.02) {
+    await query("delete from auth_attempts where created_at < now() - interval '1 day'");
+    await purgeExpiredLoginLinks();
+  }
 }
 
 export async function clearAttempts(action: AuthAction, keys: AttemptKeys) {

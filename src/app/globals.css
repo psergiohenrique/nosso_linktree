@@ -3492,6 +3492,9 @@ textarea.bf-input {
     opacity: 0;
     transform: translateY(8px);
   }
+  .auth-form .btn {
+    width: 100%;
+  }
 }
 
 /* Botão enviando */
