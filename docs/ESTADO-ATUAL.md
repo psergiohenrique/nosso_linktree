@@ -1,12 +1,12 @@
 # Linkbio by CodePath — O que já está feito
 
-Retrato do projeto em 2026-10-16. Para o estado técnico mais recente de Formulários, veja [FORMULARIOS.md](FORMULARIOS.md); este retrato histórico não comprova implantação em produção. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
+Retrato do projeto, atualizado em 2026-11-13 (partes históricas mantêm a data original). Para o estado técnico mais recente de Formulários, veja [FORMULARIOS.md](FORMULARIOS.md); este retrato histórico não comprova implantação em produção. Produto e escopo em [PRD.md](PRD.md); como rodar em [../README.md](../README.md).
 
 **Resumo:** o MVP funciona de ponta a ponta: cadastro → criação da página → links → aparência → página pública → métricas, com recuperação de senha e limite de tentativas. Endereço atual: **https://linkbio.dev.br**. Há testes automatizados (Vitest) para validação, origem do tráfego, limite de tentativas, recuperação de senha e cobrança. Plano Grátis + Pro com cobrança pelo Asaas **ligada em produção** (2026-10-21).
 
 **Marca e endereço:** produto da CodePath — "Linkbio by CodePath" no logo, rodapé, SEO/JSON-LD (`Organization` CodePath como publisher) e imagem de compartilhamento. Endereço de produção: `https://linkbio.dev.br` (via `NEXT_PUBLIC_SITE_URL`; o prefixo do endereço no painel sai dessa variável).
 
-**Banco de produção:** Postgres no Neon, com as migrações 0001–0006 aplicadas (sem seed).
+**Banco de produção:** Postgres no Neon (sem seed). O repositório vai até `0020_pix_block.sql`; o deploy de produção aplica as pendentes sozinho (ver [MIGRATIONS.md](MIGRATIONS.md)). Confira em `schema_migrations` quais já entraram.
 
 **Hospedagem:** projeto `nosso_linktree` na Vercel, ligado ao repositório (push na `main` publica). Domínio `linkbio.dev.br`. Variáveis só no ambiente Production: `DATABASE_URL`, `APP_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `BILLING_ENABLED` (`true`), `ASAAS_API_URL` (produção), `ASAAS_API_KEY` (a de produção, compartilhada com o Ambiento), `ASAAS_WEBHOOK_TOKEN`, `CRON_SECRET`. A Vercel trata as variáveis de produção como sensíveis: `vercel env pull` as traz vazias. Previews não têm banco (de propósito, para não tocar no de produção). `.vercelignore` impede que o `vercel deploy` envie arquivos `.env*`.
 
@@ -36,7 +36,7 @@ Retrato do projeto em 2026-10-16. Para o estado técnico mais recente de Formul�
 
 ## 3. Contas e login (`/login`)
 
-- Cadastro e login por **e-mail e senha** (`?modo=cadastro` para criar conta) e logout.
+- Cadastro e login por **e-mail e senha** (`?modo=cadastro` para criar conta, com código de confirmação por e-mail), **login por link mágico** (`login_links`, 15 min, uso único; em conta nunca confirmada, apaga as sessões e a senha) e logout.
 - Senhas com scrypt; sessão em tabela `sessions` guardando só o sha256 do token do cookie httpOnly.
 - **Recuperação de senha** (`/login/recuperar`): envia por e-mail (Resend) um link de uso único válido por 1 hora; a resposta é a mesma exista ou não a conta. O link passa por `/api/redefinir-senha`, que guarda o token num cookie httpOnly e abre `/login/redefinir` sem o token na URL. Trocar a senha encerra todas as sessões. Sem Resend configurado, em dev o link aparece no terminal.
 - **Limite de tentativas** (`auth_attempts`, chaves em hash): login 5 falhas por e-mail e 30 por IP a cada 15 min; cadastro 5 por IP por hora; recuperação 3 por e-mail e 10 por IP por hora.
@@ -49,15 +49,16 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 
 ### Página e links
 - Escolha do endereço (slug): 3–30 caracteres `a-z0-9-`, único, com lista de slugs reservados (`login`, `dashboard`, `go`, `api`, `demo`, `admin`…).
-- Links: criar, editar, ativar/desativar, excluir e reordenar (subir/descer).
-- Dois tipos: **link** (http/https/tel/mailto validados) e **WhatsApp** (número + mensagem pré-preenchida → `wa.me`).
+- Links: criar, editar, ativar/desativar, excluir e reordenar (arrastando ou pelo teclado).
+- Tipos: **link** (http/https/tel/mailto validados), **WhatsApp** (número + mensagem pré-preenchida → `wa.me`) e **Pix** (só no plano Business e com `PIX_ENABLED=true`; chave estática, BR Code e QR gerados no servidor, copia-e-cola na página; não ocupa vaga do Grátis; sem o Business, o bloco salvo fica só para leitura e não aparece na página).
+- Também no painel: QR code da página (PNG), redes sociais com ícones, guia “Coloque na bio” e checklist de perfil. Imagens públicas são servidas em tamanhos menores (`media-variants`).
 - Imagem por link (upload).
 - **Formato** por link: Botão (miniatura opcional), Destaque (imagem grande em cima) e Bloco (quadrado; blocos seguidos ficam em grade de 2 colunas).
 - **Tamanho** por link: Pequeno, Médio e Grande.
 
 ### Aparência (com prévia ao vivo num celular)
 - Nome, bio e foto de perfil (upload, com opção de remover).
-- 6 temas prontos: Claro, Escuro, Pôr do sol, Lima, Oceano, Papel.
+- 8 temas prontos: Claro, Escuro, Pôr do sol, Lima, Oceano, Papel, Clínica (verde-sálvia, saúde) e Escritório (grafite e areia, profissionais liberais).
 - Fundo sólido ou degradê; cores do texto, do botão e do texto do botão.
 - 5 estilos de botão: Arredondado, Pílula, Reto, Contorno, Sombra.
 - 4 fontes: Moderna, Marcante, Elegante, Máquina.
@@ -94,7 +95,7 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 
 ## 8. Playground (`/demo`)
 
-- Testa temas, cores, botões, fontes, formatos, tamanhos e imagens dos links com prévia ao vivo, sem login e sem banco (nada é salvo). Imagens de exemplo em `public/demo/`.
+- Testa temas, cores, botões, fontes, formatos, tamanhos e imagens dos links com prévia ao vivo, sem login e sem banco (nada é salvo). Usa os mesmos editores do painel (`LinksEditor`, `AppearanceSections`). Imagens de exemplo em `public/demo/`. Não oferece o bloco Pix.
 
 ## 9. Banco de dados
 
@@ -102,6 +103,11 @@ Abas: **Links**, **Aparência**, **Resultados** e **Plano** (esta só com a cobr
 - `0002_link_layout_size.sql`: `links.layout` e `links.size`.
 - `0003_auth_security.sql`: `auth_attempts` e `password_resets`.
 - `0004_billing.sql`: `subscriptions`, `invoices` e `billing_events`.
+- `0005`–`0013`: métricas, `billing_checkouts`, cores iniciais, dados do cadastro, estilo do WhatsApp, confirmação de e-mail, capa, indexação e foto no perfil.
+- `0014`–`0017`: formulários (ver [FORMULARIOS.md](FORMULARIOS.md)), versão das respostas públicas e redes sociais.
+- `0018_magic_links.sql`: `login_links`, `users.password_hash` anulável e ações `form`/`magic` no limite de tentativas.
+- `0019_plan_tier.sql`: `subscriptions.plan` (`pro`/`business`) e ciclo explícito em `billing_checkouts`.
+- `0020_pix_block.sql`: `links.kind = pix` e `links.config`.
 
 ## 10. Documentação
 
@@ -150,11 +156,9 @@ Mesmo desenho do Ambiento (Asaas, checkout hospedado, só o webhook muda o estad
 
 - **Primeiro pagamento real em produção:** feito em 2026-10-21 (ver o resumo no topo). Falta ver uma renovação (20/11) e, um dia, um estorno e um cancelamento reais.
 - **Chave do Asaas própria** para o Linkbio, se quiser revogar uma sem derrubar o outro produto (hoje é a mesma do Ambiento).
-- Plano Business (domínio próprio, leads → robô, Pix) e Agência.
+- Plano Business: o nível e o bloco Pix existem no código (atrás de `PIX_ENABLED`), mas faltam preço, checkout, domínio próprio e leads → robô. Agência não começou.
 - **Chave própria do Resend** para o Linkbio (hoje usa a do Ambiento; revogar uma afeta os dois produtos).
 - Banco separado para os previews (ex.: branch do Neon), se for usar deploys de preview.
-- Testes de ponta a ponta (navegador) e de componentes.
+- Testes de ponta a ponta (navegador) estão em `e2e/` (`npm run test:e2e`, ver AGENTS.md): cadastro até a confirmação, login, edição no painel na página pública e clique rastreado. Faltam o checkout do Asaas e o código de confirmação por e-mail; não rodam no deploy.
 - **SEO, depois do deploy:** criar a propriedade no Google Search Console (`linkbio.dev.br`), pôr o código em `GOOGLE_SITE_VERIFICATION` na Vercel, enviar `sitemap.xml` e conferir uma página no Rich Results Test e no depurador de compartilhamento do Facebook. Depois: páginas de conteúdo por nicho e comparativos.
-- Ícones de redes sociais, arrastar para reordenar, QR code.
-- Login por link mágico (o PRD cita, mas hoje é e-mail + senha).
 - V2+: captura de leads → robô de leads, Pix/vendas, domínio próprio, painel de agência/white-label, templates por nicho, blocos (vídeo, mapa, cardápio), agendamento de links.

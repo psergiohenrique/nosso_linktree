@@ -30,10 +30,10 @@ O dono do negócio quer **gerar conversa (WhatsApp) e lead**, não só "ter link
 ## 4. Escopo do MVP (V1)
 
 **Dentro:**
-1. Cadastro/login por e-mail e senha, com recuperação de senha por e-mail e limite de tentativas.
+1. Cadastro/login por e-mail e senha (com confirmação do e-mail), login por link mágico, recuperação de senha por e-mail e limite de tentativas.
 2. Escolha do endereço `dominio/slug`.
 3. Perfil: nome, bio e foto (upload). Aparência: temas prontos, fundo sólido ou degradê, cores de texto e botões, estilo do botão e fonte, com prévia ao vivo no painel.
-4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida). Imagem opcional por link (upload).
+4. Links: criar, editar, ativar/desativar, reordenar, excluir. Tipo `link` e tipo `whatsapp` (mensagem pré-preenchida); no Business, o bloco `pix`. Imagem opcional por link (upload). Reordenar arrastando, QR code da página, ícones de redes sociais, guia “Coloque na bio” e checklist de perfil.
 5. Página pública renderizada no servidor, rápida, sem captcha ou pop-up.
 6. Analytics: visualizações, visitantes únicos, cliques e CTR por link (7/30/90 dias), gráfico diário, origem e dispositivo; filtro de robôs e repetições. Conversas no WhatsApp, comparação com o período anterior e resumo semanal por e-mail. No Pro: origem por link, horários de pico, cidades, campanhas UTM e CSV.
 7. Slugs reservados e validação de URLs (http/https/tel/mailto).
@@ -42,18 +42,17 @@ Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIE
 
 **Fora do MVP (V2+):**
 - Captura de lead com envio ao robô de leads (webhook/API).
-- Pix e cobrança de serviços; vendas.
+- Cobrança de serviços e vendas (o bloco Pix de chave estática já existe, atrás de `PIX_ENABLED`).
 - Domínio próprio (plano Business).
 - Painel de agência multi-cliente, white-label.
 - Templates por nicho e montagem por IA (Instagram / Google Meu Negócio).
-- Login por link mágico (sem senha).
 - Blocos (vídeo, mapa, cardápio), agendamento de links.
 
 ## 5. Requisitos funcionais (resumo)
 
 | ID | Requisito | Critério de aceite |
 |---|---|---|
-| F1 | Login por e-mail e senha | Usuário cria conta, entra no painel e redefine a senha por um link enviado ao e-mail (válido por 1 h, uso único) |
+| F1 | Login por e-mail e senha ou link mágico | Usuário cria conta, entra no painel, redefine a senha por um link enviado ao e-mail (válido por 1 h, uso único) ou entra por um link de uso único (15 min) |
 | F2 | Criar página | Slug único, 3–30 caracteres `a-z0-9-`, não reservado |
 | F3 | CRUD de links | Alterações refletem na página pública em até 60 s |
 | F4 | Botão WhatsApp | Abre `wa.me/<número>?text=<mensagem>` |
@@ -70,7 +69,7 @@ Personalização por cliente e módulos opcionais: veja [PERSONALIZACAO-POR-CLIE
 
 ## 7. Monetização
 
-Grátis e Pro implementados (cobrança pelo Asaas, cartão recorrente; detalhes em [ESTADO-ATUAL.md](ESTADO-ATUAL.md#11-planos-e-cobrança-paywall)). Business e Agência seguem como hipótese.
+Grátis e Pro implementados (cobrança pelo Asaas, cartão recorrente; detalhes em [ESTADO-ATUAL.md](ESTADO-ATUAL.md#11-planos-e-cobrança-paywall)). O nível Business já existe na cobrança (`subscriptions.plan`) e o bloco Pix está pronto, mas só aparece com `PIX_ENABLED=true`; ainda não há preço nem checkout do Business. Agência segue como hipótese.
 
 | Plano | Preço | Destaques |
 |---|---|---|
@@ -91,7 +90,7 @@ Bundle: Pro grátis por 12 meses para quem compra site (já suportado por `court
 
 1. M0 — Validar proposta e preço com ~10 clientes da base de sites.
 2. M1 — MVP (este repositório): página pública + painel + analytics.
-3. M2 — Assinatura Pro (feito, falta ligar em produção); leads → robô, Pix.
+3. M2 — Assinatura Pro (feita e ligada em produção desde 2026-10-21); Pix (bloco pronto, falta preço e checkout do Business); leads → robô.
 4. M3 — Agências / white-label.
 
 ## 10. Questões em aberto
