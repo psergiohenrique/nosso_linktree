@@ -17,8 +17,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     "select id, profile_id, url, kind from links where id = $1 and is_active",
     [id],
   );
-  const target = link ? safeUrl(link.url) : null;
-  if (!link || !target) return NextResponse.redirect(home);
+  // Pix não é um link: a chave não pode virar redirecionamento.
+  if (!link || link.kind === "pix") return NextResponse.redirect(home);
+  const target = safeUrl(link.url);
+  if (!target) return NextResponse.redirect(home);
 
   // O referer aqui é a própria página de links; a origem real da visita fica no evento de visualização.
   const event = await trackEvent({

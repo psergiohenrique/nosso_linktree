@@ -111,37 +111,45 @@ export function PaywallDialog() {
           )}
 
           <div className="paywall-content">
-            <span className="pro-tag paywall-tag">Pro</span>
+            <span className="pro-tag paywall-tag">{feature === "pix" ? "Business" : "Pro"}</span>
             <h2 id="paywall-title" className="paywall-title">
               {copy.title}
             </h2>
             <p className="paywall-text">{copy.text}</p>
+            {feature === "pix" ? (
+              <p className="paywall-note">O plano Business ainda não está aberto para assinatura.</p>
+            ) : (
             <ul className="paywall-list">
               {PAYWALL_PRO_LIST.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
+            )}
 
-            <div className="paywall-plans">
-              <form action={subscribePro} data-posthog-event="pro_checkout_started" data-posthog-cycle="yearly">
-                <input type="hidden" name="cycle" value="yearly" />
-                <button className="btn btn-lime paywall-cta">
-                  Anual · {yearlyPerMonth}/mês
-                </button>
-                <span className="paywall-note">{yearly.price} por ano, à vista</span>
-              </form>
-              <form action={subscribePro} data-posthog-event="pro_checkout_started" data-posthog-cycle="monthly">
-                <input type="hidden" name="cycle" value="monthly" />
-                <button className="btn btn-outline paywall-cta">
-                  Mensal · {monthly.price}
-                  {monthly.per}
-                </button>
-                <span className="paywall-note">Cancele quando quiser</span>
-              </form>
-            </div>
-            <Link href="/dashboard/plano" className="paywall-more" onClick={() => ref.current?.close()}>
-              Ver detalhes do plano
-            </Link>
+            {feature !== "pix" && (
+              <div className="paywall-plans">
+                <form action={subscribePro} data-posthog-event="pro_checkout_started" data-posthog-cycle="yearly">
+                  <input type="hidden" name="cycle" value="yearly" />
+                  <button className="btn btn-lime paywall-cta">
+                    Anual · {yearlyPerMonth}/mês
+                  </button>
+                  <span className="paywall-note">{yearly.price} por ano, à vista</span>
+                </form>
+                <form action={subscribePro} data-posthog-event="pro_checkout_started" data-posthog-cycle="monthly">
+                  <input type="hidden" name="cycle" value="monthly" />
+                  <button className="btn btn-outline paywall-cta">
+                    Mensal · {monthly.price}
+                    {monthly.per}
+                  </button>
+                  <span className="paywall-note">Cancele quando quiser</span>
+                </form>
+              </div>
+            )}
+            {feature !== "pix" && (
+              <Link href="/dashboard/plano" className="paywall-more" onClick={() => ref.current?.close()}>
+                Ver detalhes do plano
+              </Link>
+            )}
           </div>
         </div>
       )}

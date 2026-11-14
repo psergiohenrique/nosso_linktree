@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import PageView, { type PageViewProfile } from "@/components/PageView";
+import { pixPayload } from "@/lib/pix";
+import { pixQrSvg } from "@/lib/pix-qr";
 import { SOCIAL_NETWORKS, THEME_PRESETS, WHATSAPP_DEFAULT, type SocialLinks } from "@/lib/types";
 
 const profile: PageViewProfile = {
@@ -62,6 +64,35 @@ describe("página pública", () => {
       expect(links).toBeGreaterThan(-1);
       expect(position === "after_links" ? social > links : social < links).toBe(true);
     }
+  });
+
+  it("mostra o QR e o copia-e-cola do Pix, sem virar link", () => {
+    const code = pixPayload({ key: "11144477735", merchantName: "Fulano de Tal", merchantCity: "Brasilia" });
+    expect(code).toBeTruthy();
+    const html = renderToStaticMarkup(
+      <PageView
+        profile={profile}
+        branding={false}
+        links={[
+          {
+            id: "pix-1",
+            title: "Pagar sinal",
+            url: "11144477735",
+            kind: "pix",
+            layout: "button",
+            size: "md",
+            thumbnail_url: null,
+            pixCode: code,
+            pixSvg: pixQrSvg(code!),
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain("Pagar sinal");
+    expect(html).toContain("Copiar código");
+    expect(html).toContain(code!);
+    expect(html).toContain("<svg");
+    expect(html).not.toContain('href="/go/pix-1"');
   });
 
   it("não mostra nome ou slug como título quando o nome está vazio", () => {

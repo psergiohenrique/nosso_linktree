@@ -33,6 +33,8 @@ export const SENTINELS = Object.freeze({
   "0015_form_builder.sql": Object.freeze({ kind: "column", table: "users", name: "forms_enabled" }),
   "0016_public_response_version.sql": Object.freeze({ kind: "column", table: "form_responses", name: "public_version" }),
   "0017_profile_socials.sql": Object.freeze({ kind: "column", table: "profiles", name: "social_links" }),
+  "0019_plan_tier.sql": Object.freeze({ kind: "column", table: "subscriptions", name: "plan" }),
+  "0020_pix_block.sql": Object.freeze({ kind: "column", table: "links", name: "config" }),
 });
 
 const CREATE_MIGRATIONS_TABLE = `create table if not exists schema_migrations (

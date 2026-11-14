@@ -6,6 +6,7 @@ import SignOutButton from "@/components/SignOutButton";
 import { PaywallDialog } from "@/components/Paywall";
 import { SITE_NAME } from "@/lib/site";
 import { requireUser } from "@/server/auth";
+import { pixEnabled } from "@/lib/pix";
 import { billingEnabled, getPlan } from "@/server/billing";
 import { formsEnabled } from "@/server/forms";
 import { getProfileByUser } from "@/server/profiles";
@@ -54,7 +55,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </>}
     >
       {children}
-      {!plan.pro && <PaywallDialog />}
+      {(!plan.pro || pixEnabled()) && <PaywallDialog />}
     </EditorShell>
   );
 }

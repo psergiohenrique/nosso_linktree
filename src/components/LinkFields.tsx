@@ -14,15 +14,42 @@ export function splitWhatsapp(url: string) {
 }
 
 /** Campos únicos para criação/edição de links no painel e no demo. */
-export default function LinkFields({ link, kind, proLayouts, onImageFile }: {
+export default function LinkFields({ link, kind, proLayouts, onImageFile, readOnly = false }: {
   link?: EditorLink;
   kind: EditorLink["kind"];
   proLayouts: boolean;
+  /** Bloco Pix salvo sem o plano Business: dá para ver e excluir, não para gravar. */
+  readOnly?: boolean;
   onImageFile?: (file: File | null) => void;
 }) {
   const wa = kind === "whatsapp";
   const target = wa && link ? splitWhatsapp(link.url) : null;
   const prefix = link ? `link-${link.id}` : "new";
+  if (kind === "pix") {
+    return (
+      <>
+        <div>
+          <label className="field-label" htmlFor={`${prefix}-title`}>Título</label>
+          <input id={`${prefix}-title`} name="title" defaultValue={link?.title} required maxLength={80} readOnly={readOnly} placeholder="Ex.: Pagar sinal" className="field" />
+        </div>
+        <div>
+          <label className="field-label" htmlFor={`${prefix}-pix-key`}>Chave Pix</label>
+          <input id={`${prefix}-pix-key`} name="url" defaultValue={link?.url} required={!readOnly} readOnly={readOnly} maxLength={77} placeholder="CPF, CNPJ, e-mail, +55… ou chave aleatória" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="field" />
+        </div>
+        <div>
+          <label className="field-label" htmlFor={`${prefix}-pix-name`}>Nome de quem recebe</label>
+          <input id={`${prefix}-pix-name`} name="pix_name" defaultValue={link?.pix?.name} required={!readOnly} readOnly={readOnly} maxLength={40} placeholder="Ex.: Barbearia do Zé" className="field" />
+          {!link && <p className="hint">Até 25 letras no código, sem acento. É o nome que o banco mostra.</p>}
+        </div>
+        <div>
+          <label className="field-label" htmlFor={`${prefix}-pix-city`}>Cidade</label>
+          <input id={`${prefix}-pix-city`} name="pix_city" defaultValue={link?.pix?.city} required={!readOnly} readOnly={readOnly} maxLength={30} placeholder="Ex.: São Paulo" className="field" />
+          {!link && <p className="hint">Até 15 letras. O valor o cliente digita no app do banco.</p>}
+        </div>
+        {link && <div className="lf-full lf-row"><label className="card-switch"><span className="switch"><input type="checkbox" name="is_active" defaultChecked={link.is_active} disabled={readOnly} /><span className="switch-track" /></span>Ativo na página</label></div>}
+      </>
+    );
+  }
   return (
     <>
       <div>

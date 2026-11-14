@@ -1,7 +1,7 @@
 // Textos dos avisos de recurso Pro (paywall), sem banco nem rede: usados no cliente.
 import { FREE_LINK_LIMIT, FREE_STATS_DAYS } from "./billing";
 
-export type PaywallFeature = "featured" | "tile" | "links" | "stats" | "csv" | "branding";
+export type PaywallFeature = "featured" | "tile" | "links" | "stats" | "csv" | "branding" | "pix";
 
 export const PAYWALL: Record<PaywallFeature, { title: string; text: string }> = {
   featured: {
@@ -27,6 +27,10 @@ export const PAYWALL: Record<PaywallFeature, { title: string; text: string }> = 
   branding: {
     title: "Tirar o selo é do Pro",
     text: "Sua página fica só com a sua marca, sem o “Feito com Linkbio” no rodapé.",
+  },
+  pix: {
+    title: "Pix é do plano Business",
+    text: "Mostre sua chave com QR e copia-e-cola. Quem paga usa o app do banco, e o dinheiro cai direto na sua conta, sem comissão. O plano Business ainda não está à venda.",
   },
 };
 

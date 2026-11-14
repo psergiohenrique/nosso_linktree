@@ -169,6 +169,7 @@ export default async function AdminAccountPage({
                 <Row label="Plano">
                   <PlanTag plan={plan} />
                 </Row>
+                <Row label="Produto">{sub.plan === "business" ? "Business" : "Pro"}</Row>
                 <Row label="Status no banco">{sub.status}</Row>
                 <Row label="Ciclo">{sub.cycle === "yearly" ? "Anual" : "Mensal"}</Row>
                 <Row label="Ativada em">{dateOrDash(sub.activated_at)}</Row>
@@ -382,7 +383,7 @@ export default async function AdminAccountPage({
                       {!l.is_active && <span className="hint"> (oculto)</span>}
                     </td>
                     <td className="admin-url">
-                      {l.kind === "whatsapp" ? "WhatsApp" : (
+                      {l.kind === "whatsapp" ? "WhatsApp" : l.kind === "pix" ? `Pix · ${l.url}` : (
                         <a href={l.url} target="_blank" rel="noopener noreferrer nofollow">
                           {l.url}
                         </a>
