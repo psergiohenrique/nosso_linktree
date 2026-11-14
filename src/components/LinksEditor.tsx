@@ -50,6 +50,7 @@ export default function LinksEditor({ links, actions, access, beforeLinks, track
               updateAction={actions.update}
               deleteAction={actions.remove}
               proLayouts={access.proLayouts}
+              pixReadOnly={!access.pix?.business}
               trackEvents={trackEvents}
               onDraftChange={onDraftChange}
               onImageFile={onImageFile ? (file) => onImageFile(link.id, file) : undefined}

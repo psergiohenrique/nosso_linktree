@@ -1,0 +1,91 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e36] [cursor=pointer]
+  - alert [ref=e30]: Links · Linkbio
+  - generic [ref=e40]:
+    - banner [ref=e41]:
+      - link "Linkbio by CodePath — início" [ref=e42] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e47]: Linkbio
+        - generic [ref=e48]: by CodePath
+      - navigation "Seções do painel" [ref=e49]:
+        - link "Links" [ref=e51] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Aparência" [ref=e52] [cursor=pointer]:
+          - /url: /dashboard/aparencia
+        - link "Resultados" [ref=e53] [cursor=pointer]:
+          - /url: /dashboard/resultados
+        - link "Formulários" [ref=e54] [cursor=pointer]:
+          - /url: /dashboard/formularios
+      - generic [ref=e55]:
+        - 'link "Abrir minha página: /barbearia-demo" [ref=e56] [cursor=pointer]':
+          - /url: /barbearia-demo
+          - generic [ref=e57]: /barbearia-demo ↗
+        - button "Sair" [ref=e58] [cursor=pointer]
+    - generic [ref=e60]:
+      - main [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - paragraph [ref=e64]: Links
+            - heading "Seus links" [level=1] [ref=e65]
+          - button "Novo link" [ref=e66] [cursor=pointer]
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - group [ref=e71]:
+              - generic "Agendar pelo WhatsApp WhatsApp 5511999999999" [ref=e72] [cursor=pointer]:
+                - generic [ref=e76]:
+                  - generic [ref=e77]: Agendar pelo WhatsApp
+                  - generic [ref=e78]: WhatsApp 5511999999999
+            - 'button "Reordenar “Agendar pelo WhatsApp”: arraste, ou use as setas para cima e para baixo" [ref=e81]'
+          - generic [ref=e92]:
+            - group [ref=e93]:
+              - generic "Ver tabela de preços example.com/precos" [ref=e94] [cursor=pointer]:
+                - generic [ref=e99]:
+                  - generic [ref=e100]: Ver tabela de preços
+                  - generic [ref=e101]: example.com/precos
+            - 'button "Reordenar “Ver tabela de preços”: arraste, ou use as setas para cima e para baixo" [ref=e104]'
+          - generic [ref=e115]:
+            - group [ref=e116]:
+              - generic "Como chegar maps.google.com" [ref=e117] [cursor=pointer]:
+                - generic [ref=e122]:
+                  - generic [ref=e123]: Como chegar
+                  - generic [ref=e124]: maps.google.com
+            - 'button "Reordenar “Como chegar”: arraste, ou use as setas para cima e para baixo" [ref=e127]'
+          - generic [ref=e138]:
+            - group [ref=e139]:
+              - generic "Instagram instagram.com" [ref=e140] [cursor=pointer]:
+                - generic [ref=e145]:
+                  - generic [ref=e146]: Instagram
+                  - generic [ref=e147]: instagram.com
+            - 'button "Reordenar “Instagram”: arraste, ou use as setas para cima e para baixo" [ref=e150]'
+        - paragraph [ref=e161]
+        - region [ref=e162]:
+          - img "QR code para http://localhost:3000/barbearia-demo" [ref=e163]
+          - generic [ref=e164]:
+            - heading "QR code da sua página" [level=2] [ref=e165]
+            - link "localhost:3000/barbearia-demo" [ref=e166] [cursor=pointer]:
+              - /url: http://localhost:3000/barbearia-demo
+            - paragraph [ref=e167]: "Para cartazes, cartões e redes sociais. Se mudar seu endereço, baixe um novo: o impresso não muda sozinho."
+            - link "Baixar QR code" [ref=e168] [cursor=pointer]:
+              - /url: data:image/png;base64,…
+        - generic [ref=e169]:
+          - generic [ref=e170]:
+            - heading "Aparecer no Google" [level=2] [ref=e171]
+            - paragraph [ref=e172]: "Ligado: o Google pode mostrar sua página para quem buscar pelo seu nome. Pode levar alguns dias."
+          - button "Desligar" [ref=e174] [cursor=pointer]
+      - generic [ref=e175]:
+        - paragraph [ref=e177]: Prévia
+        - main [ref=e180]:
+          - generic [ref=e181]:
+            - generic [ref=e182]:
+              - generic [ref=e183]: B
+              - heading "Barbearia do Zé" [level=1] [ref=e184]
+              - paragraph [ref=e185]: Corte, barba e cerveja gelada. Seg a sáb, 9h às 20h.
+            - navigation "Links" [ref=e186]:
+              - link "Agendar pelo WhatsApp" [ref=e187] [cursor=pointer]:
+                - /url: https://wa.me/5511999999999?text=Quero%20agendar
+              - link "Ver tabela de preços" [ref=e191] [cursor=pointer]:
+                - /url: https://example.com/precos
+              - link "Como chegar" [ref=e193] [cursor=pointer]:
+                - /url: https://maps.google.com
+              - link "Instagram" [ref=e195] [cursor=pointer]:
+                - /url: https://instagram.com

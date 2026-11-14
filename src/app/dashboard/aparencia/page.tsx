@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import AppearanceEditor from "@/components/AppearanceEditor";
-import { toPageViewProps } from "@/components/PageView";
+import { toPageViewProps } from "@/components/to-page-view";
 import { requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
@@ -24,7 +24,7 @@ export default async function AparenciaPage({
     profile: viewProfile,
     links: viewLinks,
     branding,
-  } = toPageViewProps(profile, links.filter((l) => l.is_active), plan.pro);
+  } = toPageViewProps(profile, links.filter((l) => l.is_active), plan);
 
   const message = error
     ? ({ kind: "error", text: error } as const)

@@ -2377,6 +2377,82 @@ html.no-scroll {
   transform: translate(-2px, -2px);
   box-shadow: 6px 6px 0 var(--bio-text);
 }
+/* Pix: QR preto no branco (o tema da página não pode baixar o contraste) e copia-e-cola. */
+.bio-pix {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border-radius: min(var(--btn-radius), 22px);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  text-align: center;
+}
+.bio-pix-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.bio-pix-qr {
+  align-self: center;
+  width: 220px;
+  height: 220px;
+  max-width: 100%;
+}
+.bio-pix-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
+}
+.bio-pix-hint,
+.bio-pix-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0.78;
+}
+.bio-pix-label {
+  font-weight: 700;
+  opacity: 1;
+  text-align: left;
+}
+.bio-pix-code {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--btn-text) 25%, transparent);
+  border-radius: 10px;
+  background: #fff;
+  color: #17181a;
+  font-family: ui-monospace, monospace;
+  font-size: 16px;
+  line-height: 1.35;
+  text-align: left;
+  resize: none;
+  overflow-wrap: anywhere;
+}
+.bio-pix-copy {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--btn-text);
+  color: var(--btn-bg);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.bio-pix-copy:focus-visible {
+  outline: 2px solid var(--bio-text);
+  outline-offset: 3px;
+}
+
 .bio-foot {
   padding-top: 8px;
   font-size: 12px;

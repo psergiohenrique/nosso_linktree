@@ -1,0 +1,27 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - link "Linkbio by CodePath — início" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e8]: Linkbio
+      - generic [ref=e9]: by CodePath
+    - generic [ref=e10]:
+      - heading "Entrar" [level=1] [ref=e11]
+      - paragraph [ref=e12]: Acesse o painel da sua página.
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: E-mail
+          - textbox "E-mail" [ref=e16]
+        - generic [ref=e17]:
+          - generic [ref=e18]: Senha
+          - generic [ref=e19]:
+            - textbox "Senha" [ref=e20]
+            - button "Mostrar senha" [ref=e21] [cursor=pointer]
+        - button "Entrar" [ref=e25] [cursor=pointer]
+      - paragraph [ref=e26]:
+        - link "Esqueci minha senha" [ref=e27] [cursor=pointer]:
+          - /url: /login/recuperar
+      - paragraph [ref=e28]:
+        - text: Ainda não tem conta?
+        - link "Criar conta" [ref=e29] [cursor=pointer]:
+          - /url: /login?modo=cadastro
+  - alert [ref=e30]

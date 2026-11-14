@@ -30,7 +30,8 @@ export function socialMetadata({
 /**
  * A página do usuário entra no Google (e no sitemap)? Só com a opção ligada e conteúdo mínimo:
  * nome ou bio e pelo menos um link ativo. Página vazia é conteúdo raso e pesa contra o domínio todo.
- * `activeLinks`: quantos links ativos aparecem na página.
+ * `activeLinks`: quantos links ativos aparecem na página, sem contar o bloco Pix (use `countIndexableLinks`):
+ * um QR de pagamento não é conteúdo para a busca.
  */
 export function isIndexable(
   profile: { search_indexing: boolean; display_name: string; bio: string },
@@ -39,9 +40,14 @@ export function isIndexable(
   return profile.search_indexing && (profile.display_name.trim() !== "" || profile.bio.trim() !== "") && activeLinks > 0;
 }
 
-/** Condição SQL equivalente a isIndexable, para o sitemap (alias p = profiles). */
+/** Links que contam para isIndexable: tudo que aparece na página, menos o bloco Pix. Muda junto com INDEXABLE_SQL. */
+export function countIndexableLinks(links: { kind?: string }[]) {
+  return links.filter((l) => l.kind !== "pix").length;
+}
+
+/** Condição SQL equivalente a isIndexable, para o sitemap (alias p = profiles). Link Pix não conta. */
 export const INDEXABLE_SQL = `p.search_indexing and (btrim(p.display_name) <> '' or btrim(p.bio) <> '')
-  and exists (select 1 from links l where l.profile_id = p.id and l.is_active)`;
+  and exists (select 1 from links l where l.profile_id = p.id and l.is_active and l.kind <> 'pix')`;
 
 /** Corta no limite sem quebrar palavra, com reticências. */
 export function truncate(text: string, max: number) {

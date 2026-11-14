@@ -12,13 +12,16 @@ type Props = {
   updateAction: EditorFormAction;
   deleteAction: EditorFormAction;
   proLayouts: boolean;
+  /** Pix salvo, mas sem o plano Business (ou com o recurso desligado): só leitura. */
+  pixReadOnly?: boolean;
   trackEvents?: boolean;
   onDraftChange?: (data: FormData) => void;
   onImageFile?: (file: File | null) => void;
 };
 
-export default function LinkCard({ link, updateAction, deleteAction, proLayouts, trackEvents = false, onDraftChange, onImageFile }: Props) {
+export default function LinkCard({ link, updateAction, deleteAction, proLayouts, pixReadOnly = false, trackEvents = false, onDraftChange, onImageFile }: Props) {
   const wa = link.kind === "whatsapp" ? splitWhatsapp(link.url) : null;
+  const pix = link.kind === "pix";
   return (
     <details className={`link-card ${link.is_active ? "" : "card-off"}`}>
       <summary className="link-sum">
@@ -27,7 +30,7 @@ export default function LinkCard({ link, updateAction, deleteAction, proLayouts,
           <img src={link.thumbnail_url} alt="" width={40} height={40} className="link-thumb" loading="lazy" />
         ) : (
           <div className={`link-thumb link-thumb-empty ${wa ? "link-thumb-whats" : ""}`} aria-hidden="true">
-            {wa ? <WhatsappIcon className="link-thumb-icon" /> : (
+            {wa ? <WhatsappIcon className="link-thumb-icon" /> : pix ? <span className="link-thumb-icon">◇</span> : (
               <svg className="link-thumb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" />
                 <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
@@ -37,7 +40,7 @@ export default function LinkCard({ link, updateAction, deleteAction, proLayouts,
         )}
         <span className="link-sum-text">
           <span className="link-sum-title">{link.title}</span>
-          <span className="link-sum-url">{wa ? `WhatsApp ${wa.phone}` : link.url.replace(/^https?:\/\//, "")}</span>
+          <span className="link-sum-url">{wa ? `WhatsApp ${wa.phone}` : pix ? "Pix" : link.url.replace(/^https?:\/\//, "")}</span>
         </span>
         {!link.is_active && <span className="link-tag">Inativo</span>}
         <Chevron />
@@ -55,10 +58,11 @@ export default function LinkCard({ link, updateAction, deleteAction, proLayouts,
         >
           <input type="hidden" name="id" value={link.id} />
           <input type="hidden" name="kind" value={link.kind} />
-          <LinkFields link={link} kind={link.kind} proLayouts={proLayouts} onImageFile={onImageFile} />
+          <LinkFields link={link} kind={link.kind} proLayouts={proLayouts} onImageFile={onImageFile} readOnly={pix && pixReadOnly} />
+          {pix && pixReadOnly && <p className="hint lf-full">O bloco Pix faz parte do plano Business. Ele continua salvo, mas não aparece na página.</p>}
           {onDraftChange ? (
             <p className="hint lf-full">Alterações aplicadas ao exemplo, sem salvar.</p>
-          ) : (
+          ) : pix && pixReadOnly ? null : (
             <SubmitButton className="btn btn-primary btn-sm lf-save" pendingLabel="Salvando…">Salvar</SubmitButton>
           )}
         </form>

@@ -4,7 +4,7 @@ import LinksEditor from "@/components/LinksEditor";
 import BioGuide from "@/components/BioGuide";
 import { EditorGrid } from "@/components/EditorShell";
 import Logo from "@/components/Logo";
-import { toPageViewProps } from "@/components/PageView";
+import { toPageViewProps } from "@/components/to-page-view";
 import PhonePreview from "@/components/PhonePreview";
 import ProfileChecklist from "@/components/ProfileChecklist";
 import ProfileQRCode from "@/components/ProfileQRCode";
@@ -12,9 +12,10 @@ import SignupSteps from "@/components/SignupSteps";
 import Toast from "@/components/Toast";
 import { mediaUrl } from "@/lib/types";
 import { SITE_HOST, SITE_URL } from "@/lib/site";
-import { FREE_LINK_LIMIT } from "@/lib/billing";
+import { FREE_LINK_LIMIT, hasTier } from "@/lib/billing";
+import { pixEnabled } from "@/lib/pix";
 import { profileChecklist } from "@/lib/profile-checklist";
-import { isIndexable } from "@/lib/seo";
+import { countIndexableLinks, isIndexable } from "@/lib/seo";
 import { getUserName, requireUser } from "@/server/auth";
 import { getPlan } from "@/server/billing";
 import { getLinksByProfile, getProfileByUser } from "@/server/profiles";
@@ -76,9 +77,12 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
   }
 
   const [links, plan] = await Promise.all([getLinksByProfile(profile.id), getPlan(user.id)]);
-  const preview = toPageViewProps(profile, links.filter((l) => l.is_active), plan.pro);
-  const atLimit = !plan.pro && links.length >= FREE_LINK_LIMIT;
-  const indexed = isIndexable(profile, preview.links.length);
+  const preview = toPageViewProps(profile, links.filter((l) => l.is_active), plan);
+  // O bloco Pix (só do Business) não gasta uma das vagas do Grátis, igual ao addLink.
+  const freeCount = links.filter((l) => l.kind !== "pix").length;
+  const atLimit = !plan.pro && freeCount >= FREE_LINK_LIMIT;
+  const pixOn = pixEnabled();
+  const indexed = isIndexable(profile, countIndexableLinks(preview.links));
 
   return (
     <EditorGrid preview={<PhonePreview {...preview} />}>
@@ -90,11 +94,12 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
       <ProfileChecklist items={profileChecklist(profile, links)} />
 
       <LinksEditor
-        links={links.map(({ id, kind, title, url, layout, size, is_active, thumbnail_id }) => ({
+        links={links.map(({ id, kind, title, url, layout, size, is_active, thumbnail_id, config }) => ({
           id, kind, title, url, layout, size, is_active, thumbnail_url: thumbnail_id ? mediaUrl(thumbnail_id) : null,
+          pix: kind === "pix" ? { name: config?.merchantName ?? "", city: config?.merchantCity ?? "" } : undefined,
         }))}
         actions={{ create: addLink, update: updateLink, remove: deleteLink, reorder: reorderLinks }}
-        access={{ proLayouts: plan.pro, atLimit, limit: FREE_LINK_LIMIT }}
+        access={{ proLayouts: plan.pro, atLimit, limit: FREE_LINK_LIMIT, pix: pixOn ? { business: hasTier(plan, "business") } : undefined }}
         trackEvents
         beforeLinks={!plan.pro && (
           <div className="upsell">
@@ -103,7 +108,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                 <span className="pro-tag">Pro</span>
                 <span>
                   <strong>
-                    {Math.min(links.length, FREE_LINK_LIMIT)} de {FREE_LINK_LIMIT} links
+                    {Math.min(freeCount, FREE_LINK_LIMIT)} de {FREE_LINK_LIMIT} links
                   </strong>{" "}
                   no plano Grátis
                 </span>
@@ -113,13 +118,13 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
                 role="progressbar"
                 aria-valuemin={0}
                 aria-valuemax={FREE_LINK_LIMIT}
-                aria-valuenow={Math.min(links.length, FREE_LINK_LIMIT)}
+                aria-valuenow={Math.min(freeCount, FREE_LINK_LIMIT)}
                 aria-label="Links usados no plano Grátis"
               >
-                <span style={{ width: `${(Math.min(links.length, FREE_LINK_LIMIT) / FREE_LINK_LIMIT) * 100}%` }} />
+                <span style={{ width: `${(Math.min(freeCount, FREE_LINK_LIMIT) / FREE_LINK_LIMIT) * 100}%` }} />
               </div>
               <p className="upsell-text">
-                {links.length > FREE_LINK_LIMIT ? `Só os ${FREE_LINK_LIMIT} primeiros ativos aparecem na sua página. ` : ""}
+                {freeCount > FREE_LINK_LIMIT ? `Só os ${FREE_LINK_LIMIT} primeiros ativos aparecem na sua página. ` : ""}
                 No Pro: links ilimitados, Destaque e Bloco, e sem o selo.
               </p>
             </div>

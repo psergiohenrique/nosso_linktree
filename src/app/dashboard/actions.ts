@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/server/auth";
-import { BillingError, cancelPlan, getPlan, startCheckout } from "@/server/billing";
+import { BillingError, cancelPlan, getPlan, requireTier, startCheckout } from "@/server/billing";
 import { query, queryOne } from "@/server/db";
 import { deleteResponse, formsEnabled } from "@/server/forms";
 import { deleteMedia, saveImage } from "@/server/media";
 import { getProfileByUser } from "@/server/profiles";
-import { FREE_LINK_LIMIT } from "@/lib/billing";
+import { FREE_LINK_LIMIT, type PlanState } from "@/lib/billing";
+import { normalizePixKey, pixEnabled, pixMerchant } from "@/lib/pix";
 import { SITE_URL } from "@/lib/site";
 import {
   BUTTON_STYLES,
@@ -188,10 +189,38 @@ export async function updateSocialLinks(formData: FormData) {
   redirect(`${back}?ok=1`);
 }
 
+/** Redirect com a mensagem do plano, no lugar de estourar a action. */
+function tierOrFail(plan: PlanState, tier: "pro" | "business") {
+  try {
+    requireTier(plan, tier);
+  } catch (err) {
+    if (err instanceof BillingError) fail(err.message);
+    throw err;
+  }
+}
+
 function readLink(formData: FormData, pro: boolean) {
-  const kind = formData.get("kind") === "whatsapp" ? "whatsapp" : "link";
+  const rawKind = formData.get("kind");
+  const kind = rawKind === "whatsapp" ? "whatsapp" : rawKind === "pix" ? "pix" : "link";
   const title = String(formData.get("title") ?? "").trim().slice(0, 80);
   if (!title) fail("Dê um título ao link.");
+
+  if (kind === "pix") {
+    const key = normalizePixKey(String(formData.get("url") ?? ""));
+    if (!key) fail("Chave Pix inválida. Use CPF, CNPJ, e-mail, celular com +55 ou chave aleatória.");
+    const merchantName = pixMerchant(String(formData.get("pix_name") ?? ""), 25);
+    if (!merchantName) fail("Informe o nome de quem recebe o Pix, com letras, até 25 caracteres.");
+    const merchantCity = pixMerchant(String(formData.get("pix_city") ?? ""), 15);
+    if (!merchantCity) fail("Informe a cidade de quem recebe o Pix, até 15 caracteres.");
+    return {
+      kind,
+      title,
+      url: key,
+      layout: "button" as const,
+      size: "md" as const,
+      config: { merchantName, merchantCity },
+    };
+  }
 
   const rawTarget = String(formData.get("url") ?? "");
   const url =
@@ -208,26 +237,46 @@ function readLink(formData: FormData, pro: boolean) {
   const layout = pro ? oneOf(formData.get("layout"), LINK_LAYOUTS.map((l) => l.value), "button") : null;
   const size = oneOf(formData.get("size"), LINK_SIZES.map((s) => s.value), "md");
 
-  return { kind, title, url, layout, size } as const;
+  return { kind, title, url, layout, size, config: null } as const;
+}
+
+function guardPix(plan: PlanState, kind: string) {
+  if (kind !== "pix") return;
+  if (!pixEnabled()) fail("O bloco Pix não está disponível.");
+  tierOrFail(plan, "business");
 }
 
 export async function addLink(formData: FormData) {
   const { user, profile } = await requireProfile();
   const plan = await getPlan(user.id);
   if (!plan.pro) {
-    const count = await queryOne<{ n: string }>("select count(*) as n from links where profile_id = $1", [user.id]);
+    // O bloco Pix (só do Business) não ocupa vaga: a página também não o mostra no Grátis.
+    const count = await queryOne<{ n: string }>(
+      "select count(*) as n from links where profile_id = $1 and kind <> 'pix'",
+      [user.id],
+    );
     if (Number(count?.n ?? 0) >= FREE_LINK_LIMIT) {
       fail(`No plano Grátis são até ${FREE_LINK_LIMIT} links. Assine o Pro para ter links ilimitados.`);
     }
   }
   const link = readLink(formData, plan.pro);
-  const upload = await saveImage(user.id, formData.get("thumbnail"));
+  guardPix(plan, link.kind);
+  const upload = link.kind === "pix" ? null : await saveImage(user.id, formData.get("thumbnail"));
   if (upload && "error" in upload) fail(upload.error);
 
   await query(
-    `insert into links (profile_id, kind, title, url, thumbnail_id, layout, size, position)
-     values ($1, $2, $3, $4, $5, $6, $7, coalesce((select max(position) + 1 from links where profile_id = $1), 0))`,
-    [user.id, link.kind, link.title, link.url, upload?.id ?? null, link.layout ?? "button", link.size],
+    `insert into links (profile_id, kind, title, url, thumbnail_id, layout, size, config, position)
+     values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, coalesce((select max(position) + 1 from links where profile_id = $1), 0))`,
+    [
+      user.id,
+      link.kind,
+      link.title,
+      link.url,
+      upload?.id ?? null,
+      link.layout ?? "button",
+      link.size,
+      link.config ? JSON.stringify(link.config) : null,
+    ],
   );
   await refreshPublicPage(profile);
 }
@@ -241,15 +290,30 @@ export async function updateLink(formData: FormData) {
   );
   if (!current) fail("Link não encontrado.");
 
-  const link = readLink(formData, (await getPlan(user.id)).pro);
-  const upload = await saveImage(user.id, formData.get("thumbnail"));
+  const plan = await getPlan(user.id);
+  const link = readLink(formData, plan.pro);
+  guardPix(plan, link.kind);
+  const upload = link.kind === "pix" ? null : await saveImage(user.id, formData.get("thumbnail"));
   if (upload && "error" in upload) fail(upload.error);
-  const thumbnailId = upload ? upload.id : formData.get("remove_thumbnail") === "on" ? null : current.thumbnail_id;
+  const thumbnailId =
+    link.kind === "pix" ? null : upload ? upload.id : formData.get("remove_thumbnail") === "on" ? null : current.thumbnail_id;
 
   await query(
-    `update links set kind = $3, title = $4, url = $5, thumbnail_id = $6, is_active = $7, layout = $8, size = $9
+    `update links set kind = $3, title = $4, url = $5, thumbnail_id = $6, is_active = $7, layout = $8, size = $9,
+            config = $10::jsonb
      where id = $1 and profile_id = $2`,
-    [id, user.id, link.kind, link.title, link.url, thumbnailId, formData.get("is_active") === "on", link.layout ?? current.layout, link.size],
+    [
+      id,
+      user.id,
+      link.kind,
+      link.title,
+      link.url,
+      thumbnailId,
+      formData.get("is_active") === "on",
+      link.layout ?? current.layout,
+      link.size,
+      link.config ? JSON.stringify(link.config) : null,
+    ],
   );
   if (thumbnailId !== current.thumbnail_id) await deleteMedia(user.id, current.thumbnail_id);
   await refreshPublicPage(profile);

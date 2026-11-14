@@ -21,7 +21,7 @@ export async function requireAdmin() {
  */
 export const realPlan = (sub: SubscriptionRow | null) => planState(sub, { billingEnabled: true });
 
-const SUB_COLUMNS = `s.status, s.cycle, s.current_period_end, s.grace_ends_at, s.canceled_at, s.courtesy_until,
+const SUB_COLUMNS = `s.status, s.plan, s.cycle, s.current_period_end, s.grace_ends_at, s.canceled_at, s.courtesy_until,
   s.gateway_subscription_id, s.card_brand, s.card_last4`;
 
 type SubColumns = { [K in keyof SubscriptionRow]: SubscriptionRow[K] | null };
@@ -39,8 +39,10 @@ export type AdminSummary = {
   new7: number;
   new30: number;
   plans: Record<PlanState["kind"], number>;
-  /** Receita mensal recorrente estimada: assinaturas ativas (anual dividido por 12). */
+  /** Receita mensal recorrente estimada: Pro ativo (anual dividido por 12). Business ainda não tem preço. */
   mrrCents: number;
+  /** Contas com acesso Business agora (ativo, cancelando ou em carência). */
+  business: number;
   paidMonthCents: number;
   paid30Cents: number;
   paidTotalCents: number;
@@ -74,10 +76,15 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     launch: 0, free: 0, courtesy: 0, active: 0, canceling: 0, past_due: 0, expired: 0, canceled: 0,
   };
   let mrrCents = 0;
+  let business = 0;
   for (const row of subs) {
     const plan = realPlan(subOf(row));
     plans[plan.kind] += 1;
-    if (plan.kind === "active" && plan.cycle) mrrCents += PRO_PRICES[plan.cycle].cents / PRO_PRICES[plan.cycle].months;
+    if (plan.tier === "business") business += 1;
+    // Sem preço de Business definido: não entra no MRR (contar como Pro inventaria receita).
+    if (plan.kind === "active" && plan.cycle && plan.tier === "pro") {
+      mrrCents += PRO_PRICES[plan.cycle].cents / PRO_PRICES[plan.cycle].months;
+    }
   }
   // Quem nunca abriu checkout não tem linha em subscriptions: é Grátis.
   plans.free += (users?.users ?? 0) - subs.length;
@@ -90,6 +97,7 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     new30: users?.new30 ?? 0,
     plans,
     mrrCents: Math.round(mrrCents),
+    business,
     paidMonthCents: revenue?.month ?? 0,
     paid30Cents: revenue?.d30 ?? 0,
     paidTotalCents: revenue?.total ?? 0,
