@@ -40,7 +40,7 @@ export const WHATSAPP_STYLES: { value: WhatsappStyle; label: string }[] = [
   { value: "custom", label: "Cores próprias" },
 ];
 
-export const SOCIAL_NETWORKS = ["instagram", "facebook", "tiktok", "youtube", "linkedin", "x"] as const;
+export const SOCIAL_NETWORKS = ["instagram", "facebook", "tiktok", "youtube", "linkedin", "x", "email"] as const;
 export type SocialNetwork = (typeof SOCIAL_NETWORKS)[number];
 export type SocialPosition = "below_name" | "after_links";
 export type SocialLinks = Record<SocialNetwork, { url: string; is_active: boolean }>;

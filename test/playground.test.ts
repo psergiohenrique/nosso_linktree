@@ -40,7 +40,7 @@ describe("adaptador local do playground", () => {
   });
 
   it("o exemplo tem todas as redes, sem dados externos ou URLs blob persistidas", () => {
-    expect(Object.keys(EXAMPLE_PROFILE.social_links!)).toHaveLength(6);
+    expect(Object.keys(EXAMPLE_PROFILE.social_links!)).toHaveLength(7);
     expect(JSON.stringify({ EXAMPLE_PROFILE, EXAMPLE_LINKS })).not.toContain("blob:");
   });
 });

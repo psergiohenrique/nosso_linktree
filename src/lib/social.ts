@@ -6,6 +6,6 @@ export function visibleSocialLinks(links?: SocialLinks | null) {
   return SOCIAL_NETWORKS.flatMap((network) => {
     const entry = links?.[network];
     const url = entry?.is_active && entry.url ? socialUrl(entry.url, network) : null;
-    return url ? [{ network, url }] : [];
+    return url ? [{ network, url: network === "email" ? `mailto:${url}` : url }] : [];
   });
 }

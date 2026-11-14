@@ -68,7 +68,7 @@ export default async function PublicPage({ params }: Params) {
     avatarUrl: profile.avatar_id ? mediaUrl(profile.avatar_id) : null,
     linkUrls: [
       ...visible.filter((l) => l.kind === "link").map((l) => l.url),
-      ...visibleSocialLinks(profile.social_links).map((social) => social.url),
+      ...visibleSocialLinks(profile.social_links).filter((social) => social.network !== "email").map((social) => social.url),
     ],
   });
 
