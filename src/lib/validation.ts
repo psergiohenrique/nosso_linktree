@@ -53,10 +53,20 @@ const SOCIAL_HOSTS: Record<SocialNetwork, readonly string[]> = {
   youtube: ['youtube.com', 'youtu.be'],
   linkedin: ['linkedin.com'],
   x: ['x.com', 'twitter.com'],
+  email: [],
 };
+
+const EMAIL_RE = /^[^\s@<>(),;:"\\]{1,64}@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i;
+
+/** E-mail de contato, em minúsculas; aceita "mailto:" na frente. null se inválido. */
+export function contactEmail(raw: string): string | null {
+  const value = raw.trim().replace(/^mailto:/i, '').toLowerCase();
+  return value.length <= 254 && EMAIL_RE.test(value) ? value : null;
+}
 
 /** URL da rede indicada: HTTP(S), sem credenciais e em domínio genuíno. */
 export function socialUrl(raw: string, network: SocialNetwork): string | null {
+  if (network === 'email') return contactEmail(raw);
   const href = safeUrl(raw);
   if (!href) return null;
   const url = new URL(href);

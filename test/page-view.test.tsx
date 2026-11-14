@@ -35,13 +35,14 @@ describe("página pública", () => {
   });
 
   it("renderiza as redes ativas com rótulos acessíveis e links seguros", () => {
-    const hosts = { instagram: "instagram.com", facebook: "facebook.com", tiktok: "tiktok.com", youtube: "youtube.com", linkedin: "linkedin.com", x: "x.com" };
-    const social_links = Object.fromEntries(SOCIAL_NETWORKS.map((network) => [network, { url: `https://${hosts[network]}/perfil`, is_active: true }])) as SocialLinks;
+    const hosts: Record<string, string> = { instagram: "instagram.com", facebook: "facebook.com", tiktok: "tiktok.com", youtube: "youtube.com", linkedin: "linkedin.com", x: "x.com" };
+    const social_links = Object.fromEntries(SOCIAL_NETWORKS.map((network) => [network, { url: network === "email" ? "ana@exemplo.com" : `https://${hosts[network]}/perfil`, is_active: true }])) as SocialLinks;
     const html = render({ social_links });
-    for (const label of ["Instagram", "Facebook", "TikTok", "YouTube", "LinkedIn", "X"]) {
+    for (const label of ["Instagram", "Facebook", "TikTok", "YouTube", "LinkedIn", "X", "Contato por e-mail"]) {
       expect(html).toContain(`aria-label="${label}"`);
     }
     expect(html).toContain('href="https://instagram.com/perfil" target="_blank" rel="noopener noreferrer nofollow ugc"');
+    expect(html).toContain('href="mailto:ana@exemplo.com"');
     expect(html).toContain('aria-hidden="true"');
     social_links.instagram.is_active = false;
     social_links.facebook.url = "javascript:alert(1)";
@@ -50,6 +51,12 @@ describe("página pública", () => {
     expect(filtered).not.toContain('aria-label="Facebook"');
     for (const network of SOCIAL_NETWORKS) social_links[network].is_active = false;
     expect(render({ social_links })).not.toContain('aria-label="Redes sociais"');
+  });
+
+  it("mostra o botão de compartilhar só na página pública, não na prévia", () => {
+    expect(render({})).toContain('aria-label="Compartilhar esta página"');
+    const preview = renderToStaticMarkup(<PageView profile={profile} links={[]} branding={false} preview tracked={false} />);
+    expect(preview).not.toContain("Compartilhar esta página");
   });
 
   it("posiciona as redes antes ou depois dos links, inclusive na posição padrão", () => {

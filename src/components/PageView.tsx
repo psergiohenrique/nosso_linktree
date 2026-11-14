@@ -4,6 +4,7 @@ import { mediaSrcSet, mediaVariant } from "@/lib/media-variants";
 import { type Appearance, type LinkItem, type Profile, type SocialNetwork, type WhatsappAppearance } from "@/lib/types";
 import { visibleSocialLinks } from "@/lib/social";
 import PixBlock from "./PixBlock";
+import ShareButton from "./ShareButton";
 
 export type PageViewProfile = Appearance &
   WhatsappAppearance &
@@ -64,6 +65,7 @@ const SOCIAL_ICONS: Record<SocialNetwork, { label: string; path: string }> = {
   tiktok: { label: "TikTok", path: "M19.589 6.686a4.793 4.793 0 01-3.77-4.246V2h-3.34v13.94a2.805 2.805 0 11-2.417-2.78V9.77a6.15 6.15 0 106.145 6.17V8.843a8.09 8.09 0 004.724 1.51V7.01a4.77 4.77 0 01-1.342-.324z" },
   youtube: { label: "YouTube", path: "M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 00.5 6.2 31 31 0 000 12a31 31 0 00.5 5.8 3 3 0 002.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 002.1-2.1A31 31 0 0024 12a31 31 0 00-.5-5.8zM9.6 15.6V8.4L15.8 12z" },
   linkedin: { label: "LinkedIn", path: "M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.42v1.56h.05a3.75 3.75 0 013.38-1.85c3.61 0 4.28 2.37 4.28 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zm1.78 13.02H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.73V1.73C24 .77 23.21 0 22.23 0z" },
+  email: { label: "Contato por e-mail", path: "M2 4h20a2 2 0 012 2v12a2 2 0 01-2 2H2a2 2 0 01-2-2V6a2 2 0 012-2zm1.4 2.2L12 12.6l8.6-6.4zM2.2 7.9V17.8h19.6V7.9L12 15.2z" },
   x: { label: "X", path: "M18.9 1.2h3.7l-8.1 9.3L24 22.8h-7.4l-5.8-7.6-6.7 7.6H.4L9 12.9 0 1.2h7.6l5.2 6.9 6.1-6.9zm-1.3 19.4h2L6.5 3.3H4.3l13.3 17.3z" },
 };
 
@@ -72,7 +74,7 @@ function SocialNav({ links }: { links: ReturnType<typeof visibleSocialLinks> }) 
   return (
     <nav className="bio-social" aria-label="Redes sociais">
       {links.map(({ network, url }) => (
-        <a key={network} href={url} target="_blank" rel="noopener noreferrer nofollow ugc" aria-label={SOCIAL_ICONS[network].label}>
+        <a key={network} href={url} {...(network === "email" ? {} : { target: "_blank", rel: "noopener noreferrer nofollow ugc" })} aria-label={SOCIAL_ICONS[network].label}>
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={SOCIAL_ICONS[network].path} /></svg>
         </a>
       ))}
@@ -192,6 +194,7 @@ export default function PageView({ profile, links, tracked = true, preview = fal
           />
         </div>
       )}
+      {tracked && !preview && <ShareButton title={name || `@${profile.slug}`} />}
       <div className={`bio-inner ${profile.cover_image_url ? "has-cover" : ""}`}>
         <header className="bio-header">
           {profile.show_avatar && (profile.avatar_url ? (

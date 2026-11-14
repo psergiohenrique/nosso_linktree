@@ -14,6 +14,7 @@ const SOCIAL_LABELS: Record<SocialNetwork, string> = {
   youtube: "YouTube",
   linkedin: "LinkedIn",
   x: "X",
+  email: "Contato (e-mail)",
 };
 
 type Props = Omit<ComponentProps<typeof AppearanceFields>, "afterProfile"> & {
@@ -42,7 +43,7 @@ export default function AppearanceSections({ pro, branding, onBrandingChange, ..
         {...fields}
         afterProfile={
           <Section id="redes" title="Redes sociais" note={activeSocials ? `${activeSocials} ${activeSocials === 1 ? "ativa" : "ativas"}` : undefined} collapsible>
-            <p className="hint">Cole o endereço e ligue as que quer mostrar. URLs sem https:// também funcionam.</p>
+            <p className="hint">Cole o endereço e ligue as que quer mostrar. URLs sem https:// também funcionam. Em “Contato”, escreva seu e-mail.</p>
             <div className="social-list">
               {SOCIAL_NETWORKS.map((network) => (
                 <div key={network} className="social-row">
@@ -56,8 +57,8 @@ export default function AppearanceSections({ pro, branding, onBrandingChange, ..
                       ...(current.social_links ?? EMPTY_SOCIAL_LINKS),
                       [network]: { ...(current.social_links ?? EMPTY_SOCIAL_LINKS)[network], url: e.target.value },
                     } }))}
-                    placeholder="https://…"
-                    inputMode="url"
+                    placeholder={network === "email" ? "contato@exemplo.com" : "https://…"}
+                    inputMode={network === "email" ? "email" : "url"}
                     autoComplete="off"
                     autoCapitalize="none"
                     autoCorrect="off"

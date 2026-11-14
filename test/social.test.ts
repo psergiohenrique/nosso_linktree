@@ -11,13 +11,24 @@ describe("URLs de redes sociais", () => {
 
   it("aceita somente domínios genuínos da rede correspondente", () => {
     const hosts = { instagram: "instagram.com", facebook: "facebook.com", tiktok: "tiktok.com", youtube: "youtu.be", linkedin: "linkedin.com", x: "twitter.com" } as const;
-    for (const network of SOCIAL_NETWORKS) {
-      expect(socialUrl(`https://www.${hosts[network]}/perfil`, network)).not.toBeNull();
-      for (const host of ["example.com", `${hosts[network]}.evil.com`, `evil${hosts[network]}`, "instagram.com@evil.com"]) {
+    type Hosted = keyof typeof hosts;
+    for (const network of SOCIAL_NETWORKS.filter((n) => n !== "email")) {
+      expect(socialUrl(`https://www.${hosts[network as Hosted]}/perfil`, network)).not.toBeNull();
+      for (const host of ["example.com", `${hosts[network as Hosted]}.evil.com`, `evil${hosts[network as Hosted]}`, "instagram.com@evil.com"]) {
         expect(socialUrl(`https://${host}/perfil`, network)).toBeNull();
       }
     }
     expect(socialUrl("https://facebook.com/perfil", "instagram")).toBeNull();
+  });
+
+  it("valida o e-mail de contato", () => {
+    expect(socialUrl(" Ana@Exemplo.com.br ", "email")).toBe("ana@exemplo.com.br");
+    expect(socialUrl("mailto:ana@exemplo.com", "email")).toBe("ana@exemplo.com");
+    for (const bad of ["", "ana", "ana@", "ana@exemplo", "a b@exemplo.com", "ana@exemplo.com, x@y.com", "javascript:alert(1)"]) {
+      expect(socialUrl(bad, "email")).toBeNull();
+    }
+    const links = Object.fromEntries(SOCIAL_NETWORKS.map((n) => [n, { url: n === "email" ? "ana@exemplo.com" : "", is_active: n === "email" }])) as SocialLinks;
+    expect(visibleSocialLinks(links)).toEqual([{ network: "email", url: "mailto:ana@exemplo.com" }]);
   });
 
   it("recusa protocolos inseguros, credenciais, URLs inválidas e longas", () => {
@@ -36,6 +47,7 @@ describe("redes sociais visíveis", () => {
       youtube: { url: "", is_active: true },
       linkedin: { url: "https://user@linkedin.com/ana", is_active: true },
       x: { url: "https://x.com/ana", is_active: true },
+      email: { url: "ana@exemplo", is_active: true },
     } satisfies SocialLinks;
     expect(visibleSocialLinks(links)).toEqual([
       { network: "instagram", url: "https://instagram.com/ana" },
@@ -45,8 +57,8 @@ describe("redes sociais visíveis", () => {
   });
 
   it("aceita todas as redes suportadas", () => {
-    const hosts = { instagram: "instagram.com", facebook: "facebook.com", tiktok: "tiktok.com", youtube: "youtube.com", linkedin: "linkedin.com", x: "x.com" };
-    const links = Object.fromEntries(SOCIAL_NETWORKS.map((network) => [network, { url: `https://${hosts[network]}/perfil`, is_active: true }])) as SocialLinks;
+    const hosts = { instagram: "instagram.com", facebook: "facebook.com", tiktok: "tiktok.com", youtube: "youtube.com", linkedin: "linkedin.com", x: "x.com" } as Record<string, string>;
+    const links = Object.fromEntries(SOCIAL_NETWORKS.map((network) => [network, { url: network === "email" ? "ana@exemplo.com" : `https://${hosts[network]}/perfil`, is_active: true }])) as SocialLinks;
     expect(visibleSocialLinks(links).map(({ network }) => network)).toEqual([...SOCIAL_NETWORKS]);
   });
 });
